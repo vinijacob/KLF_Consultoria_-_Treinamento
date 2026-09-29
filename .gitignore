@@ -1,0 +1,37 @@
+# Sistema e editores
+.DS_Store
+Thumbs.db
+.idea/
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.user
+*.swp
+
+# .NET
+bin/
+obj/
+TestResults/
+*.trx
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Segredos e variáveis de ambiente
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.*.local.json
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+
+# Instruções de agentes de IA
+CLAUDE.md
+AGENTS.md
+.claude/

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Klf.Api/Klf.Api.csproj" />
+    <Project Path="src/Klf.Application/Klf.Application.csproj" />
+    <Project Path="src/Klf.Domain/Klf.Domain.csproj" />
+    <Project Path="src/Klf.Infrastructure/Klf.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Klf.Api.Tests/Klf.Api.Tests.csproj" />
+    <Project Path="tests/Klf.Domain.Tests/Klf.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
