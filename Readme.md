@@ -49,7 +49,6 @@ Plataforma web da **KLF Consultoria & Treinamento**, empresa de Kilciene Lima Fe
 │   ├── tests/                       # xUnit v3 (Microsoft.Testing.Platform)
 │   ├── Directory.Build.props        # Configurações comuns (warnings como erro)
 │   ├── Directory.Packages.props     # Versões centralizadas dos pacotes NuGet
-│   ├── docker-compose.yml           # PostgreSQL 17 + Mailpit locais
 │   └── Klf.slnx
 ├── frontend/                        # Next.js 16
 │   ├── app/
@@ -69,7 +68,7 @@ Plataforma web da **KLF Consultoria & Treinamento**, empresa de Kilciene Lima Fe
 
 - [.NET SDK 10](https://dotnet.microsoft.com/download)
 - [Node.js](https://nodejs.org/) 22 ou superior (LTS)
-- [Docker](https://www.docker.com/) (para o PostgreSQL local)
+- [PostgreSQL 17](https://www.postgresql.org/) local (`brew install postgresql@17`) — o pgAdmin é opcional, só para visualizar
 - Ferramenta de migrations: `dotnet tool install --global dotnet-ef`
 
 ### 🚀 Como rodar localmente
@@ -81,10 +80,15 @@ git clone https://github.com/<seu-usuario>/klf-consultoria.git
 cd klf-consultoria
 ```
 
-**2. Suba o banco de dados**
+**2. Suba o banco de dados e configure a conexão**
 
 ```bash
-docker compose -f backend/docker-compose.yml up -d
+brew services start postgresql@17
+psql -d postgres -c "CREATE ROLE klf WITH LOGIN PASSWORD '<sua-senha>' CREATEDB;"
+psql -d postgres -c "CREATE DATABASE klf OWNER klf;"
+
+cd backend
+dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=klf;Username=klf;Password=<sua-senha>" --project src/Klf.Api
 ```
 
 **3. Rode o backend**
@@ -227,7 +231,6 @@ Web platform for **KLF Consultoria & Treinamento** (KLF Consulting & Training), 
 │   ├── tests/                       # xUnit v3 (Microsoft.Testing.Platform)
 │   ├── Directory.Build.props        # Shared settings (warnings as errors)
 │   ├── Directory.Packages.props     # Central NuGet package versions
-│   ├── docker-compose.yml           # Local PostgreSQL 17 + Mailpit
 │   └── Klf.slnx
 ├── frontend/                        # Next.js 16
 │   ├── app/
@@ -247,7 +250,7 @@ Web platform for **KLF Consultoria & Treinamento** (KLF Consulting & Training), 
 
 - [.NET SDK 10](https://dotnet.microsoft.com/download)
 - [Node.js](https://nodejs.org/) 22 or later (LTS)
-- [Docker](https://www.docker.com/) (for local PostgreSQL)
+- Local [PostgreSQL 17](https://www.postgresql.org/) (`brew install postgresql@17`) — pgAdmin is optional, just for browsing
 - Migrations tool: `dotnet tool install --global dotnet-ef`
 
 ### 🚀 Running locally
@@ -259,10 +262,15 @@ git clone https://github.com/<your-user>/klf-consultoria.git
 cd klf-consultoria
 ```
 
-**2. Start the database**
+**2. Start the database and configure the connection**
 
 ```bash
-docker compose -f backend/docker-compose.yml up -d
+brew services start postgresql@17
+psql -d postgres -c "CREATE ROLE klf WITH LOGIN PASSWORD '<your-password>' CREATEDB;"
+psql -d postgres -c "CREATE DATABASE klf OWNER klf;"
+
+cd backend
+dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=klf;Username=klf;Password=<your-password>" --project src/Klf.Api
 ```
 
 **3. Run the backend**
