@@ -3,12 +3,9 @@ using System.Net.Http.Json;
 
 using Klf.Application.DTOs.Health;
 
-using Microsoft.AspNetCore.Mvc.Testing;
-
 namespace Klf.Api.Tests.Controllers;
 
-public sealed class HealthControllerTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HealthControllerTests(KlfApiFactory factory) : IClassFixture<KlfApiFactory>
 {
     [Fact]
     public async Task Health_returns_ok_when_api_is_running()

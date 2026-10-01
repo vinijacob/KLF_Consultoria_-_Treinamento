@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Klf.Infrastructure\Klf.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

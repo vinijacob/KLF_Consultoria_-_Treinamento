@@ -4,8 +4,10 @@ using Klf.Application.DTOs.Common;
 
 namespace Klf.Application.Validators.Common;
 
+/// <summary>Ensures the page number and page size are within the allowed range.</summary>
 public sealed class PagedRequestValidator : AbstractValidator<PagedRequest>
 {
+    /// <summary>Defines the pagination rules.</summary>
     public PagedRequestValidator()
     {
         RuleFor(x => x.Page)

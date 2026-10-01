@@ -9,5 +9,6 @@
     <Project Path="tests/Klf.Api.Tests/Klf.Api.Tests.csproj" />
     <Project Path="tests/Klf.Application.Tests/Klf.Application.Tests.csproj" />
     <Project Path="tests/Klf.Domain.Tests/Klf.Domain.Tests.csproj" />
+    <Project Path="tests/Klf.Infrastructure.Tests/Klf.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

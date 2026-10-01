@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Klf.Domain\Klf.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Klf.Application.Tests" />
+  </ItemGroup>
+
 </Project>

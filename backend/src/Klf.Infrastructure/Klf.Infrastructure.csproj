@@ -15,4 +15,8 @@
     <ProjectReference Include="..\Klf.Application\Klf.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Klf.Infrastructure.Tests" />
+  </ItemGroup>
+
 </Project>

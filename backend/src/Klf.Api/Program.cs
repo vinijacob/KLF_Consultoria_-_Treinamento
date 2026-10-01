@@ -19,7 +19,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options => options.AddPreferredSecuritySchemes(OpenApiExtensions.BearerScheme));
 }
 else
 {
@@ -28,6 +28,9 @@ else
 }
 
 app.UseCors(ServiceCollectionExtensions.FrontendCorsPolicy);
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 

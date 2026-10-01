@@ -4,6 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Klf.Api.Middlewares;
 
+/// <summary>
+/// Catches exceptions thrown anywhere in the pipeline and turns them into <see cref="ProblemDetails"/> responses,
+/// so controllers never need <c>try/catch</c>. <see cref="DomainException"/> subclasses become 4xx responses with their
+/// message; anything else becomes a generic 500 that is logged and never exposes internal details.
+/// </summary>
 internal sealed partial class ExceptionHandlingMiddleware(
     RequestDelegate next,
     ILogger<ExceptionHandlingMiddleware> logger)
@@ -33,6 +38,7 @@ internal sealed partial class ExceptionHandlingMiddleware(
         }
     }
 
+    /// <summary>Maps an exception to the <see cref="ProblemDetails"/> returned to the client.</summary>
     internal static ProblemDetails ToProblemDetails(Exception exception) => exception switch
     {
         ValidationException e => new ValidationProblemDetails(e.Errors.ToDictionary())
@@ -42,6 +48,7 @@ internal sealed partial class ExceptionHandlingMiddleware(
         },
         NotFoundException e => Problem(StatusCodes.Status404NotFound, "Recurso não encontrado.", e.Message),
         ConflictException e => Problem(StatusCodes.Status409Conflict, "Conflito.", e.Message),
+        UnauthorizedException e => Problem(StatusCodes.Status401Unauthorized, "Não autenticado.", e.Message),
         ForbiddenException e => Problem(StatusCodes.Status403Forbidden, "Acesso negado.", e.Message),
         _ => Problem(StatusCodes.Status500InternalServerError, "Erro interno.", "Ocorreu um erro inesperado. Tente novamente mais tarde."),
     };

@@ -393,3 +393,6 @@ dotnet_diagnostic.CA1707.severity = none
 
 [src/Klf.Api/**.cs]
 dotnet_diagnostic.CA1716.severity = none
+
+[src/Klf.Infrastructure/Persistence/Migrations/**.cs]
+generated_code = true

@@ -1,5 +1,8 @@
+using Klf.Application.Interfaces.Identity;
+using Klf.Application.Interfaces.Repositories;
 using Klf.Infrastructure.Identity;
 using Klf.Infrastructure.Persistence;
+using Klf.Infrastructure.Repositories;
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -9,8 +12,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Klf.Infrastructure;
 
+/// <summary>Registers the Infrastructure layer services.</summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Registers the PostgreSQL <see cref="AppDbContext"/>, ASP.NET Core Identity, JWT issuing, the repositories and the external service integrations.
+    /// </summary>
+    /// <remarks>
+    /// The connection string is read from <c>ConnectionStrings:Default</c> only when the DbContext is first created,
+    /// so the app (and tests that don't touch the database) can start without it.
+    /// </remarks>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
@@ -36,6 +47,22 @@ public static class DependencyInjection
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.Configure<AdminSeedOptions>(configuration.GetSection(AdminSeedOptions.SectionName));
+
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IIdentityService, IdentityService>();
+        services.AddSingleton<ITokenService, TokenService>();
+        services.AddHostedService<AdminSeeder>();
+
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddScoped<ICareerEntryRepository, CareerEntryRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         return services;
     }

@@ -5,6 +5,11 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Klf.Api.Filters;
 
+/// <summary>
+/// Runs the FluentValidation validator of each action argument before the action executes.
+/// If any rule fails, the action is skipped and a 400 <see cref="ValidationProblemDetails"/> is returned
+/// with the errors grouped by field. Arguments without a registered validator are ignored.
+/// </summary>
 internal sealed class ValidationFilter(IServiceProvider serviceProvider) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
