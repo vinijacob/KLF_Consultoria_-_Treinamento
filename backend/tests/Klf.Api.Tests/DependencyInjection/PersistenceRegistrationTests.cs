@@ -1,3 +1,4 @@
+using Klf.Application.Interfaces.Content;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Infrastructure.Persistence;
 
@@ -24,6 +25,15 @@ public sealed class PersistenceRegistrationTests(RealPersistenceApiFactory facto
         using var scope = factory.Services.CreateScope();
 
         Assert.NotNull(scope.ServiceProvider.GetService<ICareerEntryRepository>());
+    }
+
+    [Fact]
+    public void Post_repository_and_sanitizer_are_registered_when_app_starts()
+    {
+        using var scope = factory.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<IPostRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IHtmlContentSanitizer>());
     }
 
     [Fact]

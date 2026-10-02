@@ -33,7 +33,7 @@ Plataforma web da **KLF Consultoria & Treinamento**, empresa de Kilciene Lima Fe
 | **E-mail**         | Resend                                                                                                                                                                       |
 | **Anti-robô**      | Cloudflare Turnstile                                                                                                                                                         |
 | **Hospedagem**     | Vercel (frontend) · Railway (backend) · Neon (PostgreSQL)                                                                                                                    |
-| **Testes**         | xUnit, Testcontainers, Vitest, Testing Library, Playwright                                                                                                                   |
+| **Testes**         | xUnit v3, Vitest, Testing Library, Playwright                                                                                                                                |
 | **CI/CD**          | GitHub Actions                                                                                                                                                               |
 
 ### 📁 Estrutura
@@ -122,6 +122,9 @@ Site: `http://localhost:3000`
 | ---------------------------- | ---------------------------------- |
 | `ConnectionStrings__Default` | String de conexão do PostgreSQL    |
 | `Cors__AllowedOrigins`       | URL(s) do frontend                 |
+| `Jwt__SigningKey`            | Chave de assinatura do JWT (≥ 32 caracteres) |
+| `Seed__Admin__Email`         | E-mail do admin inicial            |
+| `Seed__Admin__Password`      | Senha do admin inicial             |
 | `R2__AccountId`              | Conta do Cloudflare R2             |
 | `R2__AccessKeyId`            | Chave de acesso do R2              |
 | `R2__SecretAccessKey`        | Chave secreta do R2                |
@@ -215,7 +218,7 @@ Web platform for **KLF Consultoria & Treinamento** (KLF Consulting & Training), 
 | **Email**          | Resend                                                                                                                                                                       |
 | **Bot protection** | Cloudflare Turnstile                                                                                                                                                         |
 | **Hosting**        | Vercel (frontend) · Railway (backend) · Neon (PostgreSQL)                                                                                                                    |
-| **Testing**        | xUnit, Testcontainers, Vitest, Testing Library, Playwright                                                                                                                   |
+| **Testing**        | xUnit v3, Vitest, Testing Library, Playwright                                                                                                                                |
 | **CI/CD**          | GitHub Actions                                                                                                                                                               |
 
 ### 📁 Structure
@@ -304,6 +307,9 @@ Site: `http://localhost:3000`
 | ---------------------------- | ----------------------------- |
 | `ConnectionStrings__Default` | PostgreSQL connection string  |
 | `Cors__AllowedOrigins`       | Frontend URL(s)               |
+| `Jwt__SigningKey`            | JWT signing key (≥ 32 characters) |
+| `Seed__Admin__Email`         | Initial admin e-mail          |
+| `Seed__Admin__Password`      | Initial admin password        |
 | `R2__AccountId`              | Cloudflare R2 account         |
 | `R2__AccessKeyId`            | R2 access key                 |
 | `R2__SecretAccessKey`        | R2 secret key                 |

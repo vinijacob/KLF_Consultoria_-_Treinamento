@@ -27,6 +27,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Kilciene's career timeline.</summary>
     public DbSet<CareerEntry> CareerEntries => Set<CareerEntry>();
 
+    /// <summary>Kilciene's blog posts.</summary>
+    /// <summary>Blog posts, projects and news.</summary>
+    public DbSet<Post> Posts => Set<Post>();
+
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
