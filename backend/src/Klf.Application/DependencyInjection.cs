@@ -3,7 +3,9 @@ using FluentValidation;
 using Klf.Application.DTOs;
 using Klf.Application.Services.Auth;
 using Klf.Application.Services.Career;
+using Klf.Application.Services.Catalog;
 using Klf.Application.Services.Posts;
+using Klf.Application.Services.Settings;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,6 +24,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICareerEntryService, CareerEntryService>();
         services.AddScoped<IPostService, PostService>();
+        services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
+        services.AddScoped<ISiteSettingService, SiteSettingService>();
 
         return services;
     }

@@ -27,9 +27,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Kilciene's career timeline.</summary>
     public DbSet<CareerEntry> CareerEntries => Set<CareerEntry>();
 
-    /// <summary>Kilciene's blog posts.</summary>
     /// <summary>Blog posts, projects and news.</summary>
     public DbSet<Post> Posts => Set<Post>();
+
+    /// <summary>Training and consulting services offered by KLF.</summary>
+    public DbSet<Service> Services => Set<Service>();
+
+    /// <summary>Site settings (institutional texts, contact, social networks, default SEO), one row per key.</summary>
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
 
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
