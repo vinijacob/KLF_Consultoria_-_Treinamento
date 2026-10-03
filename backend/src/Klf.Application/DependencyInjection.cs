@@ -4,8 +4,10 @@ using Klf.Application.DTOs;
 using Klf.Application.Services.Auth;
 using Klf.Application.Services.Career;
 using Klf.Application.Services.Catalog;
+using Klf.Application.Services.Clients;
 using Klf.Application.Services.Posts;
 using Klf.Application.Services.Settings;
+using Klf.Application.Services.Testimonials;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
         services.AddScoped<ISiteSettingService, SiteSettingService>();
+        services.AddScoped<IClientService, ClientService>();
+        services.AddScoped<ITestimonialService, TestimonialService>();
 
         return services;
     }

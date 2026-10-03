@@ -36,6 +36,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Site settings (institutional texts, contact, social networks, default SEO), one row per key.</summary>
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
 
+    /// <summary>Companies and stores trained by KLF.</summary>
+    public DbSet<Client> Clients => Set<Client>();
+
+    /// <summary>Named testimonials, with the consent of their authors.</summary>
+    public DbSet<Testimonial> Testimonials => Set<Testimonial>();
+
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

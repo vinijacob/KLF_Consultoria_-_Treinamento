@@ -69,6 +69,8 @@ public static class DependencyInjection
         services.AddScoped<IPostRepository, PostRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
+        services.AddScoped<IClientRepository, ClientRepository>();
+        services.AddScoped<ITestimonialRepository, TestimonialRepository>();
 
         return services;
     }

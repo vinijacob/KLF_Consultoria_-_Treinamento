@@ -53,6 +53,15 @@ public sealed class PersistenceRegistrationTests(RealPersistenceApiFactory facto
     }
 
     [Fact]
+    public void Client_and_testimonial_repositories_are_registered_when_app_starts()
+    {
+        using var scope = factory.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<IClientRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<ITestimonialRepository>());
+    }
+
+    [Fact]
     public void Refresh_token_repository_is_registered_when_app_starts()
     {
         using var scope = factory.Services.CreateScope();
