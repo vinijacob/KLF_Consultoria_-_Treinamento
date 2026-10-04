@@ -11,11 +11,12 @@ public sealed class TestimonialServiceTests
     private static readonly DateTimeOffset Now = new(2026, 10, 2, 12, 0, 0, TimeSpan.Zero);
 
     private readonly InMemoryTestimonialRepository _repository = new();
+    private readonly InMemoryMediaAssetRepository _media = new();
     private readonly TestimonialService _service;
 
     public TestimonialServiceTests()
     {
-        _service = new TestimonialService(_repository, _repository, new MutableTimeProvider(Now));
+        _service = new TestimonialService(_repository, _media, _repository, new MutableTimeProvider(Now));
     }
 
     [Fact]

@@ -42,6 +42,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Named testimonials, with the consent of their authors.</summary>
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
 
+    /// <summary>Uploaded images (metadata; the files live in the file storage).</summary>
+    public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
+
+    /// <summary>Photo albums of the gallery.</summary>
+    public DbSet<Album> Albums => Set<Album>();
+
+    /// <summary>Images inside albums.</summary>
+    public DbSet<AlbumMedia> AlbumMedia => Set<AlbumMedia>();
+
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
@@ -55,6 +64,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         base.OnModelCreating(builder);
 
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // Ids are created in the domain (UUID v7). Without this, a child added to a loaded parent's collection
+        // (e.g. AlbumMedia in Album.Items) is seen as an existing row and EF issues an UPDATE instead of an INSERT.
+        foreach (var entityType in builder.Model.GetEntityTypes().Where(t => typeof(Entity).IsAssignableFrom(t.ClrType) && t.BaseType is null))
+        {
+            builder.Entity(entityType.ClrType).Property(nameof(Entity.Id)).ValueGeneratedNever();
+        }
 
         foreach (var entityType in builder.Model.GetEntityTypes()
             .Where(t => typeof(SoftDeletableEntity).IsAssignableFrom(t.ClrType) && t.BaseType is null))

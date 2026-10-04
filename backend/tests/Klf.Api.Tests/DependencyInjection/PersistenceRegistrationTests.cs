@@ -1,5 +1,6 @@
 using Klf.Application.Interfaces.Content;
 using Klf.Application.Interfaces.Repositories;
+using Klf.Application.Interfaces.Storage;
 using Klf.Infrastructure.Persistence;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -59,6 +60,16 @@ public sealed class PersistenceRegistrationTests(RealPersistenceApiFactory facto
 
         Assert.NotNull(scope.ServiceProvider.GetService<IClientRepository>());
         Assert.NotNull(scope.ServiceProvider.GetService<ITestimonialRepository>());
+    }
+
+    [Fact]
+    public void Media_album_repositories_and_file_storage_are_registered_when_app_starts()
+    {
+        using var scope = factory.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<IMediaAssetRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IAlbumRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IFileStorage>());
     }
 
     [Fact]

@@ -1,16 +1,20 @@
 using Klf.Application.Interfaces.Content;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Interfaces.Repositories;
+using Klf.Application.Interfaces.Storage;
 using Klf.Infrastructure.Identity;
 using Klf.Infrastructure.Persistence;
 using Klf.Infrastructure.Repositories;
 using Klf.Infrastructure.Services;
+using Klf.Infrastructure.Storage;
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace Klf.Infrastructure;
 
@@ -63,6 +67,21 @@ public static class DependencyInjection
         services.AddSingleton<IHtmlContentSanitizer, HtmlContentSanitizer>();
         services.AddHostedService<AdminSeeder>();
 
+        services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
+        services.AddSingleton<IFileStorage>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<StorageOptions>>().Value;
+
+            return options.Provider switch
+            {
+                StorageOptions.R2Provider => new R2FileStorage(options),
+                StorageOptions.LocalProvider => new LocalFileStorage(
+                    Path.Combine(sp.GetRequiredService<IHostEnvironment>().ContentRootPath, options.LocalDirectory),
+                    options.PublicBaseUrl),
+                _ => throw new InvalidOperationException($"Storage:Provider inválido: '{options.Provider}'. Use Local ou R2."),
+            };
+        });
+
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ICareerEntryRepository, CareerEntryRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -71,6 +90,8 @@ public static class DependencyInjection
         services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
         services.AddScoped<IClientRepository, ClientRepository>();
         services.AddScoped<ITestimonialRepository, TestimonialRepository>();
+        services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
+        services.AddScoped<IAlbumRepository, AlbumRepository>();
 
         return services;
     }

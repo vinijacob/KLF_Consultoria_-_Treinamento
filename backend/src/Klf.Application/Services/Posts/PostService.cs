@@ -3,6 +3,7 @@ using Klf.Application.DTOs.Posts;
 using Klf.Application.Interfaces.Content;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Mappings;
+using Klf.Application.Services.Media;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -10,6 +11,7 @@ namespace Klf.Application.Services.Posts;
 
 internal sealed class PostService(
     IPostRepository repository,
+    IMediaAssetRepository mediaRepository,
     IUnitOfWork unitOfWork,
     IHtmlContentSanitizer sanitizer,
     TimeProvider timeProvider) : IPostService
@@ -46,6 +48,7 @@ internal sealed class PostService(
     public async Task<PostResponse> CreateAsync(Guid authorId, CreatePostRequest request, CancellationToken cancellationToken)
     {
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: null, cancellationToken);
+        await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
 
         var post = new Post(
             authorId,
@@ -72,6 +75,7 @@ internal sealed class PostService(
     {
         var post = await GetOrThrowAsync(id, cancellationToken);
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: id, cancellationToken);
+        await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
 
         post.Update(
             request.Type,

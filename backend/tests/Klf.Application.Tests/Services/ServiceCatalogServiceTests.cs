@@ -10,11 +10,12 @@ namespace Klf.Application.Tests.Services;
 public sealed class ServiceCatalogServiceTests
 {
     private readonly InMemoryServiceRepository _repository = new();
+    private readonly InMemoryMediaAssetRepository _media = new();
     private readonly ServiceCatalogService _service;
 
     public ServiceCatalogServiceTests()
     {
-        _service = new ServiceCatalogService(_repository, _repository, new FakeHtmlSanitizer());
+        _service = new ServiceCatalogService(_repository, _media, _repository, new FakeHtmlSanitizer());
     }
 
     [Fact]

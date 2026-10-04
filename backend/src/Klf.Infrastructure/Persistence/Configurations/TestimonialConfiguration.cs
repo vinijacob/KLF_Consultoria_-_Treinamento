@@ -15,5 +15,10 @@ internal sealed class TestimonialConfiguration : IEntityTypeConfiguration<Testim
         builder.Property(x => x.Quote).HasMaxLength(1000);
 
         builder.HasIndex(x => new { x.IsPublished, x.DisplayOrder });
+
+        builder.HasOne<MediaAsset>()
+            .WithMany()
+            .HasForeignKey(x => x.PhotoId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

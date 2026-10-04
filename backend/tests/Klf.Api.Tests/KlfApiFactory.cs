@@ -1,6 +1,7 @@
 using Klf.Api.Tests.Fakes;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Interfaces.Repositories;
+using Klf.Application.Interfaces.Storage;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -21,6 +22,10 @@ public class KlfApiFactory : WebApplicationFactory<Program>
     public const string AdminPassword = "Senha@Forte123";
 
     public InMemoryRefreshTokenRepository RefreshTokens { get; } = new();
+
+    public InMemoryMediaAssetRepository Media { get; } = new();
+
+    public FakeFileStorage Storage { get; } = new();
 
     protected virtual bool UseInMemoryPersistence => true;
 
@@ -51,6 +56,10 @@ public class KlfApiFactory : WebApplicationFactory<Program>
                 services.RemoveAll<IUnitOfWork>();
                 services.AddSingleton<IRefreshTokenRepository>(RefreshTokens);
                 services.AddSingleton<IUnitOfWork, NoOpUnitOfWork>();
+                services.RemoveAll<IMediaAssetRepository>();
+                services.RemoveAll<IFileStorage>();
+                services.AddSingleton<IMediaAssetRepository>(Media);
+                services.AddSingleton<IFileStorage>(Storage);
             }
         });
     }

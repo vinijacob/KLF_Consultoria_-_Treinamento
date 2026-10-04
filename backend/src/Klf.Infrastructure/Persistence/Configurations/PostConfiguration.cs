@@ -27,5 +27,10 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
             .WithMany()
             .HasForeignKey(x => x.AuthorId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<MediaAsset>()
+            .WithMany()
+            .HasForeignKey(x => x.CoverId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -35,3 +35,6 @@ appsettings.*.local.json
 CLAUDE.md
 AGENTS.md
 .claude/
+
+# Uploads locais (desenvolvimento)
+backend/src/Klf.Api/uploads/

@@ -12,12 +12,13 @@ public sealed class PostServiceTests
     private static readonly Guid Author = Guid.CreateVersion7();
 
     private readonly InMemoryPostRepository _repository = new();
+    private readonly InMemoryMediaAssetRepository _media = new();
     private readonly MutableTimeProvider _clock = new(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero));
     private readonly PostService _service;
 
     public PostServiceTests()
     {
-        _service = new PostService(_repository, _repository, new FakeHtmlSanitizer(), _clock);
+        _service = new PostService(_repository, _media, _repository, new FakeHtmlSanitizer(), _clock);
     }
 
     [Fact]

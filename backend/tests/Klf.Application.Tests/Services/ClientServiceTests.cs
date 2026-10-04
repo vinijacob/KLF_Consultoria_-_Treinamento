@@ -9,11 +9,12 @@ namespace Klf.Application.Tests.Services;
 public sealed class ClientServiceTests
 {
     private readonly InMemoryClientRepository _repository = new();
+    private readonly InMemoryMediaAssetRepository _media = new();
     private readonly ClientService _service;
 
     public ClientServiceTests()
     {
-        _service = new ClientService(_repository, _repository);
+        _service = new ClientService(_repository, _media, _repository);
     }
 
     [Fact]

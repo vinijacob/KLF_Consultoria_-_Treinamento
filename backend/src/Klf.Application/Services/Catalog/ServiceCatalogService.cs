@@ -2,6 +2,7 @@ using Klf.Application.DTOs.Catalog;
 using Klf.Application.Interfaces.Content;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Mappings;
+using Klf.Application.Services.Media;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -9,6 +10,7 @@ namespace Klf.Application.Services.Catalog;
 
 internal sealed class ServiceCatalogService(
     IServiceRepository repository,
+    IMediaAssetRepository mediaRepository,
     IUnitOfWork unitOfWork,
     IHtmlContentSanitizer sanitizer) : IServiceCatalogService
 {
@@ -44,6 +46,7 @@ internal sealed class ServiceCatalogService(
     public async Task<ServiceResponse> CreateAsync(CreateServiceRequest request, CancellationToken cancellationToken)
     {
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: null, cancellationToken);
+        await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
 
         var service = new Service(
             request.Title.Trim(),
@@ -67,6 +70,7 @@ internal sealed class ServiceCatalogService(
     {
         var service = await GetOrThrowAsync(id, cancellationToken);
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: id, cancellationToken);
+        await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
 
         service.Update(
             request.Title.Trim(),

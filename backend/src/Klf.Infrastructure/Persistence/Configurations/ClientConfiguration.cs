@@ -13,5 +13,10 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(x => x.WebsiteUrl).HasMaxLength(300);
 
         builder.HasIndex(x => new { x.IsActive, x.DisplayOrder });
+
+        builder.HasOne<MediaAsset>()
+            .WithMany()
+            .HasForeignKey(x => x.LogoId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

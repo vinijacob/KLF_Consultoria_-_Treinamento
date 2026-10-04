@@ -19,5 +19,10 @@ internal sealed class ServiceConfiguration : IEntityTypeConfiguration<Service>
             .HasFilter("\"DeletedAt\" IS NULL");
 
         builder.HasIndex(x => new { x.IsActive, x.DisplayOrder });
+
+        builder.HasOne<MediaAsset>()
+            .WithMany()
+            .HasForeignKey(x => x.CoverId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

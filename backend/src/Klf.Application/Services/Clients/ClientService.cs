@@ -1,12 +1,16 @@
 using Klf.Application.DTOs.Clients;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Mappings;
+using Klf.Application.Services.Media;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
 namespace Klf.Application.Services.Clients;
 
-internal sealed class ClientService(IClientRepository repository, IUnitOfWork unitOfWork) : IClientService
+internal sealed class ClientService(
+    IClientRepository repository,
+    IMediaAssetRepository mediaRepository,
+    IUnitOfWork unitOfWork) : IClientService
 {
     public async Task<IReadOnlyList<PublicClientResponse>> ListPublicAsync(CancellationToken cancellationToken)
     {
@@ -31,6 +35,8 @@ internal sealed class ClientService(IClientRepository repository, IUnitOfWork un
 
     public async Task<ClientResponse> CreateAsync(CreateClientRequest request, CancellationToken cancellationToken)
     {
+        await MediaReference.EnsureExistsAsync(mediaRepository, request.LogoId, "LogoId", cancellationToken);
+
         var client = new Client(
             request.Name.Trim(),
             NullIfBlank(request.WebsiteUrl),
@@ -47,6 +53,7 @@ internal sealed class ClientService(IClientRepository repository, IUnitOfWork un
     public async Task<ClientResponse> UpdateAsync(Guid id, UpdateClientRequest request, CancellationToken cancellationToken)
     {
         var client = await GetOrThrowAsync(id, cancellationToken);
+        await MediaReference.EnsureExistsAsync(mediaRepository, request.LogoId, "LogoId", cancellationToken);
 
         client.Update(
             request.Name.Trim(),
