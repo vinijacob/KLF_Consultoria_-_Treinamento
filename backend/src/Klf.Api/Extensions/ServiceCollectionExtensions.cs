@@ -32,6 +32,7 @@ internal static class ServiceCollectionExtensions
         services.AddOpenApi(options => options.AddBearerSecurity());
         services.AddProblemDetails();
         services.AddJwtAuthentication();
+        services.AddSingleton<FeedbackCookie>();
 
         services.AddCors(options => options.AddPolicy(FrontendCorsPolicy, policy =>
             policy

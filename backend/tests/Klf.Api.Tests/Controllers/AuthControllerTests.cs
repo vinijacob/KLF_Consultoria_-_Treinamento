@@ -173,6 +173,6 @@ public sealed class AuthControllerTests(KlfApiFactory factory) : IClassFixture<K
         var response = await client.PostAsJsonAsync(LoginUri, new LoginRequest(KlfApiFactory.AdminEmail, KlfApiFactory.AdminPassword), TestContext.Current.CancellationToken);
         var body = await response.Content.ReadFromJsonAsync<LoginResponse>(TestContext.Current.CancellationToken);
 
-        return body!.AccessToken;
+        return body!.AccessToken!;
     }
 }

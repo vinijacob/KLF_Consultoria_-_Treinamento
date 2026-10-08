@@ -19,6 +19,8 @@
 
   <ItemGroup Label="Infrastructure">
     <PackageVersion Include="AWSSDK.S3" Version="4.0.104.1" />
+    <PackageVersion Include="QRCoder" Version="1.8.0" />
+    <PackageVersion Include="QuestPDF" Version="2026.9.1" />
     <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />

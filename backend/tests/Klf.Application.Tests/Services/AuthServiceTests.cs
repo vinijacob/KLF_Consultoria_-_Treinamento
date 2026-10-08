@@ -23,7 +23,7 @@ public sealed class AuthServiceTests
     [Fact]
     public async Task Login_starts_session_with_stored_refresh_token_when_credentials_are_valid()
     {
-        var session = await CreateService(CredentialsCheckResult.Success(User)).LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
+        var session = await LoginSessionAsync(CreateService(CredentialsCheckResult.Success(User)));
 
         var stored = Assert.Single(_refreshTokens.Tokens);
         Assert.Equal($"access-for-{User.Id}", session.AccessToken);
@@ -55,7 +55,7 @@ public sealed class AuthServiceTests
     public async Task Refresh_rotates_token_in_same_session_when_token_is_active()
     {
         var service = CreateService(CredentialsCheckResult.Success(User));
-        var login = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
+        var login = await LoginSessionAsync(service);
         _clock.Now = _clock.Now.AddMinutes(20);
 
         var refreshed = await service.RefreshAsync(login.RefreshToken, TestContext.Current.CancellationToken);
@@ -70,8 +70,8 @@ public sealed class AuthServiceTests
     public async Task Refresh_revokes_every_session_when_used_token_is_presented_again()
     {
         var service = CreateService(CredentialsCheckResult.Success(User));
-        var login = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
-        var otherDevice = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
+        var login = await LoginSessionAsync(service);
+        var otherDevice = await LoginSessionAsync(service);
         await service.RefreshAsync(login.RefreshToken, TestContext.Current.CancellationToken);
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
@@ -86,7 +86,7 @@ public sealed class AuthServiceTests
     public async Task Refresh_throws_unauthorized_when_session_expired()
     {
         var service = CreateService(CredentialsCheckResult.Success(User));
-        var login = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
+        var login = await LoginSessionAsync(service);
         _clock.Now = _clock.Now.AddHours(8).AddSeconds(1);
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
@@ -104,8 +104,8 @@ public sealed class AuthServiceTests
     public async Task Logout_revokes_only_that_session_when_token_is_known()
     {
         var service = CreateService(CredentialsCheckResult.Success(User));
-        var thisDevice = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
-        var otherDevice = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
+        var thisDevice = await LoginSessionAsync(service);
+        var otherDevice = await LoginSessionAsync(service);
         var rotated = await service.RefreshAsync(thisDevice.RefreshToken, TestContext.Current.CancellationToken);
 
         await service.LogoutAsync(rotated.RefreshToken, TestContext.Current.CancellationToken);
@@ -120,8 +120,8 @@ public sealed class AuthServiceTests
     public async Task Refresh_does_not_revoke_other_sessions_when_token_was_revoked_by_logout()
     {
         var service = CreateService(CredentialsCheckResult.Success(User));
-        var thisDevice = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
-        var otherDevice = await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken);
+        var thisDevice = await LoginSessionAsync(service);
+        var otherDevice = await LoginSessionAsync(service);
         await service.LogoutAsync(thisDevice.RefreshToken, TestContext.Current.CancellationToken);
 
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
@@ -146,32 +146,11 @@ public sealed class AuthServiceTests
             CreateService(CredentialsCheckResult.Invalid).GetCurrentUserAsync(Guid.CreateVersion7(), TestContext.Current.CancellationToken));
     }
 
-    private static string Hash(string token) => $"hash:{token}";
+    private static string Hash(string token) => FakeTokenService.Hash(token);
 
-    private AuthService CreateService(CredentialsCheckResult result) =>
-        new(new FakeIdentityService(result), _tokens, _refreshTokens, _refreshTokens, _clock);
+    private AuthService CreateService(CredentialsCheckResult result, bool twoFactorRequired = false) =>
+        new(new FakeIdentityService(User, result), _tokens, new FakeTwoFactorPolicy(twoFactorRequired), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock);
 
-    private sealed class FakeIdentityService(CredentialsCheckResult result) : IIdentityService
-    {
-        public Task<CredentialsCheckResult> CheckCredentialsAsync(string email, string password, CancellationToken cancellationToken) =>
-            Task.FromResult(email == User.Email ? result : CredentialsCheckResult.Invalid);
-
-        public Task<UserAccount?> FindByIdAsync(Guid userId, CancellationToken cancellationToken) =>
-            Task.FromResult(userId == User.Id ? User : null);
-    }
-
-    private sealed class FakeTokenService(TimeProvider clock) : ITokenService
-    {
-        private int _counter;
-
-        public AccessToken Generate(UserAccount user) => new($"access-for-{user.Id}", clock.GetUtcNow().UtcDateTime.AddMinutes(15));
-
-        public NewRefreshToken CreateRefreshToken()
-        {
-            var token = $"refresh-{++_counter}";
-            return new NewRefreshToken(token, Hash(token), clock.GetUtcNow().UtcDateTime.AddHours(8));
-        }
-
-        public string HashRefreshToken(string token) => Hash(token);
-    }
+    private static async Task<AuthSession> LoginSessionAsync(AuthService service) =>
+        (await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken)).Session!;
 }

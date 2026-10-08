@@ -51,6 +51,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Images inside albums.</summary>
     public DbSet<AlbumMedia> AlbumMedia => Set<AlbumMedia>();
 
+    /// <summary>Feedback form templates.</summary>
+    public DbSet<FeedbackForm> FeedbackForms => Set<FeedbackForm>();
+
+    /// <summary>Feedback sessions (classes being evaluated), each with a frozen copy of its form.</summary>
+    public DbSet<FeedbackSession> FeedbackSessions => Set<FeedbackSession>();
+
+    /// <summary>Anonymous feedback responses (no IP, user agent, exact time or user).</summary>
+    public DbSet<FeedbackResponse> FeedbackResponses => Set<FeedbackResponse>();
+
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

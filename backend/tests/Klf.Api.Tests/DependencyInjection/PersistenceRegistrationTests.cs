@@ -73,6 +73,34 @@ public sealed class PersistenceRegistrationTests(RealPersistenceApiFactory facto
     }
 
     [Fact]
+    public void Two_factor_policy_is_required_by_default_when_not_configured_otherwise()
+    {
+        using var scope = factory.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<Klf.Application.Interfaces.Identity.ITwoFactorPolicy>());
+    }
+
+    [Fact]
+    public void Email_sender_and_links_are_registered_when_app_starts()
+    {
+        using var scope = factory.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<Klf.Application.Interfaces.Email.IEmailSender>());
+        Assert.NotNull(scope.ServiceProvider.GetService<Klf.Application.Interfaces.Links.IFrontendLinks>());
+    }
+
+    [Fact]
+    public void Feedback_repositories_and_poster_renderer_are_registered_when_app_starts()
+    {
+        using var scope = factory.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<IFeedbackFormRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IFeedbackSessionRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IFeedbackResponseRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<Klf.Application.Interfaces.Documents.IFeedbackPosterRenderer>());
+    }
+
+    [Fact]
     public void Refresh_token_repository_is_registered_when_app_starts()
     {
         using var scope = factory.Services.CreateScope();

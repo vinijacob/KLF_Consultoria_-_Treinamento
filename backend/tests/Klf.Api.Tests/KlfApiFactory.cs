@@ -1,4 +1,5 @@
 using Klf.Api.Tests.Fakes;
+using Klf.Application.Interfaces.Email;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Interfaces.Storage;
@@ -27,6 +28,10 @@ public class KlfApiFactory : WebApplicationFactory<Program>
 
     public FakeFileStorage Storage { get; } = new();
 
+    public FakeEmailSender Email { get; } = new();
+
+    public FakeIdentityService Identity { get; } = new(new UserAccount(Guid.CreateVersion7(), AdminEmail, "Admin Teste", ["Admin"]));
+
     protected virtual bool UseInMemoryPersistence => true;
 
     public HttpClient CreateHttpsClient() =>
@@ -41,14 +46,15 @@ public class KlfApiFactory : WebApplicationFactory<Program>
             ["Jwt:SigningKey"] = "test-signing-key-that-is-long-enough-for-hmac-sha256",
             ["ConnectionStrings:Default"] = "Host=localhost;Database=klf_test_never_opened",
             ["RateLimiting:LoginPerMinute"] = "1000",
+            ["TwoFactor:Required"] = "false",
         }));
 
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IIdentityService>();
-            services.AddSingleton<IIdentityService>(new FakeIdentityService(
-                new UserAccount(Guid.CreateVersion7(), AdminEmail, "Admin Teste", ["Admin"]),
-                AdminPassword));
+            services.AddSingleton<IIdentityService>(Identity);
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Email);
 
             if (UseInMemoryPersistence)
             {
@@ -62,17 +68,6 @@ public class KlfApiFactory : WebApplicationFactory<Program>
                 services.AddSingleton<IFileStorage>(Storage);
             }
         });
-    }
-
-    private sealed class FakeIdentityService(UserAccount user, string password) : IIdentityService
-    {
-        public Task<CredentialsCheckResult> CheckCredentialsAsync(string email, string password1, CancellationToken cancellationToken) =>
-            Task.FromResult(email == user.Email && password1 == password
-                ? CredentialsCheckResult.Success(user)
-                : CredentialsCheckResult.Invalid);
-
-        public Task<UserAccount?> FindByIdAsync(Guid userId, CancellationToken cancellationToken) =>
-            Task.FromResult(userId == user.Id ? user : null);
     }
 }
 

@@ -30,13 +30,23 @@ internal sealed partial class ExceptionHandlingMiddleware(
 
             if (problem.Status >= StatusCodes.Status500InternalServerError)
             {
-                LogUnhandledException(logger, exception);
+                if (context.Request.Path.StartsWithSegments(AnonymousFeedbackPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    LogAnonymousFeedbackFailure(logger, exception.GetType().Name);
+                }
+                else
+                {
+                    LogUnhandledException(logger, exception);
+                }
             }
 
             context.Response.StatusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
             await context.Response.WriteAsJsonAsync(problem, problem.GetType(), options: null, "application/problem+json");
         }
     }
+
+    /// <summary>Anonymous feedback routes: errors there are logged without path, message or stack trace (no trace of a respondent).</summary>
+    internal const string AnonymousFeedbackPath = "/api/v1/public/feedback";
 
     /// <summary>Maps an exception to the <see cref="ProblemDetails"/> returned to the client.</summary>
     internal static ProblemDetails ToProblemDetails(Exception exception) => exception switch
@@ -55,6 +65,9 @@ internal sealed partial class ExceptionHandlingMiddleware(
 
     private static ProblemDetails Problem(int status, string title, string detail) =>
         new() { Status = status, Title = title, Detail = detail };
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception on an anonymous feedback route ({ExceptionType}); details omitted on purpose")]
+    private static partial void LogAnonymousFeedbackFailure(ILogger logger, string exceptionType);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception")]
     private static partial void LogUnhandledException(ILogger logger, Exception exception);

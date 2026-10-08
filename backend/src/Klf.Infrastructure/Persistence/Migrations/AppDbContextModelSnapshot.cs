@@ -25,7 +25,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.Album", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CoverId")
@@ -76,7 +75,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.AlbumMedia", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AlbumId")
@@ -111,7 +109,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.CareerEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -160,7 +157,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.Client", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -199,10 +195,143 @@ namespace Klf.Infrastructure.Persistence.Migrations
                     b.ToTable("Clients");
                 });
 
+            modelBuilder.Entity("Klf.Domain.Entities.FeedbackForm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Definition")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FeedbackForms");
+                });
+
+            modelBuilder.Entity("Klf.Domain.Entities.FeedbackResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Answers")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("SubmittedOn")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("FeedbackResponses");
+                });
+
+            modelBuilder.Entity("Klf.Domain.Entities.FeedbackSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ClosesAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Definition")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FormDescription")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("FormId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FormTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("MaxResponses")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("OpensAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PublicCode")
+                        .IsRequired()
+                        .HasMaxLength(22)
+                        .HasColumnType("character(22)")
+                        .IsFixedLength();
+
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("FormId");
+
+                    b.HasIndex("OpensAt");
+
+                    b.HasIndex("PublicCode")
+                        .IsUnique();
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("OwnerId", "OpensAt");
+
+                    b.ToTable("FeedbackSessions");
+                });
+
             modelBuilder.Entity("Klf.Domain.Entities.MediaAsset", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("AltText")
@@ -247,7 +376,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.Post", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
@@ -326,7 +454,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -368,7 +495,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.Service", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Audience")
@@ -436,7 +562,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.SiteSetting", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -465,7 +590,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Klf.Domain.Entities.Testimonial", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("AuthorName")
@@ -753,6 +877,33 @@ namespace Klf.Infrastructure.Persistence.Migrations
                     b.HasOne("Klf.Domain.Entities.MediaAsset", null)
                         .WithMany()
                         .HasForeignKey("LogoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Klf.Domain.Entities.FeedbackResponse", b =>
+                {
+                    b.HasOne("Klf.Domain.Entities.FeedbackSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Klf.Domain.Entities.FeedbackSession", b =>
+                {
+                    b.HasOne("Klf.Domain.Entities.Client", null)
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Klf.Domain.Entities.FeedbackForm", null)
+                        .WithMany()
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Klf.Domain.Entities.Service", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

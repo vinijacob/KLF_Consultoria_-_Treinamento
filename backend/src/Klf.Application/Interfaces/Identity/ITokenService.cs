@@ -22,4 +22,13 @@ public interface ITokenService
 
     /// <summary>Hashes a refresh token received from the browser, to look it up in the database.</summary>
     string HashRefreshToken(string token);
+
+    /// <summary>
+    /// Creates a 5-minute token proving the password step of the sign-in was passed. It is not an access token:
+    /// it only works on the two-factor endpoints.
+    /// </summary>
+    string CreateTwoFactorChallenge(Guid userId);
+
+    /// <summary>Returns the user a two-factor challenge token was issued for, or <see langword="null"/> if it is invalid or expired.</summary>
+    Task<Guid?> ReadTwoFactorChallengeAsync(string token);
 }

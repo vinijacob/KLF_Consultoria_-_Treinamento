@@ -18,6 +18,12 @@ internal static class AuthenticationExtensions
     public const string LoginRateLimitPolicy = "login";
 
     /// <summary>
+    /// Rate limiting policy of the anonymous feedback routes: <c>RateLimiting:FeedbackPerMinute</c> requests per minute per IP (default 120).
+    /// Generous because a whole class often shares one Wi-Fi (one IP). The IP lives only in memory, never in the database.
+    /// </summary>
+    public const string FeedbackRateLimitPolicy = "feedback";
+
+    /// <summary>
     /// Validates incoming JWTs with the same <see cref="JwtOptions"/> used to issue them.
     /// Inbound claim mapping is disabled, so claims keep their short names (<c>sub</c>, <c>role</c>, <c>name</c>).
     /// </summary>
@@ -56,6 +62,13 @@ internal static class AuthenticationExtensions
                 _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = context.RequestServices.GetRequiredService<IConfiguration>().GetValue("RateLimiting:LoginPerMinute", 10),
+                    Window = TimeSpan.FromMinutes(1),
+                }));
+            options.AddPolicy(FeedbackRateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = context.RequestServices.GetRequiredService<IConfiguration>().GetValue("RateLimiting:FeedbackPerMinute", 120),
                     Window = TimeSpan.FromMinutes(1),
                 }));
         });

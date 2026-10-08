@@ -1,7 +1,12 @@
 using Klf.Application.Interfaces.Content;
+using Klf.Application.Interfaces.Documents;
+using Klf.Application.Interfaces.Email;
 using Klf.Application.Interfaces.Identity;
+using Klf.Application.Interfaces.Links;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Interfaces.Storage;
+using Klf.Infrastructure.Documents;
+using Klf.Infrastructure.Email;
 using Klf.Infrastructure.Identity;
 using Klf.Infrastructure.Persistence;
 using Klf.Infrastructure.Repositories;
@@ -59,6 +64,26 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromMinutes(30));
+
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<FrontendOptions>(configuration.GetSection(FrontendOptions.SectionName));
+        services.AddSingleton<EmailQueue>();
+        services.AddSingleton<IEmailSender, QueuedEmailSender>();
+        services.AddSingleton<IFrontendLinks, FrontendLinks>();
+        services.AddHostedService<EmailDispatcher>();
+        services.AddHttpClient<ResendEmailTransport>(client => client.BaseAddress = new Uri("https://api.resend.com/"));
+        services.AddScoped<IEmailTransport>(sp =>
+            sp.GetRequiredService<IOptions<EmailOptions>>().Value.Provider switch
+            {
+                EmailOptions.ResendProvider => sp.GetRequiredService<ResendEmailTransport>(),
+                EmailOptions.LogProvider => ActivatorUtilities.CreateInstance<LogEmailTransport>(sp),
+                var other => throw new InvalidOperationException($"Email:Provider inválido: '{other}'. Use Log ou Resend."),
+            });
+
+        services.Configure<TwoFactorOptions>(configuration.GetSection(TwoFactorOptions.SectionName));
+        services.AddSingleton<ITwoFactorPolicy, TwoFactorPolicy>();
+
         services.Configure<AdminSeedOptions>(configuration.GetSection(AdminSeedOptions.SectionName));
 
         services.AddSingleton(TimeProvider.System);
@@ -92,6 +117,10 @@ public static class DependencyInjection
         services.AddScoped<ITestimonialRepository, TestimonialRepository>();
         services.AddScoped<IMediaAssetRepository, MediaAssetRepository>();
         services.AddScoped<IAlbumRepository, AlbumRepository>();
+        services.AddScoped<IFeedbackFormRepository, FeedbackFormRepository>();
+        services.AddScoped<IFeedbackSessionRepository, FeedbackSessionRepository>();
+        services.AddScoped<IFeedbackResponseRepository, FeedbackResponseRepository>();
+        services.AddSingleton<IFeedbackPosterRenderer, FeedbackPosterRenderer>();
 
         return services;
     }
