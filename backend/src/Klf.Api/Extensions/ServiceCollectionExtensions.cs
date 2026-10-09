@@ -39,6 +39,7 @@ internal static class ServiceCollectionExtensions
                 .WithOrigins(configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
                 .AllowAnyHeader()
                 .AllowAnyMethod()
+                .WithExposedHeaders("Content-Disposition")
                 .AllowCredentials()));
 
         return services;

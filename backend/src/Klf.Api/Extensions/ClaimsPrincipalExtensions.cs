@@ -1,7 +1,5 @@
 using System.Security.Claims;
 
-using Klf.Application.Services.Feedback;
-using Klf.Domain.Common;
 using Klf.Domain.Exceptions;
 using Klf.Infrastructure.Identity;
 
@@ -16,8 +14,4 @@ internal static class ClaimsPrincipalExtensions
         Guid.TryParse(principal.FindFirstValue(ClaimTypeNames.Subject), out var userId)
             ? userId
             : throw new UnauthorizedException("Sessão inválida. Entre novamente.");
-
-    /// <summary>The caller of a feedback operation: admins see every session, instructors only their own.</summary>
-    public static FeedbackActor ToFeedbackActor(this ClaimsPrincipal principal) =>
-        new(principal.GetUserId(), principal.IsInRole(Roles.Admin));
 }

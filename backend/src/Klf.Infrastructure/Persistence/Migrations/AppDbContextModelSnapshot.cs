@@ -324,8 +324,6 @@ namespace Klf.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.HasIndex("OwnerId", "OpensAt");
-
                     b.ToTable("FeedbackSessions");
                 });
 

@@ -52,6 +52,33 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
+    public async Task Login_throws_unauthorized_when_account_has_no_panel_role()
+    {
+        var outsider = User with { Roles = ["Instructor"] };
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            CreateService(CredentialsCheckResult.Success(outsider), identity: new FakeIdentityService(outsider))
+                .LoginAsync(ValidLogin, TestContext.Current.CancellationToken));
+
+        Assert.Equal("Esta conta não tem acesso ao painel.", exception.Message);
+        Assert.Empty(_refreshTokens.Tokens);
+    }
+
+    [Fact]
+    public async Task Refresh_ends_session_when_user_lost_every_panel_role()
+    {
+        var identity = new FakeIdentityService(User);
+        var service = CreateService(CredentialsCheckResult.Success(User), identity: identity);
+        var login = await LoginSessionAsync(service);
+        identity.UserRoles = [];
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            service.RefreshAsync(login.RefreshToken, TestContext.Current.CancellationToken));
+
+        Assert.False(Assert.Single(_refreshTokens.Tokens).IsActive(_clock.Now.UtcDateTime));
+    }
+
+    [Fact]
     public async Task Refresh_rotates_token_in_same_session_when_token_is_active()
     {
         var service = CreateService(CredentialsCheckResult.Success(User));
@@ -148,8 +175,8 @@ public sealed class AuthServiceTests
 
     private static string Hash(string token) => FakeTokenService.Hash(token);
 
-    private AuthService CreateService(CredentialsCheckResult result, bool twoFactorRequired = false) =>
-        new(new FakeIdentityService(User, result), _tokens, new FakeTwoFactorPolicy(twoFactorRequired), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock);
+    private AuthService CreateService(CredentialsCheckResult result, bool twoFactorRequired = false, FakeIdentityService? identity = null) =>
+        new(identity ?? new FakeIdentityService(User, result), _tokens, new FakeTwoFactorPolicy(twoFactorRequired), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock);
 
     private static async Task<AuthSession> LoginSessionAsync(AuthService service) =>
         (await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken)).Session!;

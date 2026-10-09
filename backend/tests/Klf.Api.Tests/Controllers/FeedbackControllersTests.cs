@@ -122,34 +122,34 @@ public sealed class FeedbackControllersTests : IClassFixture<KlfApiFactory>
     }
 
     [Fact]
-    public async Task Admin_routes_return_401_anonymous_403_editor_and_404_to_instructor_for_others_sessions()
+    public async Task Admin_routes_return_401_anonymous_and_403_editor()
     {
         var session = _store.SeedSession(Guid.CreateVersion7(), DateTime.UtcNow.AddHours(-1), DateTime.UtcNow.AddHours(1));
         using var anonymous = _factory.CreateClient();
         using var editor = CreateClientAs(Roles.Editor, out _);
-        using var instructor = CreateClientAs(Roles.Instructor, out _);
         var uri = new Uri($"{Sessions}/{session.Id}", UriKind.Relative);
         var token = TestContext.Current.CancellationToken;
 
         Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync(Sessions, token)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await editor.GetAsync(Sessions, token)).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await instructor.GetAsync(uri, token)).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await instructor.GetAsync(new Uri($"{uri}/results", UriKind.Relative), token)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await editor.GetAsync(uri, token)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await editor.GetAsync(Forms, token)).StatusCode);
     }
 
     [Fact]
-    public async Task Instructor_creates_own_session_and_sees_it()
+    public async Task Admin_creates_session_recorded_as_creator_and_sees_sessions_of_others()
     {
         var token = TestContext.Current.CancellationToken;
-        using var instructor = CreateClientAs(Roles.Instructor, out var instructorId);
+        using var admin = CreateClientAs(Roles.Admin, out var adminId);
         var form = new Klf.Domain.Entities.FeedbackForm("Padrão", null, FeedbackSamples.Definition());
         _store.Forms.Add(form);
+        var other = _store.SeedSession(Guid.CreateVersion7(), DateTime.UtcNow.AddHours(-1), DateTime.UtcNow.AddHours(1));
 
-        var created = await (await instructor.PostAsJsonAsync(Sessions, SessionRequest(form.Id), Json, token))
+        var created = await (await admin.PostAsJsonAsync(Sessions, SessionRequest(form.Id), Json, token))
             .Content.ReadFromJsonAsync<FeedbackSessionResponse>(Json, token);
-        var get = await instructor.GetAsync(new Uri($"{Sessions}/{created!.Id}", UriKind.Relative), token);
+        var get = await admin.GetAsync(new Uri($"{Sessions}/{other.Id}", UriKind.Relative), token);
 
-        Assert.Equal(instructorId, created.OwnerId);
+        Assert.Equal(adminId, created!.OwnerId);
         Assert.Equal(HttpStatusCode.OK, get.StatusCode);
     }
 

@@ -3,6 +3,7 @@ using Klf.Application.Interfaces.Email;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Interfaces.Links;
 using Klf.Application.Interfaces.Repositories;
+using Klf.Domain.Common;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -23,6 +24,11 @@ internal sealed class AuthService(
     public async Task<LoginResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await identityService.CheckCredentialsAsync(request.Email.Trim(), request.Password, cancellationToken);
+
+        if (result.User is { } account && !Roles.CanSignIn(account.Roles))
+        {
+            throw new UnauthorizedException("Esta conta não tem acesso ao painel.");
+        }
 
         return result switch
         {
@@ -157,7 +163,7 @@ internal sealed class AuthService(
 
         var user = await identityService.FindByIdAsync(stored.UserId, cancellationToken);
 
-        if (user is null)
+        if (user is null || !Roles.CanSignIn(user.Roles))
         {
             stored.Revoke(now);
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -229,8 +235,9 @@ internal sealed class AuthService(
     private async Task<UserAccount> ReadChallengeUserAsync(string token, CancellationToken cancellationToken)
     {
         var userId = await tokenService.ReadTwoFactorChallengeAsync(token) ?? throw ChallengeExpired();
+        var user = await identityService.FindByIdAsync(userId, cancellationToken);
 
-        return await identityService.FindByIdAsync(userId, cancellationToken) ?? throw ChallengeExpired();
+        return user is not null && Roles.CanSignIn(user.Roles) ? user : throw ChallengeExpired();
     }
 
     private static UnauthorizedException ChallengeExpired() =>

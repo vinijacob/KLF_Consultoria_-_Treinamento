@@ -67,11 +67,6 @@ internal sealed class FeedbackSessionRepository(AppDbContext context) : IFeedbac
     {
         var query = context.FeedbackSessions.AsNoTracking();
 
-        if (filter.OwnerId is { } ownerId)
-        {
-            query = query.Where(session => session.OwnerId == ownerId);
-        }
-
         if (filter.ClientId is { } clientId)
         {
             query = query.Where(session => session.ClientId == clientId);

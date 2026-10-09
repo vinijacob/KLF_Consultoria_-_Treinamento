@@ -20,6 +20,7 @@ namespace Klf.Api.Tests.Controllers;
 
 public sealed class CareerControllersTests : IClassFixture<KlfApiFactory>
 {
+    private const string NoPanelRole = "Visitor";
     private static readonly Uri AdminUri = new("/api/v1/admin/career", UriKind.Relative);
     private static readonly Uri PublicUri = new("/api/v1/public/career", UriKind.Relative);
 
@@ -59,9 +60,9 @@ public sealed class CareerControllersTests : IClassFixture<KlfApiFactory>
     }
 
     [Fact]
-    public async Task Admin_create_returns_403_when_user_is_instructor()
+    public async Task Admin_create_returns_403_when_user_has_no_panel_role()
     {
-        using var client = CreateClientAs(Roles.Instructor);
+        using var client = CreateClientAs(NoPanelRole);
 
         var response = await client.PostAsJsonAsync(AdminUri, ValidRequest(), TestContext.Current.CancellationToken);
 

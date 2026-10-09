@@ -22,6 +22,7 @@ namespace Klf.Api.Tests.Controllers;
 
 public sealed class MediaAndAlbumsControllersTests : IClassFixture<KlfApiFactory>
 {
+    private const string NoPanelRole = "Visitor";
     private static readonly Uri AdminMedia = new("/api/v1/admin/media", UriKind.Relative);
     private static readonly Uri AdminAlbums = new("/api/v1/admin/albums", UriKind.Relative);
     private static readonly Uri PublicAlbums = new("/api/v1/public/albums", UriKind.Relative);
@@ -45,13 +46,13 @@ public sealed class MediaAndAlbumsControllersTests : IClassFixture<KlfApiFactory
     }
 
     [Fact]
-    public async Task Upload_returns_401_without_token_and_403_for_instructor()
+    public async Task Upload_returns_401_without_token_and_403_without_panel_role()
     {
         using var anonymous = _factory.CreateClient();
-        using var instructor = CreateClientAs(Roles.Instructor);
+        using var outsider = CreateClientAs(NoPanelRole);
 
         var unauthorized = await anonymous.PostAsync(AdminMedia, Form(Png, "a.png"), TestContext.Current.CancellationToken);
-        var forbidden = await instructor.PostAsync(AdminMedia, Form(Png, "a.png"), TestContext.Current.CancellationToken);
+        var forbidden = await outsider.PostAsync(AdminMedia, Form(Png, "a.png"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);

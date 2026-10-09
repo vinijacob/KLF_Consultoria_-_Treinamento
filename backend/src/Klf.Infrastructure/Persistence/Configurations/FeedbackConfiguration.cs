@@ -26,7 +26,6 @@ internal sealed class FeedbackSessionConfiguration : IEntityTypeConfiguration<Fe
         builder.Property(x => x.Definition).HasJsonConversion();
 
         builder.HasIndex(x => x.PublicCode).IsUnique();
-        builder.HasIndex(x => new { x.OwnerId, x.OpensAt });
         builder.HasIndex(x => x.OpensAt);
 
         builder.HasOne<FeedbackForm>().WithMany().HasForeignKey(x => x.FormId).OnDelete(DeleteBehavior.Restrict);

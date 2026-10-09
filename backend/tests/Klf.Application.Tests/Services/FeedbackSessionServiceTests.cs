@@ -10,8 +10,7 @@ namespace Klf.Application.Tests.Services;
 public sealed class FeedbackSessionServiceTests
 {
     private static readonly DateTimeOffset Now = new(2026, 10, 7, 14, 0, 0, TimeSpan.Zero);
-    private static readonly FeedbackActor Admin = new(Guid.CreateVersion7(), IsAdmin: true);
-    private static readonly FeedbackActor Instructor = new(Guid.CreateVersion7(), IsAdmin: false);
+    private static readonly Guid UserId = Guid.CreateVersion7();
 
     private readonly InMemoryFeedbackStore _store = new();
     private readonly InMemoryClientRepository _clients = new();
@@ -31,11 +30,11 @@ public sealed class FeedbackSessionServiceTests
         var form = new FeedbackForm("Padrão", "Desc", FeedbackSamples.Definition());
         _store.Forms.Add(form);
 
-        var response = await _service.CreateAsync(Instructor, Request(form.Id), TestContext.Current.CancellationToken);
+        var response = await _service.CreateAsync(UserId, Request(form.Id), TestContext.Current.CancellationToken);
         form.Update("Mudou", null, new FormDefinition([new FormSection("x", "X", null, FeedbackTopic.Training, [FeedbackSamples.Question("q", FeedbackQuestionType.ShortText)])]));
 
         var session = Assert.Single(_store.Sessions);
-        Assert.Equal(Instructor.UserId, session.OwnerId);
+        Assert.Equal(UserId, session.OwnerId);
         Assert.Equal("Padrão", session.FormTitle);
         Assert.Equal(2, session.Definition.Sections.Count);
         Assert.Equal($"https://klf.test/avaliar/{session.PublicCode}", response.PublicUrl);
@@ -49,9 +48,9 @@ public sealed class FeedbackSessionServiceTests
         _store.Forms.Add(form);
         var token = TestContext.Current.CancellationToken;
 
-        var noForm = await Assert.ThrowsAsync<ValidationException>(() => _service.CreateAsync(Admin, Request(Guid.CreateVersion7()), token));
-        var noClient = await Assert.ThrowsAsync<ValidationException>(() => _service.CreateAsync(Admin, Request(form.Id) with { ClientId = Guid.CreateVersion7() }, token));
-        var noService = await Assert.ThrowsAsync<ValidationException>(() => _service.CreateAsync(Admin, Request(form.Id) with { ServiceId = Guid.CreateVersion7() }, token));
+        var noForm = await Assert.ThrowsAsync<ValidationException>(() => _service.CreateAsync(UserId, Request(Guid.CreateVersion7()), token));
+        var noClient = await Assert.ThrowsAsync<ValidationException>(() => _service.CreateAsync(UserId, Request(form.Id) with { ClientId = Guid.CreateVersion7() }, token));
+        var noService = await Assert.ThrowsAsync<ValidationException>(() => _service.CreateAsync(UserId, Request(form.Id) with { ServiceId = Guid.CreateVersion7() }, token));
 
         Assert.Contains("FormId", noForm.Errors.Keys);
         Assert.Contains("ClientId", noClient.Errors.Keys);
@@ -60,30 +59,12 @@ public sealed class FeedbackSessionServiceTests
     }
 
     [Fact]
-    public async Task Instructor_sees_only_own_sessions_and_gets_404_for_others()
-    {
-        var own = _store.SeedSession(Instructor.UserId, Now.UtcDateTime, Now.UtcDateTime.AddHours(2), title: "Minha");
-        var other = _store.SeedSession(Guid.CreateVersion7(), Now.UtcDateTime, Now.UtcDateTime.AddHours(2), title: "De outro");
-        var token = TestContext.Current.CancellationToken;
-
-        var instructorList = await _service.ListAsync(Instructor, new FeedbackSessionListRequest(), token);
-        var adminList = await _service.ListAsync(Admin, new FeedbackSessionListRequest(), token);
-
-        Assert.Equal([own.Id], instructorList.Items.Select(s => s.Id));
-        Assert.Equal(2, adminList.TotalItems);
-        await Assert.ThrowsAsync<NotFoundException>(() => _service.GetByIdAsync(Instructor, other.Id, token));
-        await Assert.ThrowsAsync<NotFoundException>(() => _service.GetResultsAsync(Instructor, other.Id, token));
-        await Assert.ThrowsAsync<NotFoundException>(() => _service.GetPosterAsync(Instructor, other.Id, token));
-        Assert.NotNull(await _service.GetByIdAsync(Admin, other.Id, token));
-    }
-
-    [Fact]
     public async Task List_reports_response_count_and_closed_status_when_limit_is_reached()
     {
-        var session = _store.SeedSession(Admin.UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1), maxResponses: 2);
+        var session = _store.SeedSession(UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1), maxResponses: 2);
         _store.SeedResponses(session, 9, 10);
 
-        var list = await _service.ListAsync(Admin, new FeedbackSessionListRequest(), TestContext.Current.CancellationToken);
+        var list = await _service.ListAsync(new FeedbackSessionListRequest(), TestContext.Current.CancellationToken);
 
         var item = Assert.Single(list.Items);
         Assert.Equal(2, item.ResponseCount);
@@ -93,26 +74,26 @@ public sealed class FeedbackSessionServiceTests
     [Fact]
     public async Task Replace_form_works_without_responses_and_throws_conflict_after_the_first()
     {
-        var session = _store.SeedSession(Admin.UserId, Now.UtcDateTime, Now.UtcDateTime.AddHours(2));
+        var session = _store.SeedSession(UserId, Now.UtcDateTime, Now.UtcDateTime.AddHours(2));
         var request = new ReplaceSessionFormRequest("Só desta turma", null, new FormDefinitionDto(
             [new FormSectionDto("s", "Seção", null, FeedbackTopic.Training, [new FormQuestionDto("q", FeedbackQuestionType.ShortText, "Algo?", null, true, null, null, null, null, null, null)])]));
         var token = TestContext.Current.CancellationToken;
 
-        var replaced = await _service.ReplaceFormAsync(Admin, session.Id, request, token);
+        var replaced = await _service.ReplaceFormAsync(session.Id, request, token);
         _store.SeedResponses(session, 9);
 
         Assert.Equal("Só desta turma", replaced.FormTitle);
-        await Assert.ThrowsAsync<ConflictException>(() => _service.ReplaceFormAsync(Admin, session.Id, request, token));
+        await Assert.ThrowsAsync<ConflictException>(() => _service.ReplaceFormAsync(session.Id, request, token));
     }
 
     [Fact]
     public async Task Close_and_reopen_change_status()
     {
-        var session = _store.SeedSession(Admin.UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
+        var session = _store.SeedSession(UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
         var token = TestContext.Current.CancellationToken;
 
-        var closed = await _service.CloseAsync(Admin, session.Id, token);
-        var reopened = await _service.ReopenAsync(Admin, session.Id, token);
+        var closed = await _service.CloseAsync(session.Id, token);
+        var reopened = await _service.ReopenAsync(session.Id, token);
 
         Assert.Equal(FeedbackSessionStatus.Closed, closed.Status);
         Assert.Equal(FeedbackSessionStatus.Open, reopened.Status);
@@ -121,10 +102,10 @@ public sealed class FeedbackSessionServiceTests
     [Fact]
     public async Task Results_hide_everything_below_three_responses()
     {
-        var session = _store.SeedSession(Admin.UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
+        var session = _store.SeedSession(UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
         _store.SeedResponses(session, 10, 2);
 
-        var results = await _service.GetResultsAsync(Admin, session.Id, TestContext.Current.CancellationToken);
+        var results = await _service.GetResultsAsync(session.Id, TestContext.Current.CancellationToken);
 
         Assert.False(results.HasEnoughResponses);
         Assert.Equal(2, results.ResponseCount);
@@ -135,10 +116,10 @@ public sealed class FeedbackSessionServiceTests
     [Fact]
     public async Task Results_compute_nps_averages_distribution_and_shuffled_texts()
     {
-        var session = _store.SeedSession(Admin.UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
+        var session = _store.SeedSession(UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
         _store.SeedResponses(session, 10, 9, 8, 6);
 
-        var results = await _service.GetResultsAsync(Admin, session.Id, TestContext.Current.CancellationToken);
+        var results = await _service.GetResultsAsync(session.Id, TestContext.Current.CancellationToken);
 
         Assert.True(results.HasEnoughResponses);
         Assert.Equal(new NpsResult(25, 2, 1, 1, 4), results.Nps);
@@ -155,12 +136,12 @@ public sealed class FeedbackSessionServiceTests
     [Fact]
     public async Task Results_hide_a_question_answered_by_fewer_than_three_people()
     {
-        var session = _store.SeedSession(Admin.UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
+        var session = _store.SeedSession(UserId, Now.UtcDateTime.AddHours(-1), Now.UtcDateTime.AddHours(1));
         _store.SeedResponses(session, 10, 9, 10);
         _store.Responses.Add(new FeedbackResponse(session.Id, new DateOnly(2026, 10, 7),
             [.. FeedbackSamples.ValidAnswers(nps: 2), new FeedbackAnswer("porque", "Só eu escrevi isto", null, null)]));
 
-        var results = await _service.GetResultsAsync(Admin, session.Id, TestContext.Current.CancellationToken);
+        var results = await _service.GetResultsAsync(session.Id, TestContext.Current.CancellationToken);
 
         var porque = results.Sections.SelectMany(s => s.Questions).Single(q => q.Id == "porque");
         Assert.True(porque.IsHidden);
@@ -172,15 +153,14 @@ public sealed class FeedbackSessionServiceTests
     public async Task Summary_joins_sessions_of_the_period_and_skips_small_ones_in_nps()
     {
         var day = Now.UtcDateTime;
-        var big = _store.SeedSession(Admin.UserId, day, day.AddHours(2), title: "Grande");
-        var small = _store.SeedSession(Admin.UserId, day, day.AddHours(2), title: "Pequena");
-        var old = _store.SeedSession(Admin.UserId, day.AddDays(-40), day.AddDays(-39), title: "Antiga");
+        var big = _store.SeedSession(UserId, day, day.AddHours(2), title: "Grande");
+        var small = _store.SeedSession(UserId, day, day.AddHours(2), title: "Pequena");
+        var old = _store.SeedSession(UserId, day.AddDays(-40), day.AddDays(-39), title: "Antiga");
         _store.SeedResponses(big, 10, 10, 0);
         _store.SeedResponses(small, 0, 0);
         _store.SeedResponses(old, 0, 0, 0);
 
         var summary = await _service.GetSummaryAsync(
-            Admin,
             new FeedbackSummaryRequest { From = new DateOnly(2026, 10, 1), To = new DateOnly(2026, 10, 31) },
             TestContext.Current.CancellationToken);
 
@@ -193,9 +173,9 @@ public sealed class FeedbackSessionServiceTests
     [Fact]
     public async Task Poster_uses_local_times_and_public_url()
     {
-        var session = _store.SeedSession(Admin.UserId, new DateTime(2026, 10, 7, 12, 0, 0, DateTimeKind.Utc), new DateTime(2026, 10, 7, 16, 0, 0, DateTimeKind.Utc));
+        var session = _store.SeedSession(UserId, new DateTime(2026, 10, 7, 12, 0, 0, DateTimeKind.Utc), new DateTime(2026, 10, 7, 16, 0, 0, DateTimeKind.Utc));
 
-        var file = await _service.GetPosterAsync(Admin, session.Id, TestContext.Current.CancellationToken);
+        var file = await _service.GetPosterAsync(session.Id, TestContext.Current.CancellationToken);
 
         Assert.Equal("application/pdf", file.ContentType);
         Assert.Equal(new DateTime(2026, 10, 7, 8, 0, 0), _renderer.LastPoster!.OpensAt);

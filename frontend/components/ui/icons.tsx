@@ -69,3 +69,77 @@ export function ArrowRightIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 9.5 12 15.5 18 9.5" />
+    </Icon>
+  );
+}
+
+export function ArrowUpIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 20V5M6.5 10.5 12 5l5.5 5.5" />
+    </Icon>
+  );
+}
+
+export function ArrowDownIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4v15M6.5 13.5 12 19l5.5-5.5" />
+    </Icon>
+  );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />
+    </Icon>
+  );
+}
+
+export function KeyIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="8" cy="12" r="3.5" />
+      <path d="M11.5 12H20M17 12v3.5M20 12v2.5" />
+    </Icon>
+  );
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m15.5 15.5 5 5" />
+    </Icon>
+  );
+}
+
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20 12H5M10.5 6.5 5 12l5.5 5.5" />
+    </Icon>
+  );
+}
+
+export function PauseIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M8.5 5v14M15.5 5v14" />
+    </Icon>
+  );
+}
+
+export function PlayIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M7 4.5v15L19 12 7 4.5Z" />
+    </Icon>
+  );
+}

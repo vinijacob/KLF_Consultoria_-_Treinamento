@@ -23,6 +23,7 @@ namespace Klf.Api.Tests.Controllers;
 
 public sealed class PostsControllersTests : IClassFixture<KlfApiFactory>
 {
+    private const string NoPanelRole = "Visitor";
     private static readonly Uri AdminUri = new("/api/v1/admin/posts", UriKind.Relative);
     private static readonly Uri PublicUri = new("/api/v1/public/posts", UriKind.Relative);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
@@ -88,9 +89,9 @@ public sealed class PostsControllersTests : IClassFixture<KlfApiFactory>
     }
 
     [Fact]
-    public async Task Admin_create_returns_403_when_user_is_instructor()
+    public async Task Admin_create_returns_403_when_user_has_no_panel_role()
     {
-        using var client = CreateClientAs(Guid.CreateVersion7(), Roles.Instructor);
+        using var client = CreateClientAs(Guid.CreateVersion7(), NoPanelRole);
 
         var response = await client.PostAsJsonAsync(AdminUri, ValidRequest("novo"), JsonOptions, TestContext.Current.CancellationToken);
 

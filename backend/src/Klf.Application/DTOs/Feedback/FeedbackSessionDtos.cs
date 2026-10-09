@@ -93,7 +93,7 @@ public sealed record FeedbackSessionListRequest : PagedRequest
 /// <param name="ClosedAt">When it was closed by hand (UTC).</param>
 /// <param name="ClientId">Company or store trained.</param>
 /// <param name="ServiceId">Training given.</param>
-/// <param name="OwnerId">User who manages it.</param>
+/// <param name="OwnerId">User who created it.</param>
 public sealed record FeedbackSessionResponse(
     Guid Id,
     string Title,

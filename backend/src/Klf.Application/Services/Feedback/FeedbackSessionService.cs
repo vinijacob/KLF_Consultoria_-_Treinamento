@@ -22,11 +22,10 @@ internal sealed class FeedbackSessionService(
     TimeProvider timeProvider) : IFeedbackSessionService
 {
     public async Task<PagedResponse<FeedbackSessionListItemResponse>> ListAsync(
-        FeedbackActor actor,
         FeedbackSessionListRequest request,
         CancellationToken cancellationToken)
     {
-        var filter = new FeedbackSessionFilter(OwnerOf(actor), request.ClientId, request.ServiceId, request.Search?.Trim());
+        var filter = new FeedbackSessionFilter(request.ClientId, request.ServiceId, request.Search?.Trim());
         var (items, total) = await sessions.ListAsync(filter, request.Skip, request.PageSize, cancellationToken);
         var counts = await responses.CountBySessionsAsync([.. items.Select(session => session.Id)], cancellationToken);
 
@@ -41,21 +40,21 @@ internal sealed class FeedbackSessionService(
             total);
     }
 
-    public async Task<FeedbackSessionResponse> GetByIdAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
+    public async Task<FeedbackSessionResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
 
         return await ToResponseAsync(session, cancellationToken);
     }
 
-    public async Task<FeedbackSessionResponse> CreateAsync(FeedbackActor actor, CreateFeedbackSessionRequest request, CancellationToken cancellationToken)
+    public async Task<FeedbackSessionResponse> CreateAsync(Guid userId, CreateFeedbackSessionRequest request, CancellationToken cancellationToken)
     {
         var form = await forms.GetByIdAsync(request.FormId, cancellationToken)
             ?? throw new ValidationException("FormId", "Formulário não encontrado.");
         await EnsureLinksExistAsync(request, cancellationToken);
 
         var session = new FeedbackSession(
-            actor.UserId,
+            userId,
             request.Title.Trim(),
             form.Id,
             form.Title,
@@ -73,9 +72,9 @@ internal sealed class FeedbackSessionService(
         return session.ToResponse(session.GetStatus(UtcNow, 0), 0, links.FeedbackForm(session.PublicCode));
     }
 
-    public async Task<FeedbackSessionResponse> UpdateAsync(FeedbackActor actor, Guid id, UpdateFeedbackSessionRequest request, CancellationToken cancellationToken)
+    public async Task<FeedbackSessionResponse> UpdateAsync(Guid id, UpdateFeedbackSessionRequest request, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
         await EnsureLinksExistAsync(request, cancellationToken);
 
         session.Update(
@@ -91,9 +90,9 @@ internal sealed class FeedbackSessionService(
         return await ToResponseAsync(session, cancellationToken);
     }
 
-    public async Task<FeedbackSessionResponse> ReplaceFormAsync(FeedbackActor actor, Guid id, ReplaceSessionFormRequest request, CancellationToken cancellationToken)
+    public async Task<FeedbackSessionResponse> ReplaceFormAsync(Guid id, ReplaceSessionFormRequest request, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
         var count = await responses.CountBySessionAsync(id, cancellationToken);
 
         session.ReplaceForm(
@@ -108,9 +107,9 @@ internal sealed class FeedbackSessionService(
         return session.ToResponse(session.GetStatus(UtcNow, count), count, links.FeedbackForm(session.PublicCode));
     }
 
-    public async Task<FeedbackSessionResponse> CloseAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
+    public async Task<FeedbackSessionResponse> CloseAsync(Guid id, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
 
         session.Close(UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -118,9 +117,9 @@ internal sealed class FeedbackSessionService(
         return await ToResponseAsync(session, cancellationToken);
     }
 
-    public async Task<FeedbackSessionResponse> ReopenAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
+    public async Task<FeedbackSessionResponse> ReopenAsync(Guid id, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
 
         session.Reopen();
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -128,26 +127,25 @@ internal sealed class FeedbackSessionService(
         return await ToResponseAsync(session, cancellationToken);
     }
 
-    public async Task DeleteAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
 
         sessions.Remove(session);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<FeedbackSessionResultsResponse> GetResultsAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
+    public async Task<FeedbackSessionResultsResponse> GetResultsAsync(Guid id, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
         var answered = await responses.ListBySessionsAsync([id], cancellationToken);
 
         return FeedbackResults.ForSession(session, session.GetStatus(UtcNow, answered.Count), answered);
     }
 
-    public async Task<FeedbackSummaryResponse> GetSummaryAsync(FeedbackActor actor, FeedbackSummaryRequest request, CancellationToken cancellationToken)
+    public async Task<FeedbackSummaryResponse> GetSummaryAsync(FeedbackSummaryRequest request, CancellationToken cancellationToken)
     {
         var filter = new FeedbackSessionFilter(
-            OwnerOf(actor),
             request.ClientId,
             request.ServiceId,
             OpensFrom: request.From is { } from ? AppTimeZone.ToUtc(from.ToDateTime(TimeOnly.MinValue)) : null,
@@ -184,17 +182,17 @@ internal sealed class FeedbackSessionService(
                 row.Nps))]);
     }
 
-    public async Task<FileDownload> GetQrCodeAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
+    public async Task<FileDownload> GetQrCodeAsync(Guid id, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
         var png = posterRenderer.RenderQrCodePng(links.FeedbackForm(session.PublicCode));
 
         return new FileDownload(png, "image/png", $"qrcode-{session.PublicCode}.png");
     }
 
-    public async Task<FileDownload> GetPosterAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
+    public async Task<FileDownload> GetPosterAsync(Guid id, CancellationToken cancellationToken)
     {
-        var session = await GetOwnedAsync(actor, id, cancellationToken);
+        var session = await GetSessionAsync(id, cancellationToken);
         var pdf = posterRenderer.RenderPosterPdf(new FeedbackPoster(
             session.Title,
             session.FormTitle,
@@ -207,8 +205,6 @@ internal sealed class FeedbackSessionService(
 
     private DateTime UtcNow => timeProvider.GetUtcNow().UtcDateTime;
 
-    private static Guid? OwnerOf(FeedbackActor actor) => actor.IsAdmin ? null : actor.UserId;
-
     private async Task<FeedbackSessionResponse> ToResponseAsync(FeedbackSession session, CancellationToken cancellationToken)
     {
         var count = await responses.CountBySessionAsync(session.Id, cancellationToken);
@@ -216,14 +212,9 @@ internal sealed class FeedbackSessionService(
         return session.ToResponse(session.GetStatus(UtcNow, count), count, links.FeedbackForm(session.PublicCode));
     }
 
-    private async Task<FeedbackSession> GetOwnedAsync(FeedbackActor actor, Guid id, CancellationToken cancellationToken)
-    {
-        var session = await sessions.GetByIdAsync(id, cancellationToken);
-
-        return session is not null && (actor.IsAdmin || session.OwnerId == actor.UserId)
-            ? session
-            : throw NotFoundException.For("Sessão de avaliação", id);
-    }
+    private async Task<FeedbackSession> GetSessionAsync(Guid id, CancellationToken cancellationToken) =>
+        await sessions.GetByIdAsync(id, cancellationToken)
+            ?? throw NotFoundException.For("Sessão de avaliação", id);
 
     private async Task EnsureLinksExistAsync(IFeedbackSessionFields request, CancellationToken cancellationToken)
     {

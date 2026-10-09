@@ -20,6 +20,7 @@ namespace Klf.Api.Tests.Controllers;
 
 public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfApiFactory>
 {
+    private const string NoPanelRole = "Visitor";
     private static readonly Uri AdminClients = new("/api/v1/admin/clients", UriKind.Relative);
     private static readonly Uri PublicClients = new("/api/v1/public/clients", UriKind.Relative);
     private static readonly Uri AdminTestimonials = new("/api/v1/admin/testimonials", UriKind.Relative);
@@ -56,13 +57,13 @@ public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfAp
     }
 
     [Fact]
-    public async Task Admin_clients_return_401_without_token_and_403_for_instructor()
+    public async Task Admin_clients_return_401_without_token_and_403_without_panel_role()
     {
         using var anonymous = _factory.CreateClient();
-        using var instructor = CreateClientAs(Roles.Instructor);
+        using var outsider = CreateClientAs(NoPanelRole);
 
         var unauthorized = await anonymous.GetAsync(AdminClients, TestContext.Current.CancellationToken);
-        var forbidden = await instructor.GetAsync(AdminClients, TestContext.Current.CancellationToken);
+        var forbidden = await outsider.GetAsync(AdminClients, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
@@ -169,12 +170,12 @@ public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfAp
     }
 
     [Fact]
-    public async Task Admin_testimonials_return_403_for_instructor_and_404_for_unknown_id()
+    public async Task Admin_testimonials_return_403_without_panel_role_and_404_for_unknown_id()
     {
-        using var instructor = CreateClientAs(Roles.Instructor);
+        using var outsider = CreateClientAs(NoPanelRole);
         using var admin = CreateClientAs(Roles.Admin);
 
-        var forbidden = await instructor.GetAsync(AdminTestimonials, TestContext.Current.CancellationToken);
+        var forbidden = await outsider.GetAsync(AdminTestimonials, TestContext.Current.CancellationToken);
         var notFound = await admin.PostAsync(new Uri($"{AdminTestimonials}/{Guid.CreateVersion7()}/revoke-consent", UriKind.Relative), null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);

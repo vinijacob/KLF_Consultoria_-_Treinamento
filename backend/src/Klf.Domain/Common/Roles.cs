@@ -9,9 +9,9 @@ public static class Roles
     /// <summary>Publishes site content: projects, blog posts, photos and services.</summary>
     public const string Editor = "Editor";
 
-    /// <summary>Creates feedback sessions and sees the responses of their own classes only.</summary>
-    public const string Instructor = "Instructor";
+    /// <summary>Every role, used to create them in the database on startup. Only accounts with one of them can sign in.</summary>
+    public static IReadOnlyList<string> All { get; } = [Admin, Editor];
 
-    /// <summary>Every role, used to create them in the database on startup.</summary>
-    public static IReadOnlyList<string> All { get; } = [Admin, Editor, Instructor];
+    /// <summary>Whether an account with these roles may sign in to the admin panel.</summary>
+    public static bool CanSignIn(IEnumerable<string> roles) => roles.Any(All.Contains);
 }

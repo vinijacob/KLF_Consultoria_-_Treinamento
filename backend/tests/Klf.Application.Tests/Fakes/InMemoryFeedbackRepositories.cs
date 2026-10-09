@@ -74,7 +74,6 @@ internal sealed class InMemoryFeedbackStore : IFeedbackFormRepository, IFeedback
     }
 
     private IEnumerable<FeedbackSession> Filter(FeedbackSessionFilter filter) => Sessions
-        .Where(s => filter.OwnerId is null || s.OwnerId == filter.OwnerId)
         .Where(s => filter.ClientId is null || s.ClientId == filter.ClientId)
         .Where(s => filter.ServiceId is null || s.ServiceId == filter.ServiceId)
         .Where(s => filter.OpensFrom is null || s.OpensAt >= filter.OpensFrom)

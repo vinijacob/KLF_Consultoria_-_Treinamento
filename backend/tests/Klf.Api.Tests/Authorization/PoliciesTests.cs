@@ -14,13 +14,10 @@ public sealed class PoliciesTests(KlfApiFactory factory) : IClassFixture<KlfApiF
     {
         { Policies.ManageUsers, Roles.Admin, true },
         { Policies.ManageUsers, Roles.Editor, false },
-        { Policies.ManageUsers, Roles.Instructor, false },
         { Policies.ManageContent, Roles.Admin, true },
         { Policies.ManageContent, Roles.Editor, true },
-        { Policies.ManageContent, Roles.Instructor, false },
         { Policies.ManageFeedback, Roles.Admin, true },
         { Policies.ManageFeedback, Roles.Editor, false },
-        { Policies.ManageFeedback, Roles.Instructor, true },
     };
 
     [Theory]

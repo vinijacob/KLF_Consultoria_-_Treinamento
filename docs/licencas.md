@@ -27,3 +27,5 @@ Nenhuma imagem de terceiros em uso. Fotos e logos do site são enviadas pelo pai
 | QuestPDF (backend) | Community (grátis para empresa com faturamento anual abaixo de US$ 1 milhão) | Rever se a KLF passar do limite |
 | QRCoder (backend) | MIT | |
 | Next.js, React, Tailwind CSS | MIT | |
+| Tiptap (`@tiptap/react`, `starter-kit`, `pm`) | MIT | Editor de texto do painel (só o núcleo aberto; nada do Tiptap Pro/Cloud) |
+| qrcode (node-qrcode) | MIT | QR Code do cadastro do 2FA, gerado no navegador |

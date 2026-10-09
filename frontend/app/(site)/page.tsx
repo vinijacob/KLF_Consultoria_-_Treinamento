@@ -1,6 +1,8 @@
 import { ArrowLink, Container, FramedImage, SectionHeading } from "@/components/site/blocks";
 import { ClosingCta } from "@/components/site/contact";
-import { ClientRoll, PostIndex, ServiceIndex, TestimonialQuote } from "@/components/site/lists";
+import { ClientMarquee } from "@/components/site/client-marquee";
+import { PostIndex, ServiceIndex } from "@/components/site/lists";
+import { TestimonialCarousel } from "@/components/site/testimonials";
 import { ButtonLink } from "@/components/ui/button";
 import { Kicker, Rule } from "@/components/ui/typography";
 import { copy } from "@/content/site-copy";
@@ -98,28 +100,30 @@ export default async function HomePage() {
             number={++section}
             kicker={copy.testimonials.kicker}
             title={copy.testimonials.title}
-            link={testimonials.length > 1 ? { href: "/clientes", label: "Ler outros depoimentos" } : undefined}
+            link={testimonials.length > 1 ? { href: "/clientes", label: "Ler todos os depoimentos" } : undefined}
           />
           <div className="mt-10 md:grid md:grid-cols-12">
             <div className="md:col-span-9 md:col-start-4">
-              <TestimonialQuote testimonial={featured} large />
+              <TestimonialCarousel testimonials={testimonials} />
             </div>
           </div>
         </Container>
       )}
 
       {clients.length > 0 && (
-        <Container className="mt-24">
-          <SectionHeading
-            number={++section}
-            kicker={copy.clients.kicker}
-            title={copy.clients.title}
-            link={clients.length > 8 ? { href: "/clientes", label: "Ver todas as empresas" } : undefined}
-          />
+        <>
+          <Container className="mt-24">
+            <SectionHeading
+              number={++section}
+              kicker={copy.clients.kicker}
+              title={copy.clients.title}
+              link={{ href: "/clientes", label: "Ver todas as empresas" }}
+            />
+          </Container>
           <div className="mt-10">
-            <ClientRoll clients={clients.slice(0, 8)} />
+            <ClientMarquee clients={clients} />
           </div>
-        </Container>
+        </>
       )}
 
       {posts.items.length > 0 && (

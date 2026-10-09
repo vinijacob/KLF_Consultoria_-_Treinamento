@@ -16,15 +16,12 @@ internal static class Policies
     /// <summary>Manage site content (services, posts, gallery, testimonials). Admin or Editor.</summary>
     public const string ManageContent = nameof(ManageContent);
 
-    /// <summary>
-    /// Manage feedback sessions and see responses. Admin or Instructor; restricting instructors to their own
-    /// sessions is checked in the service, because it depends on the data.
-    /// </summary>
+    /// <summary>Manage feedback forms and sessions and see responses. Admin only.</summary>
     public const string ManageFeedback = nameof(ManageFeedback);
 
     /// <summary>Registers every policy.</summary>
     public static AuthorizationBuilder AddKlfPolicies(this AuthorizationBuilder builder) => builder
         .AddPolicy(ManageUsers, policy => policy.RequireRole(Roles.Admin))
         .AddPolicy(ManageContent, policy => policy.RequireRole(Roles.Admin, Roles.Editor))
-        .AddPolicy(ManageFeedback, policy => policy.RequireRole(Roles.Admin, Roles.Instructor));
+        .AddPolicy(ManageFeedback, policy => policy.RequireRole(Roles.Admin));
 }

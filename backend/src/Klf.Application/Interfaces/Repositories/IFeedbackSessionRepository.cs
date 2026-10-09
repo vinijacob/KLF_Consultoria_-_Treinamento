@@ -3,14 +3,12 @@ using Klf.Domain.Entities;
 namespace Klf.Application.Interfaces.Repositories;
 
 /// <summary>Filters of a session query. Every filter is optional.</summary>
-/// <param name="OwnerId">Only sessions managed by this user (instructors).</param>
 /// <param name="ClientId">Only sessions of this company or store.</param>
 /// <param name="ServiceId">Only sessions of this training.</param>
 /// <param name="Search">Text searched in the session name.</param>
 /// <param name="OpensFrom">Only sessions opening at or after this time (UTC).</param>
 /// <param name="OpensBefore">Only sessions opening before this time (UTC).</param>
 public sealed record FeedbackSessionFilter(
-    Guid? OwnerId = null,
     Guid? ClientId = null,
     Guid? ServiceId = null,
     string? Search = null,

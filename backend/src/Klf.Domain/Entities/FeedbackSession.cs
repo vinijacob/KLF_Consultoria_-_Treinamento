@@ -15,7 +15,7 @@ namespace Klf.Domain.Entities;
 public sealed class FeedbackSession : SoftDeletableEntity
 {
     /// <summary>Creates a session with a new random public code.</summary>
-    /// <param name="ownerId">User who manages the session (an instructor sees only their own sessions).</param>
+    /// <param name="ownerId">User who created the session.</param>
     /// <param name="title">Internal and public name, e.g. "Loja Centro — Atendimento (manhã)".</param>
     /// <param name="formId">Template the form was copied from; optional.</param>
     /// <param name="formTitle">Title respondents see.</param>
@@ -57,7 +57,7 @@ public sealed class FeedbackSession : SoftDeletableEntity
     /// <summary>Length of <see cref="PublicCode"/>: 16 random bytes (128 bits) in Base64Url.</summary>
     public const int PublicCodeLength = 22;
 
-    /// <summary>User who manages the session.</summary>
+    /// <summary>User who created the session.</summary>
     public Guid OwnerId { get; private set; }
 
     /// <summary>Internal and public name of the session.</summary>

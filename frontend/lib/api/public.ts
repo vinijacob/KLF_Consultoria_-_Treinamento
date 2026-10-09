@@ -67,14 +67,19 @@ const emptyPage: Paged<PostListItem> = {
   hasPreviousPage: false,
 };
 
-export function getPosts({ type, page = 1, pageSize = 10 }: { type?: PostType; page?: number; pageSize?: number } = {}) {
+export function getPosts({
+  type,
+  search,
+  page = 1,
+  pageSize = 10,
+}: { type?: PostType; search?: string; page?: number; pageSize?: number } = {}) {
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (type) query.set("type", type);
+  if (search) query.set("search", search);
 
   return orFallback(get<Paged<PostListItem>>(`/posts?${query}`, "posts"), { ...emptyPage, page, pageSize });
 }
 
 export const getPost = (slug: string) => get<PostDetail>(`/posts/${encodeURIComponent(slug)}`, "posts");
 
-/** Endereço público de uma imagem pelo id (a API redireciona para o arquivo). */
-export const mediaUrl = (id: string) => `${env.publicApiUrl}/api/v1/public/media/${id}`;
+export { mediaUrl } from "@/lib/media";

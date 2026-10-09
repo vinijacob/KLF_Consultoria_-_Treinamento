@@ -1,20 +1,32 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { Kicker } from "@/components/ui/typography";
+import { cn } from "@/lib/cn";
 import { formatDate, formatWorkload, postTypeLabel, serviceFormatLabel, twoDigits } from "@/lib/format";
 import type { Client, PostListItem, ServiceListItem, Testimonial } from "@/types/site";
 
-/** Serviços como um sumário de revista: número, título, resumo e ficha técnica em uma linha. */
-export function ServiceIndex({ services }: { services: ServiceListItem[] }) {
+/**
+ * Serviços como um sumário de revista: número, título, resumo e ficha técnica em uma linha.
+ * `numbers` mantém a numeração original quando a lista está filtrada pela busca.
+ */
+export function ServiceIndex({
+  services,
+  numbers,
+  itemClassName,
+}: {
+  services: ServiceListItem[];
+  numbers?: number[];
+  itemClassName?: string;
+}) {
   return (
     <ol className="border-t border-ink">
       {services.map((service, index) => (
-        <li key={service.id} className="border-b border-rule">
+        <li key={service.id} className={cn("border-b border-rule", itemClassName)}>
           <Link
             href={`/servicos/${service.slug}`}
             className="group grid gap-x-8 gap-y-3 py-7 md:grid-cols-12 md:items-baseline"
           >
-            <span className="font-mono text-sm text-ink-soft md:col-span-1">{twoDigits(index + 1)}</span>
+            <span className="font-mono text-sm text-ink-soft md:col-span-1">{twoDigits(numbers?.[index] ?? index + 1)}</span>
             <span className="md:col-span-6">
               <span className="block font-serif text-[1.75rem] leading-tight group-hover:underline group-hover:decoration-1 group-hover:underline-offset-[6px]">
                 {service.title}

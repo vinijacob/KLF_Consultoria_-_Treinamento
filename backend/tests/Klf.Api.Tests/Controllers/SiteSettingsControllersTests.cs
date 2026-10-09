@@ -18,6 +18,7 @@ namespace Klf.Api.Tests.Controllers;
 
 public sealed class SiteSettingsControllersTests : IClassFixture<KlfApiFactory>
 {
+    private const string NoPanelRole = "Visitor";
     private static readonly Uri PublicUri = new("/api/v1/public/settings", UriKind.Relative);
     private static readonly Uri AdminContactUri = new("/api/v1/admin/settings/contact", UriKind.Relative);
 
@@ -70,9 +71,9 @@ public sealed class SiteSettingsControllersTests : IClassFixture<KlfApiFactory>
     }
 
     [Fact]
-    public async Task Admin_put_returns_403_when_user_is_instructor()
+    public async Task Admin_put_returns_403_when_user_has_no_panel_role()
     {
-        using var client = CreateClientAs(Roles.Instructor);
+        using var client = CreateClientAs(NoPanelRole);
 
         var response = await client.PutAsJsonAsync(AdminContactUri, new { email = "a@b.com" }, TestContext.Current.CancellationToken);
 
