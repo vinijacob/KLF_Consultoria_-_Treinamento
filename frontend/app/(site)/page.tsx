@@ -1,37 +1,143 @@
-const pillars = ["Consultoria", "Treinamentos", "Avaliações"];
+import { ArrowLink, Container, FramedImage, SectionHeading } from "@/components/site/blocks";
+import { ClosingCta } from "@/components/site/contact";
+import { ClientRoll, PostIndex, ServiceIndex, TestimonialQuote } from "@/components/site/lists";
+import { ButtonLink } from "@/components/ui/button";
+import { Kicker, Rule } from "@/components/ui/typography";
+import { copy } from "@/content/site-copy";
+import { getClients, getPosts, getServices, getSettings, getTestimonials } from "@/lib/api/public";
 
-export default function HomePage() {
+const romans = ["I", "II", "III"];
+
+export default async function HomePage() {
+  const [settings, services, testimonials, clients, posts] = await Promise.all([
+    getSettings(),
+    getServices(),
+    getTestimonials(),
+    getClients(),
+    getPosts({ pageSize: 3 }),
+  ]);
+
+  const about = settings.about ?? {};
+  const featured = testimonials[0];
+  let section = 0;
+
   return (
-    <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-      <span className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-1.5 text-xs font-medium tracking-wide text-muted uppercase backdrop-blur">
-        <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-        Site em construção
-      </span>
+    <>
+      <Container className="pt-10 sm:pt-14">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-7">
+            <Kicker>{copy.hero.kicker}</Kicker>
+            <h1 className="mt-6 text-[clamp(3.25rem,9vw,6.5rem)] leading-[0.95] font-normal tracking-[-0.03em]">
+              {copy.hero.titleStart} <em className="font-normal">{copy.hero.titleEmphasis}</em>
+            </h1>
+            <Rule variant="accent" className="mt-10 max-w-24" />
+            <p className="mt-8 max-w-xl text-[1.375rem] leading-relaxed">{copy.hero.lede}</p>
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <ButtonLink href="/servicos" size="lg">
+                {copy.hero.primary}
+              </ButtonLink>
+              <ArrowLink href="/contato">{copy.hero.secondary}</ArrowLink>
+            </div>
+          </div>
+          <div className="lg:col-span-5 lg:pt-4">
+            <FramedImage alt={copy.person.name} caption={copy.hero.portraitCaption} placeholder="Retrato em breve" priority />
+          </div>
+        </div>
+      </Container>
 
-      <h1 className="font-display text-7xl leading-none font-semibold tracking-tight text-brand sm:text-9xl">
-        KLF
-      </h1>
-      <p className="mt-4 font-display text-2xl text-foreground italic sm:text-4xl">
-        Consultoria <span className="text-accent">&amp;</span> Treinamento
-      </p>
+      <Container className="mt-20">
+        <ul className="grid border-y border-ink md:grid-cols-3 md:divide-x md:divide-rule">
+          {copy.pillars.map((pillar, index) => (
+            <li key={pillar.title} className="border-b border-rule px-0 py-8 last:border-b-0 md:border-b-0 md:px-8 md:first:pl-0 md:last:pr-0">
+              <p className="font-mono text-sm text-accent">{romans[index]}</p>
+              <h2 className="mt-3 text-3xl">{pillar.title}</h2>
+              <p className="mt-3 text-lg leading-relaxed text-ink-soft">{pillar.text}</p>
+            </li>
+          ))}
+        </ul>
+      </Container>
 
-      <div className="my-10 h-px w-24 bg-linear-to-r from-transparent via-accent to-transparent" />
+      <Container className="mt-24">
+        <SectionHeading
+          number={++section}
+          kicker={copy.services.kicker}
+          title={copy.services.title}
+          intro={copy.services.intro}
+          link={services.length > 4 ? { href: "/servicos", label: "Ver todos os serviços" } : undefined}
+        />
+        <div className="mt-10">
+          {services.length > 0 ? (
+            <ServiceIndex services={services.slice(0, 4)} />
+          ) : (
+            <p className="border-y border-rule py-8 font-sans text-ink-soft">{copy.services.empty}</p>
+          )}
+        </div>
+      </Container>
 
-      <p className="max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-        Desenvolvendo pessoas e fortalecendo equipes. Em breve, um novo espaço
-        para conhecer nossos serviços, projetos e conteúdos.
-      </p>
+      <Container className="mt-24">
+        <SectionHeading number={++section} kicker={copy.about.kicker} title={copy.about.title} />
+        <div className="mt-10 grid gap-10 md:grid-cols-12">
+          <blockquote className="md:col-span-8 md:col-start-5">
+            <p className="font-serif text-[clamp(1.625rem,3.2vw,2.375rem)] leading-[1.25]">
+              {about.mission ?? copy.about.teaser}
+            </p>
+            <footer className="mt-6 font-sans text-[0.9375rem]">
+              <span className="font-semibold">{copy.person.name}</span>
+              <span className="text-ink-soft"> · {copy.person.role}</span>
+            </footer>
+            <ArrowLink href="/sobre" className="mt-8">
+              {copy.about.link}
+            </ArrowLink>
+          </blockquote>
+        </div>
+      </Container>
 
-      <ul className="mt-10 flex flex-wrap justify-center gap-3">
-        {pillars.map((pillar) => (
-          <li
-            key={pillar}
-            className="rounded-full border border-border bg-surface px-5 py-2 text-sm font-medium text-foreground backdrop-blur hover:bg-primary hover:text-white hover:-translate-y-0.5 hover:shadow-md hover:cursor-pointer"
-          >
-            {pillar}
-          </li>
-        ))}
-      </ul>
-    </section>
+      {featured && (
+        <Container className="mt-24">
+          <SectionHeading
+            number={++section}
+            kicker={copy.testimonials.kicker}
+            title={copy.testimonials.title}
+            link={testimonials.length > 1 ? { href: "/clientes", label: "Ler outros depoimentos" } : undefined}
+          />
+          <div className="mt-10 md:grid md:grid-cols-12">
+            <div className="md:col-span-9 md:col-start-4">
+              <TestimonialQuote testimonial={featured} large />
+            </div>
+          </div>
+        </Container>
+      )}
+
+      {clients.length > 0 && (
+        <Container className="mt-24">
+          <SectionHeading
+            number={++section}
+            kicker={copy.clients.kicker}
+            title={copy.clients.title}
+            link={clients.length > 8 ? { href: "/clientes", label: "Ver todas as empresas" } : undefined}
+          />
+          <div className="mt-10">
+            <ClientRoll clients={clients.slice(0, 8)} />
+          </div>
+        </Container>
+      )}
+
+      {posts.items.length > 0 && (
+        <Container className="mt-24">
+          <SectionHeading
+            number={++section}
+            kicker={copy.posts.kicker}
+            title={copy.posts.title}
+            intro={copy.posts.intro}
+            link={{ href: "/conteudo", label: "Ver todas as publicações" }}
+          />
+          <div className="mt-10">
+            <PostIndex posts={posts.items} />
+          </div>
+        </Container>
+      )}
+
+      <ClosingCta contact={settings.contact} />
+    </>
   );
 }

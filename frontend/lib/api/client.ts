@@ -1,9 +1,17 @@
 import { env } from "@/lib/env";
 
+export type ProblemDetails = {
+  title?: string;
+  detail?: string;
+  status?: number;
+  errors?: Record<string, string[]>;
+};
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly errors?: Record<string, string[]>,
   ) {
     super(message);
     this.name = "ApiError";
@@ -18,8 +26,16 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `Falha na requisição (${response.status}).`);
+    const problem = (await response.json().catch(() => null)) as ProblemDetails | null;
+
+    throw new ApiError(
+      response.status,
+      problem?.detail ?? problem?.title ?? `Falha na requisição (${response.status}).`,
+      problem?.errors,
+    );
   }
+
+  if (response.status === 204) return undefined as T;
 
   return response.json() as Promise<T>;
 }
