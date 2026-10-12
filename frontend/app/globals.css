@@ -5,31 +5,34 @@
  * Contraste conferido (WCAG 2.2 AA): texto >= 4,5:1; bordas de campos >= 3:1.
  */
 :root {
-  --paper: #f4efe6;
-  --paper-deep: #e9e2d3;
-  --card: #fbf8f1;
-  --rule: #d3c9b5;
-  --rule-strong: #8c826d;
-  --ink: #1a1d26;
-  --ink-soft: #575b66;
+  /* Cada cor tem o valor diurno e o noturno; quem decide qual vale é o color-scheme (sistema ou escolha da pessoa). */
+  color-scheme: light dark;
 
-  --brand: #15294d;
-  --brand-deep: #0e1d38;
-  --brand-contrast: #f4efe6;
-  --brand-soft: #dfe3ea;
-  --accent: #a8431a;
-  --accent-deep: #8a3414;
-  --accent-contrast: #ffffff;
+  --paper: light-dark(#f4efe6, #13161e);
+  --paper-deep: light-dark(#e9e2d3, #1a1e29);
+  --card: light-dark(#fbf8f1, #1b1f2b);
+  --rule: light-dark(#d3c9b5, #2c3140);
+  --rule-strong: light-dark(#8c826d, #6e748a);
+  --ink: light-dark(#1a1d26, #ece6d8);
+  --ink-soft: light-dark(#575b66, #a3a6b0);
 
-  --success: #2d6a3e;
-  --warning: #8a5a0b;
-  --danger: #a32a2a;
+  --brand: light-dark(#15294d, #8fb4e3);
+  --brand-deep: light-dark(#0e1d38, #b3cdee);
+  --brand-contrast: light-dark(#f4efe6, #13161e);
+  --brand-soft: light-dark(#dfe3ea, #1f2a3f);
+  --accent: light-dark(#a8431a, #e2875b);
+  --accent-deep: light-dark(#8a3414, #eba383);
+  --accent-contrast: light-dark(#ffffff, #13161e);
 
-  --ring: #15294d;
-  --selection: #c9d4e6;
+  --success: light-dark(#2d6a3e, #7cc08d);
+  --warning: light-dark(#8a5a0b, #e0b15a);
+  --danger: light-dark(#a32a2a, #ef8a8a);
 
-  --footer: #15294d;
-  --footer-ink: #f4efe6;
+  --ring: light-dark(#15294d, #8fb4e3);
+  --selection: light-dark(#c9d4e6, #2c4466);
+
+  --footer: light-dark(#15294d, #0d1424);
+  --footer-ink: light-dark(#f4efe6, #ece6d8);
 
   /* QR Code: sempre escuro sobre claro (leitores de câmera falham com cores invertidas), nos dois modos. */
   --qr-ink: #1a1d26;
@@ -43,34 +46,13 @@
   --stage-accent: #a8431a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #13161e;
-    --paper-deep: #1a1e29;
-    --card: #1b1f2b;
-    --rule: #2c3140;
-    --rule-strong: #6e748a;
-    --ink: #ece6d8;
-    --ink-soft: #a3a6b0;
+/* Escolha feita no botão de tema (guardada no navegador, aplicada antes da página aparecer: ver app/layout.tsx). */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
 
-    --brand: #8fb4e3;
-    --brand-deep: #b3cdee;
-    --brand-contrast: #13161e;
-    --brand-soft: #1f2a3f;
-    --accent: #e2875b;
-    --accent-deep: #eba383;
-    --accent-contrast: #13161e;
-
-    --success: #7cc08d;
-    --warning: #e0b15a;
-    --danger: #ef8a8a;
-
-    --ring: #8fb4e3;
-    --selection: #2c4466;
-
-    --footer: #0d1424;
-    --footer-ink: #ece6d8;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 @theme inline {

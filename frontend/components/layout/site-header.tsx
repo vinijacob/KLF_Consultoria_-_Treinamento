@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { siteConfig } from "@/config/site";
 import { ButtonLink } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/cn";
 
 function isActive(pathname: string, href: string) {
@@ -49,7 +50,8 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <ButtonLink href="/contato" variant="accent" className="hidden sm:inline-flex">
             Pedir proposta
           </ButtonLink>

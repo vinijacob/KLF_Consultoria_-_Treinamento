@@ -18,6 +18,9 @@ public static class SiteSettingKeys
     /// <summary>Default SEO: title, description and share image used when a page has none of its own.</summary>
     public const string Seo = "seo";
 
+    /// <summary>Company data used by the legal pages: legal name, CNPJ, address, court and the person in charge of personal data.</summary>
+    public const string Legal = "legal";
+
     /// <summary>Every existing key.</summary>
-    public static IReadOnlyList<string> All { get; } = [About, Contact, Social, Seo];
+    public static IReadOnlyList<string> All { get; } = [About, Contact, Social, Seo, Legal];
 }

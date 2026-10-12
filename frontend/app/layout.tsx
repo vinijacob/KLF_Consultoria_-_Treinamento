@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { siteConfig } from "@/config/site";
+import { themeBootScript } from "@/lib/theme";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -39,7 +40,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body className="flex min-h-full flex-col bg-paper text-ink">{children}</body>
     </html>
   );

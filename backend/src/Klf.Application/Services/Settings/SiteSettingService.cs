@@ -5,6 +5,7 @@ using FluentValidation;
 using Klf.Application.DTOs.Settings;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Services.Media;
+using Klf.Application.Validators.Settings;
 using Klf.Domain.Common;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
@@ -20,7 +21,9 @@ internal sealed class SiteSettingService(
     IValidator<AboutSettings> aboutValidator,
     IValidator<ContactSettings> contactValidator,
     IValidator<SocialSettings> socialValidator,
-    IValidator<SeoSettings> seoValidator) : ISiteSettingService
+    IValidator<SeoSettings> seoValidator,
+    IValidator<LegalSettings> legalValidator,
+    TimeProvider timeProvider) : ISiteSettingService
 {
     private static readonly JsonSerializerOptions StrictJson = new(JsonSerializerDefaults.Web)
     {
@@ -65,6 +68,14 @@ internal sealed class SiteSettingService(
                 var seo = Parse(key, value, seoValidator);
                 await MediaReference.EnsureExistsAsync(media, seo.ShareImageId, nameof(SeoSettings.ShareImageId), cancellationToken);
                 valueJson = Serialize(seo);
+                break;
+            case SiteSettingKeys.Legal:
+                var legal = Parse(key, value, legalValidator);
+                valueJson = Serialize(legal with
+                {
+                    Cnpj = string.IsNullOrWhiteSpace(legal.Cnpj) ? null : Cnpj.Format(legal.Cnpj),
+                    UpdatedOn = AppTimeZone.Today(timeProvider),
+                });
                 break;
             default:
                 throw UnknownKey(key);

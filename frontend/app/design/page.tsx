@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { CookieBannerPreview } from "@/components/site/consent";
 import { Button } from "@/components/ui/button";
 import { controlClasses, FieldError } from "@/components/ui/field";
 import { AlertIcon, ArrowRightIcon, CheckIcon, ClockIcon, LockIcon } from "@/components/ui/icons";
@@ -119,6 +120,12 @@ export default function DesignPage() {
           <ClockIcon title="Horário" />
           <LockIcon title="Privado" />
           <ArrowRightIcon title="Avançar" />
+        </div>
+      </Block>
+
+      <Block title="Banner de cookies (só aparece quando há categoria opcional em uso)">
+        <div className="max-w-3xl">
+          <CookieBannerPreview />
         </div>
       </Block>
 

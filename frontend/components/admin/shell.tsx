@@ -7,6 +7,7 @@ import { isActive, navFor, roleInfo } from "@/config/admin";
 import { datelineFor } from "@/lib/admin/datetime";
 import { cn } from "@/lib/cn";
 import type { Role } from "@/types/admin";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Kicker, Rule } from "@/components/ui/typography";
 import { useAuth } from "./auth-provider";
 
@@ -120,6 +121,7 @@ function AccountFooter() {
         <Link href="/" target="_blank" rel="noopener" className="inline-flex min-h-11 items-center text-brand underline underline-offset-4">
           Ver o site
         </Link>
+        <ThemeToggle withLabel />
         <button
           type="button"
           disabled={leaving}

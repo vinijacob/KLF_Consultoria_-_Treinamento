@@ -1,6 +1,8 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ConsentManager } from "@/components/site/consent";
 import { siteConfig } from "@/config/site";
 import { getSettings, mediaUrl } from "@/lib/api/public";
 
@@ -37,6 +39,8 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
       <SiteFooter settings={settings} />
+      <ConsentManager />
+      <Analytics />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CookiePreferencesButton } from "@/components/site/consent";
 import { copy } from "@/content/site-copy";
 import { siteConfig } from "@/config/site";
 import { phoneHref, whatsappLink } from "@/lib/format";
@@ -96,6 +97,14 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
               <Link href="/termos" className={linkClass}>
                 Termos de uso
               </Link>
+            </li>
+            <li>
+              <Link href="/cookies" className={linkClass}>
+                Política de cookies
+              </Link>
+            </li>
+            <li>
+              <CookiePreferencesButton className={`${linkClass} text-left`} />
             </li>
           </Column>
         </div>

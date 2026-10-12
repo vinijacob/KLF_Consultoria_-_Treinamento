@@ -28,6 +28,14 @@ const longDate = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long
 
 export const formatDate = (iso: string) => longDate.format(new Date(iso));
 
+const dayDate = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+
+/** Datas só de dia ("2026-10-12") viram "12 de outubro de 2026" sem passar por fuso (senão viram o dia anterior em Manaus). */
+export function formatDay(day: string) {
+  const [year, month, date] = day.split("-").map(Number);
+  return dayDate.format(new Date(Date.UTC(year, month - 1, date)));
+}
+
 /** Datas só de dia ("2024-03-01") viram "mar. 2024" sem passar por fuso. */
 export function formatMonthYear(day: string) {
   const [year, month] = day.split("-").map(Number);

@@ -71,3 +71,30 @@ public sealed class SeoSettingsValidator : AbstractValidator<SeoSettings>
             .WithMessage("Imagem inválida.");
     }
 }
+
+/// <summary>Validates <see cref="LegalSettings"/>.</summary>
+public sealed class LegalSettingsValidator : AbstractValidator<LegalSettings>
+{
+    /// <summary>Defines the rules.</summary>
+    public LegalSettingsValidator()
+    {
+        RuleFor(x => x.CompanyName).MaximumLength(200).WithMessage("A razão social pode ter no máximo 200 caracteres.");
+
+        RuleFor(x => x.Cnpj)
+            .Must(Cnpj.IsValid).When(x => !string.IsNullOrWhiteSpace(x.Cnpj))
+            .WithMessage("CNPJ inválido. Confira os números (os dois últimos são dígitos verificadores).");
+
+        RuleFor(x => x.Address).MaximumLength(300).WithMessage("O endereço pode ter no máximo 300 caracteres.");
+
+        RuleFor(x => x.ForumCity)
+            .Matches(@"^[\p{L} .'-]{2,80}/[A-Z]{2}$").When(x => !string.IsNullOrWhiteSpace(x.ForumCity))
+            .WithMessage("Informe a cidade e a sigla do estado, como em Manaus/AM.");
+
+        RuleFor(x => x.DpoName).MaximumLength(120).WithMessage("O nome do encarregado pode ter no máximo 120 caracteres.");
+
+        RuleFor(x => x.DpoEmail)
+            .Cascade(CascadeMode.Stop)
+            .MaximumLength(200).WithMessage("O e-mail pode ter no máximo 200 caracteres.")
+            .EmailAddress().When(x => !string.IsNullOrEmpty(x.DpoEmail)).WithMessage("Informe um e-mail válido.");
+    }
+}

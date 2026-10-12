@@ -12,6 +12,7 @@ public sealed class SiteSettingServiceTests
 {
     private readonly InMemorySiteSettingRepository _repository = new();
     private readonly InMemoryMediaAssetRepository _media = new();
+    private readonly MutableTimeProvider _clock = new(new DateTimeOffset(2026, 10, 13, 2, 0, 0, TimeSpan.Zero));
     private readonly SiteSettingService _service;
 
     public SiteSettingServiceTests()
@@ -23,7 +24,9 @@ public sealed class SiteSettingServiceTests
             new AboutSettingsValidator(),
             new ContactSettingsValidator(),
             new SocialSettingsValidator(),
-            new SeoSettingsValidator());
+            new SeoSettingsValidator(),
+            new LegalSettingsValidator(),
+            _clock);
     }
 
     [Fact]
@@ -158,6 +161,34 @@ public sealed class SiteSettingServiceTests
             _service.UpsertAsync(SiteSettingKeys.Seo, Json($$"""{"shareImageId":"{{Guid.CreateVersion7()}}"}"""), TestContext.Current.CancellationToken));
 
         Assert.Contains("ShareImageId", exception.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task Upsert_legal_formats_cnpj_and_stamps_the_date_in_manaus_time()
+    {
+        var saved = await _service.UpsertAsync(SiteSettingKeys.Legal, Json("""{"companyName":"KLF Ltda","cnpj":"12abc34501de35"}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal("12.ABC.345/01DE-35", saved.GetProperty("cnpj").GetString());
+        Assert.Equal("2026-10-12", saved.GetProperty("updatedOn").GetString());
+    }
+
+    [Fact]
+    public async Task Upsert_legal_ignores_the_date_sent_by_the_client()
+    {
+        var saved = await _service.UpsertAsync(SiteSettingKeys.Legal, Json("""{"dpoEmail":"dados@klf.com.br","updatedOn":"2020-01-01"}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal("2026-10-12", saved.GetProperty("updatedOn").GetString());
+        Assert.Equal(JsonValueKind.Null, saved.GetProperty("cnpj").ValueKind);
+    }
+
+    [Fact]
+    public async Task Upsert_legal_rejects_cnpj_with_wrong_check_digits()
+    {
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
+            _service.UpsertAsync(SiteSettingKeys.Legal, Json("""{"cnpj":"11.222.333/0001-82"}"""), TestContext.Current.CancellationToken));
+
+        Assert.Contains("Cnpj", exception.Errors.Keys);
+        Assert.Empty(_repository.Settings);
     }
 
     private static JsonElement Json(string json)

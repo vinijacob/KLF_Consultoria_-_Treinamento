@@ -28,11 +28,22 @@ export type SocialSettings = {
 
 export type SeoSettings = { title?: string | null; description?: string | null; shareImageId?: string | null };
 
+export type LegalSettings = {
+  companyName?: string | null;
+  cnpj?: string | null;
+  address?: string | null;
+  forumCity?: string | null;
+  dpoName?: string | null;
+  dpoEmail?: string | null;
+  updatedOn?: string | null;
+};
+
 export type SiteSettings = {
   about?: AboutSettings;
   contact?: ContactSettings;
   social?: SocialSettings;
   seo?: SeoSettings;
+  legal?: LegalSettings;
 };
 
 export type ServiceListItem = {

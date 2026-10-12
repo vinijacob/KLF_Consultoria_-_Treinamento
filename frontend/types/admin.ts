@@ -1,7 +1,7 @@
 import type { FeedbackTopic, FormDefinition, QuestionType, SessionStatus } from "./feedback";
 import type { CareerEntryType, PostType, ServiceFormat } from "./site";
 
-export type { AboutSettings, ContactSettings, Paged, SeoSettings, SiteSettings, SocialSettings } from "./site";
+export type { AboutSettings, ContactSettings, LegalSettings, Paged, SeoSettings, SiteSettings, SocialSettings } from "./site";
 
 export type Role = "Admin" | "Editor";
 

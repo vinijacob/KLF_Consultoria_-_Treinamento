@@ -15,8 +15,13 @@ const parts = new Intl.DateTimeFormat("en-CA", {
 });
 
 function localParts(date: Date) {
-  const map = Object.fromEntries(parts.formatToParts(date).map((part) => [part.type, part.value]));
-  return { date: `${map.year}-${map.month}-${map.day}`, time: `${map.hour}:${map.minute}` };
+  const map = Object.fromEntries(
+    parts.formatToParts(date).map((part) => [part.type, part.value]),
+  );
+  return {
+    date: `${map.year}-${map.month}-${map.day}`,
+    time: `${map.hour}:${map.minute}`,
+  };
 }
 
 /** ISO da API → valor do `datetime-local` no horário de Manaus. */
@@ -30,7 +35,9 @@ export function toLocalInput(iso: string | null | undefined) {
 function offsetMinutes(at: Date) {
   const local = localParts(at);
   const asUtc = Date.parse(`${local.date}T${local.time}:00Z`);
-  return Math.round((asUtc - Math.floor(at.getTime() / 60_000) * 60_000) / 60_000);
+  return Math.round(
+    (asUtc - Math.floor(at.getTime() / 60_000) * 60_000) / 60_000,
+  );
 }
 
 /** Valor do `datetime-local` (horário de Manaus) → ISO com fuso, para a API. */
@@ -74,10 +81,12 @@ const shortDateFormat = new Intl.DateTimeFormat("pt-BR", {
 });
 
 /** "08/10/2026, 14:30" no horário de Manaus. */
-export const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso));
+export const formatDateTime = (iso: string) =>
+  dateTimeFormat.format(new Date(iso));
 
 /** "08/10/2026" no horário de Manaus. */
-export const formatShortDate = (iso: string) => shortDateFormat.format(new Date(iso));
+export const formatShortDate = (iso: string) =>
+  shortDateFormat.format(new Date(iso));
 
 /** Dia sem hora ("2024-03-01") → "01/03/2024", sem passar por fuso. */
 export function formatDay(day: string) {
