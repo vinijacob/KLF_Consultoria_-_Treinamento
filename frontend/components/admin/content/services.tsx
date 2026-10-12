@@ -82,7 +82,7 @@ function toForm(service?: AdminService): Form {
   };
 }
 
-function ServiceForm({ service }: { service?: AdminService }) {
+function ServiceForm({ service, onReset }: { onReset: () => void; service?: AdminService }) {
   const [form, setForm] = useState(() => toForm(service));
   const [slugTouched, setSlugTouched] = useState(Boolean(service));
   const editor = useEntityEditor<AdminService>({
@@ -90,6 +90,7 @@ function ServiceForm({ service }: { service?: AdminService }) {
     listHref: LIST,
     id: service?.id,
     created: "Serviço criado.",
+    onReset,
     deleted: "Serviço excluído.",
   });
   const error = (field: string) => fieldError(editor.errors, field);
@@ -235,7 +236,7 @@ function ServiceForm({ service }: { service?: AdminService }) {
 export function ServiceEditor({ id }: { id?: string }) {
   return (
     <EntityLoader<AdminService> path={id ? `/admin/services/${id}` : null}>
-      {(service) => <ServiceForm service={service} />}
+      {(service, _replace, reset) => <ServiceForm service={service} onReset={reset} />}
     </EntityLoader>
   );
 }

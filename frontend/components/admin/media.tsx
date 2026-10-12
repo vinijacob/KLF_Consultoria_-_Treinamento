@@ -87,7 +87,7 @@ export function UploadForm({ onUploaded }: { onUploaded: (asset: MediaAsset) => 
             setFile(chosen);
             setFileProblem(chosen ? checkFile(chosen) : null);
           }}
-          className="block w-full font-sans text-sm file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-xs file:border file:border-ink file:bg-transparent file:px-4 file:font-sans file:text-sm file:font-medium file:text-ink hover:file:bg-ink hover:file:text-paper"
+          className="block w-full font-sans text-sm file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-md file:border file:border-ink file:bg-transparent file:px-4 file:font-sans file:text-sm file:font-medium file:text-ink hover:file:bg-ink hover:file:text-paper"
         />
         <FieldError>{fileProblem ?? fieldError(errors, "file")}</FieldError>
       </div>

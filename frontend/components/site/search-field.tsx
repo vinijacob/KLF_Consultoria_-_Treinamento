@@ -5,7 +5,7 @@ import { SearchIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 /**
- * Busca no estilo do site: fio grosso embaixo, texto serifado grande. A contagem de resultados é anunciada
+ * Busca no estilo do site: caixa com lupa e texto serifado. A contagem de resultados é anunciada
  * a leitores de tela (`aria-live`). Funciona solta (filtro na hora) ou dentro de um `<form>` (busca na API).
  */
 export function SearchField({
@@ -31,8 +31,8 @@ export function SearchField({
       <label htmlFor={id} className="font-mono text-xs font-medium uppercase tracking-[0.14em] text-ink-soft">
         {label}
       </label>
-      <div className="mt-2 flex items-center gap-3 border-b-2 border-ink">
-        <SearchIcon className="shrink-0 text-2xl text-ink-soft" />
+      <div className="mt-2 flex items-center gap-3 rounded-xl border border-rule-strong bg-card px-4 transition-colors focus-within:border-ink hover:border-ink">
+        <SearchIcon className="shrink-0 text-xl text-ink-soft" />
         <input
           id={id}
           type="search"
@@ -42,7 +42,7 @@ export function SearchField({
           value={value}
           onChange={(event) => onValueChange?.(event.target.value)}
           className={cn(
-            "min-h-14 w-full min-w-0 bg-transparent py-2 font-serif text-2xl text-ink placeholder:text-ink-soft/70",
+            "min-h-14 w-full min-w-0 bg-transparent py-2 font-serif text-xl text-ink placeholder:text-ink-soft/70",
             "[&::-webkit-search-cancel-button]:hidden",
           )}
           {...props}
@@ -51,7 +51,7 @@ export function SearchField({
           <button
             type="button"
             onClick={onClear}
-            className="min-h-11 shrink-0 font-sans text-sm font-medium uppercase tracking-[0.12em] text-brand underline underline-offset-4"
+            className="min-h-11 shrink-0 font-sans text-sm font-medium text-brand underline underline-offset-4"
           >
             Limpar
           </button>

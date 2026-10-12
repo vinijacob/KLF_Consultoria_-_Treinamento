@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container, EmptyNote, PageHeader } from "@/components/site/blocks";
-import { PostIndex } from "@/components/site/lists";
+import { PostGrid } from "@/components/site/lists";
 import { PostSearch } from "@/components/site/post-search";
 import { copy } from "@/content/site-copy";
 import { getPosts } from "@/lib/api/public";
@@ -46,13 +46,13 @@ export default async function PostsPage({ searchParams }: PageProps<"/conteudo">
           <PostSearch key={search} initial={search} type={active.slug} clearHref={href(active.slug, "")} status={status} />
         </div>
         <nav aria-label="Filtrar por tipo" className="mt-4">
-          <ul className="flex flex-wrap gap-x-6 gap-y-2 font-sans text-[0.9375rem]">
+          <ul className="flex flex-wrap gap-2 font-sans text-[0.9375rem]">
             {filters.map((filter) => (
               <li key={filter.label}>
                 <Link
                   href={href(filter.slug, search)}
                   aria-current={filter === active ? "page" : undefined}
-                  className="py-1 underline-offset-[6px] hover:underline aria-[current=page]:font-semibold aria-[current=page]:underline aria-[current=page]:decoration-2"
+                  className="inline-flex min-h-11 items-center rounded-full border border-rule-strong px-4 transition-colors hover:border-ink aria-[current=page]:border-brand aria-[current=page]:bg-brand aria-[current=page]:text-brand-contrast"
                 >
                   {filter.label}
                 </Link>
@@ -63,7 +63,7 @@ export default async function PostsPage({ searchParams }: PageProps<"/conteudo">
       </PageHeader>
 
       <Container className="mt-12">
-        {posts.items.length > 0 ? <PostIndex posts={posts.items} /> : <EmptyNote>{search ? `Nenhuma publicação encontrada para “${search}”. Tente outra palavra.` : copy.posts.empty}</EmptyNote>}
+        {posts.items.length > 0 ? <PostGrid posts={posts.items} /> : <EmptyNote>{search ? `Nenhuma publicação encontrada para “${search}”. Tente outra palavra.` : copy.posts.empty}</EmptyNote>}
 
         {posts.totalPages > 1 && (
           <nav aria-label="Páginas" className="mt-10 flex items-center justify-between font-sans text-[0.9375rem]">

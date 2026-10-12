@@ -128,18 +128,19 @@ export function ArrowLeftIcon(props: IconProps) {
   );
 }
 
-export function PauseIcon(props: IconProps) {
+export function EyeIcon(props: IconProps) {
   return (
     <Icon {...props}>
-      <path d="M8.5 5v14M15.5 5v14" />
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
     </Icon>
   );
 }
 
-export function PlayIcon(props: IconProps) {
+export function EyeOffIcon(props: IconProps) {
   return (
     <Icon {...props}>
-      <path d="M7 4.5v15L19 12 7 4.5Z" />
+      <path d="M9.5 6A9.6 9.6 0 0 1 12 5.5C18 5.5 21.5 12 21.5 12a16 16 0 0 1-2.6 3.4M14.1 14.1a3 3 0 0 1-4.2-4.2M6.6 7.6C4 9.4 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.3-1.1M4 4l16 16" />
     </Icon>
   );
 }

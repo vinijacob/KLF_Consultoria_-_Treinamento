@@ -4,6 +4,7 @@ using FluentValidation;
 
 using Klf.Application.DTOs.Settings;
 using Klf.Application.Interfaces.Repositories;
+using Klf.Application.Services.Media;
 using Klf.Domain.Common;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
@@ -14,6 +15,7 @@ namespace Klf.Application.Services.Settings;
 
 internal sealed class SiteSettingService(
     ISiteSettingRepository repository,
+    IMediaAssetRepository media,
     IUnitOfWork unitOfWork,
     IValidator<AboutSettings> aboutValidator,
     IValidator<ContactSettings> contactValidator,
@@ -44,14 +46,29 @@ internal sealed class SiteSettingService(
 
     public async Task<JsonElement> UpsertAsync(string key, JsonElement value, CancellationToken cancellationToken)
     {
-        var valueJson = key switch
+        string valueJson;
+
+        switch (key)
         {
-            SiteSettingKeys.About => Normalize(key, value, aboutValidator),
-            SiteSettingKeys.Contact => Normalize(key, value, contactValidator),
-            SiteSettingKeys.Social => Normalize(key, value, socialValidator),
-            SiteSettingKeys.Seo => Normalize(key, value, seoValidator),
-            _ => throw UnknownKey(key),
-        };
+            case SiteSettingKeys.About:
+                var about = Parse(key, value, aboutValidator);
+                await MediaReference.EnsureExistsAsync(media, about.PortraitId, nameof(AboutSettings.PortraitId), cancellationToken);
+                valueJson = Serialize(about);
+                break;
+            case SiteSettingKeys.Contact:
+                valueJson = Serialize(Parse(key, value, contactValidator));
+                break;
+            case SiteSettingKeys.Social:
+                valueJson = Serialize(Parse(key, value, socialValidator));
+                break;
+            case SiteSettingKeys.Seo:
+                var seo = Parse(key, value, seoValidator);
+                await MediaReference.EnsureExistsAsync(media, seo.ShareImageId, nameof(SeoSettings.ShareImageId), cancellationToken);
+                valueJson = Serialize(seo);
+                break;
+            default:
+                throw UnknownKey(key);
+        }
 
         var setting = await repository.GetByKeyAsync(key, cancellationToken);
 
@@ -87,7 +104,9 @@ internal sealed class SiteSettingService(
         return document.RootElement.Clone();
     }
 
-    private static string Normalize<T>(string key, JsonElement value, IValidator<T> validator)
+    private static string Serialize<T>(T value) => JsonSerializer.Serialize(value, StrictJson);
+
+    private static T Parse<T>(string key, JsonElement value, IValidator<T> validator)
         where T : class
     {
         T? typed;
@@ -117,6 +136,6 @@ internal sealed class SiteSettingService(
                 .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage).ToArray()));
         }
 
-        return JsonSerializer.Serialize(typed, StrictJson);
+        return typed;
     }
 }

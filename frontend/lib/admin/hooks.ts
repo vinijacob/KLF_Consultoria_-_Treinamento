@@ -74,10 +74,12 @@ export function useSubmit() {
  * Recado de uma tela para a próxima (ex.: "Serviço criado." depois de redirecionar para a edição).
  * Vive só na memória: some ao recarregar a página.
  */
-let pendingFlash: string | null = null;
+export type Flash = { message: string; href?: string; linkLabel?: string };
 
-export function setFlash(message: string) {
-  pendingFlash = message;
+let pendingFlash: Flash | null = null;
+
+export function setFlash(message: string, link?: { href: string; label: string }) {
+  pendingFlash = { message, href: link?.href, linkLabel: link?.label };
 }
 
 /** Lê o recado deixado pela tela anterior (uma vez só). */

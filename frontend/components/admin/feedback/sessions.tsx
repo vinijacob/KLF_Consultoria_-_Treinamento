@@ -354,7 +354,7 @@ function Share({ session }: { session: FeedbackSessionDetail }) {
             Endereço do formulário
           </label>
           <div className="flex gap-2">
-            <input id={linkId} readOnly value={session.publicUrl} className="min-w-0 flex-1 rounded-xs border border-rule-strong bg-card px-3 py-2.5 font-mono text-sm" />
+            <input id={linkId} readOnly value={session.publicUrl} className="min-w-0 flex-1 rounded-md border border-rule-strong bg-card px-3 py-2.5 font-mono text-sm" />
             <Button
               variant="outline"
               onClick={() => void navigator.clipboard.writeText(session.publicUrl).then(() => setCopied(true))}
@@ -561,7 +561,7 @@ function SessionView({ initial }: { initial: FeedbackSessionDetail }) {
       />
       {flash && (
         <Notice tone="success" role="status" className="mb-8">
-          {flash}
+          {flash.message}
         </Notice>
       )}
       {toggle.message && (

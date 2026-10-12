@@ -102,13 +102,14 @@ function toForm(entry?: AdminCareerEntry): Form {
   };
 }
 
-function CareerForm({ entry }: { entry?: AdminCareerEntry }) {
+function CareerForm({ entry, onReset }: { onReset: () => void; entry?: AdminCareerEntry }) {
   const [form, setForm] = useState(() => toForm(entry));
   const editor = useEntityEditor<AdminCareerEntry>({
     apiPath: "/admin/career",
     listHref: LIST,
     id: entry?.id,
     created: "Item criado.",
+    onReset,
     deleted: "Item excluído.",
   });
   const error = (field: string) => fieldError(editor.errors, field);
@@ -206,7 +207,7 @@ function CareerForm({ entry }: { entry?: AdminCareerEntry }) {
 export function CareerEditor({ id }: { id?: string }) {
   return (
     <EntityLoader<AdminCareerEntry> path={id ? `/admin/career/${id}` : null}>
-      {(entry) => <CareerForm entry={entry} />}
+      {(entry, _replace, reset) => <CareerForm entry={entry} onReset={reset} />}
     </EntityLoader>
   );
 }

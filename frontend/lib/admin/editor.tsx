@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ApiError } from "@/lib/api/client";
@@ -16,13 +17,18 @@ type EditorOptions = {
   id?: string;
   created: string;
   deleted: string;
+  /**
+   * Depois de criar: limpa o formulário para o próximo cadastro (padrão, quando `onReset` existe) ou vai para a
+   * edição do registro novo (álbuns, formulários: o passo seguinte precisa do registro salvo).
+   */
+  onReset?: () => void;
 };
 
 /**
- * Criar, salvar e excluir um registro do painel. Ao criar, vai para a tela de edição do registro novo;
- * ao excluir, volta para a lista com um recado.
+ * Criar, salvar e excluir um registro do painel. Ao criar, limpa os campos para um novo cadastro (com link para abrir
+ * o que foi salvo) ou vai para a edição; ao excluir, volta para a lista com um recado.
  */
-export function useEntityEditor<TResponse extends { id: string }>({ apiPath, listHref, id, created, deleted }: EditorOptions) {
+export function useEntityEditor<TResponse extends { id: string }>({ apiPath, listHref, id, created, deleted, onReset }: EditorOptions) {
   const router = useRouter();
   const submit = useSubmit();
   const flash = useFlash();
@@ -36,6 +42,10 @@ export function useEntityEditor<TResponse extends { id: string }>({ apiPath, lis
 
     if (id) {
       setSavedAt(new Date());
+    } else if (onReset) {
+      setFlash(`${created} Os campos foram limpos para um novo cadastro.`, { href: `${listHref}/${result.id}`, label: "Abrir o que foi salvo" });
+      onReset();
+      window.scrollTo({ top: 0 });
     } else {
       setFlash(created);
       router.replace(`${listHref}/${result.id}`);
@@ -59,7 +69,18 @@ export function useEntityEditor<TResponse extends { id: string }>({ apiPath, lis
     ...submit,
     save,
     remove,
-    savedNote: savedAt ? `Salvo às ${timeFormat.format(savedAt)}.` : flash,
+    savedNote: savedAt ? (
+      `Salvo às ${timeFormat.format(savedAt)}.`
+    ) : flash ? (
+      <>
+        {flash.message}{" "}
+        {flash.href && (
+          <Link href={flash.href} className="font-medium underline underline-offset-4">
+            {flash.linkLabel}
+          </Link>
+        )}
+      </>
+    ) : null,
   };
 }
 

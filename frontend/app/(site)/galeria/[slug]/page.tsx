@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLink, Container, EmptyNote, PageHeader } from "@/components/site/blocks";
-import { Rule } from "@/components/ui/typography";
 import { getAlbum } from "@/lib/api/public";
 
 export async function generateMetadata({ params }: PageProps<"/galeria/[slug]">): Promise<Metadata> {
@@ -33,10 +32,10 @@ export default async function AlbumPage({ params }: PageProps<"/galeria/[slug]">
         ) : (
           <ul className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {album.items.map((item, index) => (
-              <li key={`${item.url}-${index}`}>
+              <li key={`${item.url}-${index}`} className="reveal">
                 <figure>
-                  <a href={item.url} target="_blank" rel="noopener" className="block border border-ink p-2">
-                    <span className="relative block aspect-[4/3] overflow-hidden bg-paper-deep">
+                  <a href={item.url} target="_blank" rel="noopener" className="lift block overflow-hidden rounded-2xl">
+                    <span className="relative block aspect-[4/3] overflow-hidden rounded-2xl bg-paper-deep">
                       <Image
                         src={item.url}
                         alt={item.altText ?? ""}
@@ -54,8 +53,7 @@ export default async function AlbumPage({ params }: PageProps<"/galeria/[slug]">
             ))}
           </ul>
         )}
-        <Rule className="mt-16" />
-        <ArrowLink href="/galeria" className="mt-6">
+        <ArrowLink href="/galeria" className="mt-16">
           Voltar para a galeria
         </ArrowLink>
       </Container>

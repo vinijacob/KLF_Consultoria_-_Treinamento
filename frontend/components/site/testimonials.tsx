@@ -1,125 +1,98 @@
 "use client";
 
-import { useEffect, useId, useState, useSyncExternalStore } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, ArrowRightIcon, PauseIcon, PlayIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import { twoDigits } from "@/lib/format";
+import { mediaUrl } from "@/lib/media";
+import { usePrefersReducedMotion } from "@/lib/motion";
 import type { Testimonial } from "@/types/site";
+import { Avatar } from "./blocks";
 import { TestimonialQuote } from "./lists";
 
-const INTERVAL_MS = 9000;
-
-function subscribeReducedMotion(onChange: () => void) {
-  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-function usePrefersReducedMotion() {
-  return useSyncExternalStore(
-    subscribeReducedMotion,
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    () => true,
-  );
-}
+const INTERVAL_MS = 8000;
 
 /**
- * Depoimentos em rodízio: um por vez, em letra grande. Gira sozinho a cada 9 s, para com o mouse ou o foco em cima,
- * tem botão de pausa e setas, e não gira para quem pediu menos movimento no sistema (WCAG 2.2.2).
- * Todos os depoimentos ficam empilhados no mesmo lugar, então a altura não pula na troca.
+ * Depoimento em destaque com a lista de quem falou logo abaixo (fotos ou iniciais). A troca é automática a cada 8 s,
+ * marcada por uma linha que enche sob o nome atual; ela pausa com o mouse em cima e para de vez quando a pessoa
+ * escolhe um depoimento. Quem pediu menos movimento no sistema troca só clicando.
+ * O tempo vem do fim da própria animação da linha, então o texto troca exatamente quando a linha termina.
  */
-export function TestimonialCarousel({ testimonials }: { testimonials: Testimonial[] }) {
+export function TestimonialSpotlight({ testimonials }: { testimonials: Testimonial[] }) {
   const id = useId();
   const reducedMotion = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
-  const [stopped, setStopped] = useState(false);
+  const [chosen, setChosen] = useState(false);
   const [hovering, setHovering] = useState(false);
-  const [focused, setFocused] = useState(false);
   const count = testimonials.length;
-  const playing = count > 1 && !stopped && !reducedMotion;
-  const running = playing && !hovering && !focused;
-
-  useEffect(() => {
-    if (!running) return;
-    const timer = window.setTimeout(() => setIndex((current) => (current + 1) % count), INTERVAL_MS);
-    return () => window.clearTimeout(timer);
-  }, [running, index, count]);
+  const auto = count > 1 && !chosen && !reducedMotion;
 
   if (count === 0) return null;
-  if (count === 1) return <TestimonialQuote testimonial={testimonials[0]} large />;
-
-  const go = (next: number) => setIndex((next + count) % count);
 
   return (
-    <section
-      aria-roledescription="carrossel"
-      aria-label="Depoimentos"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
-      }}
-    >
-      <div className="grid" aria-live={playing ? "off" : "polite"}>
-        {testimonials.map((testimonial, position) => {
-          const current = position === index;
-          return (
-            <div
-              key={testimonial.id}
-              id={`${id}-${position}`}
-              role="group"
-              aria-roledescription="depoimento"
-              aria-label={`${position + 1} de ${count}`}
-              aria-hidden={!current}
-              className={cn("[grid-area:1/1]", current ? "motion-safe:animate-fade" : "invisible")}
-            >
-              <TestimonialQuote testimonial={testimonial} large />
-            </div>
-          );
-        })}
+    <div onMouseEnter={() => setHovering(true)} onMouseLeave={() => setHovering(false)}>
+      <div className="grid items-center rounded-3xl border border-rule bg-card px-7 py-10 sm:px-12 sm:py-14">
+        {testimonials.map((testimonial, position) => (
+          <div
+            key={testimonial.id}
+            id={`${id}-panel-${position}`}
+            role={count > 1 ? "tabpanel" : undefined}
+            aria-labelledby={count > 1 ? `${id}-tab-${position}` : undefined}
+            aria-hidden={position !== index}
+            className={cn("[grid-area:1/1]", position === index ? "motion-safe:animate-fade" : "invisible")}
+          >
+            <TestimonialQuote testimonial={testimonial} large />
+          </div>
+        ))}
       </div>
 
-      <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-        <p className="font-mono text-sm tracking-[0.12em] text-ink-soft">
-          <span className="text-ink">{twoDigits(index + 1)}</span> / {twoDigits(count)}
-        </p>
-        <div className="relative h-0.5 min-w-24 flex-1 bg-rule" aria-hidden>
-          {playing && (
-            <span
-              key={index}
-              className={cn("absolute inset-0 origin-left bg-accent motion-safe:animate-progress", !running && "[animation-play-state:paused]")}
-              style={{ animationDuration: `${INTERVAL_MS}ms` }}
-            />
-          )}
+      {count > 1 && (
+        <div role="tablist" aria-label="Escolha um depoimento" className="-mx-1 mt-5 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
+          {testimonials.map((testimonial, position) => {
+            const current = position === index;
+
+            return (
+              <button
+                key={testimonial.id}
+                id={`${id}-tab-${position}`}
+                type="button"
+                role="tab"
+                aria-selected={current}
+                aria-controls={`${id}-panel-${position}`}
+                onClick={() => {
+                  setChosen(true);
+                  setIndex(position);
+                }}
+                className={cn(
+                  "relative flex min-h-16 shrink-0 snap-start items-center gap-3 overflow-hidden rounded-2xl border px-3 py-2.5 text-left transition-colors",
+                  current ? "border-brand bg-brand-soft" : "border-rule bg-card hover:border-rule-strong",
+                )}
+              >
+                <Avatar name={testimonial.authorName} src={testimonial.photoId ? mediaUrl(testimonial.photoId) : null} size="sm" />
+                <span className="max-w-44 pr-1">
+                  <span className="block truncate font-sans text-sm font-semibold text-ink">{testimonial.authorName}</span>
+                  {testimonial.companyName && <span className="block truncate font-sans text-xs text-ink-soft">{testimonial.companyName}</span>}
+                </span>
+                {current && auto && (
+                  <span
+                    key={index}
+                    aria-hidden
+                    onAnimationEnd={() => setIndex((position + 1) % count)}
+                    className={cn("absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent motion-safe:animate-progress", hovering && "[animation-play-state:paused]")}
+                    style={{ animationDuration: `${INTERVAL_MS}ms` }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="min-w-11 px-0" aria-label="Depoimento anterior" aria-controls={`${id}-${index}`} onClick={() => go(index - 1)}>
-            <ArrowLeftIcon />
-          </Button>
-          <Button variant="outline" className="min-w-11 px-0" aria-label="Próximo depoimento" aria-controls={`${id}-${index}`} onClick={() => go(index + 1)}>
-            <ArrowRightIcon />
-          </Button>
-          {!reducedMotion && (
-            <Button
-              variant="outline"
-              className="min-w-11 px-0"
-              aria-label={stopped ? "Voltar a girar os depoimentos" : "Pausar os depoimentos"}
-              onClick={() => setStopped((value) => !value)}
-            >
-              {stopped ? <PlayIcon /> : <PauseIcon />}
-            </Button>
-          )}
-        </div>
-      </div>
-    </section>
+      )}
+    </div>
   );
 }
 
 const STEP = 6;
 
-/** Todos os depoimentos em colunas, como cartas de leitores, mostrados de 6 em 6. */
+/** Todos os depoimentos em caixas, em colunas, mostrados de 6 em 6. */
 export function TestimonialWall({ testimonials }: { testimonials: Testimonial[] }) {
   const [visible, setVisible] = useState(STEP);
   const shown = testimonials.slice(0, visible);
@@ -127,17 +100,17 @@ export function TestimonialWall({ testimonials }: { testimonials: Testimonial[] 
 
   return (
     <div>
-      <ul className="gap-x-12 md:columns-2 lg:columns-3">
+      <ul className="gap-5 md:columns-2 lg:columns-3">
         {shown.map((testimonial) => (
-          <li key={testimonial.id} className="mb-10 break-inside-avoid border-t border-rule pt-6 motion-safe:animate-rise">
+          <li key={testimonial.id} className="mb-5 break-inside-avoid rounded-2xl border border-rule bg-card p-7 motion-safe:animate-rise">
             <TestimonialQuote testimonial={testimonial} />
           </li>
         ))}
       </ul>
       {rest > 0 && (
-        <div className="flex justify-center">
+        <div className="mt-5 flex justify-center">
           <Button variant="outline" size="lg" onClick={() => setVisible((current) => current + STEP)}>
-            Mostrar mais {Math.min(STEP, rest)} de {rest}
+            Mostrar mais depoimentos ({rest})
           </Button>
         </div>
       )}

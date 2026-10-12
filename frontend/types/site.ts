@@ -8,6 +8,7 @@ export type AboutSettings = {
   values?: string[] | null;
   differentials?: string[] | null;
   history?: string | null;
+  portraitId?: string | null;
 };
 
 export type ContactSettings = {

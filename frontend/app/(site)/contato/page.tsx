@@ -20,7 +20,7 @@ export default async function ContactPage() {
         <div className="lg:col-span-8">
           <ContactChannels contact={contact ?? {}} />
         </div>
-        <aside className="lg:col-span-4">
+        <aside className="h-fit rounded-2xl bg-paper-deep p-7 lg:col-span-4">
           <Kicker>Atendimento</Kicker>
           <p className="mt-3 text-lg leading-relaxed">{copy.contact.hours}</p>
           <p className="mt-6 font-sans text-sm text-ink-soft">{copy.contact.formSoon}</p>

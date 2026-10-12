@@ -6,19 +6,19 @@ import { copy } from "@/content/site-copy";
 import { phoneHref, whatsappLink } from "@/lib/format";
 import type { ContactSettings } from "@/types/site";
 
-/** Faixa final das páginas: convite para conversar. Usa o acento (uma vez por tela). */
+/** Caixa final das páginas: convite para conversar, em azul-marinho. Usa o acento no botão (uma vez por tela). */
 export function ClosingCta({ contact, message }: { contact?: ContactSettings; message?: string }) {
   const whatsapp = contact?.whatsapp;
 
   return (
-    <section aria-labelledby="cta-title" className="-mb-24 mt-24 border-t border-ink bg-paper-deep">
-      <Container className="grid gap-8 py-16 md:grid-cols-12 md:items-end">
+    <Container className="mt-24">
+      <section aria-labelledby="cta-title" className="reveal grid gap-8 rounded-3xl bg-brand px-7 py-12 text-brand-contrast sm:px-12 sm:py-16 md:grid-cols-12 md:items-end">
         <div className="md:col-span-8">
-          <Kicker>{copy.contact.kicker}</Kicker>
+          <p className="font-mono text-xs font-medium uppercase tracking-[0.14em]">{copy.contact.kicker}</p>
           <h2 id="cta-title" className="mt-3 text-[clamp(2rem,5vw,3.5rem)] leading-[1.04]">
             {copy.contact.title}
           </h2>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-ink-soft">{copy.contact.intro}</p>
+          <p className="mt-4 max-w-xl text-lg leading-relaxed">{copy.contact.intro}</p>
         </div>
         <div className="flex flex-col gap-3 md:col-span-4 md:items-end">
           {whatsapp ? (
@@ -35,17 +35,17 @@ export function ClosingCta({ contact, message }: { contact?: ContactSettings; me
             </ButtonLink>
           )}
           {whatsapp && (
-            <Link href="/contato" className="font-sans text-sm text-brand underline underline-offset-4">
+            <Link href="/contato" className="inline-flex min-h-11 items-center font-sans text-sm underline underline-offset-4">
               Outras formas de contato
             </Link>
           )}
         </div>
-      </Container>
-    </section>
+      </section>
+    </Container>
   );
 }
 
-/** Canais de contato em lista, cada um com o que fazer (abrir conversa, escrever, ligar). */
+/** Canais de contato em caixas, cada um com o que fazer (abrir conversa, escrever, ligar). */
 export function ContactChannels({ contact }: { contact: ContactSettings }) {
   const channels = [
     contact.whatsapp && {
@@ -63,13 +63,13 @@ export function ContactChannels({ contact }: { contact: ContactSettings }) {
   }
 
   return (
-    <dl className="border-t border-ink">
+    <dl className="grid gap-4 sm:grid-cols-2">
       {channels.map((channel) => (
-        <div key={channel.label} className="grid gap-2 border-b border-rule py-6 sm:grid-cols-[10rem_1fr] sm:items-baseline">
+        <div key={channel.label} className="reveal rounded-2xl border border-rule bg-card p-6">
           <dt>
             <Kicker>{channel.label}</Kicker>
           </dt>
-          <dd className="font-serif text-[1.625rem] leading-snug break-words">
+          <dd className="mt-2 font-serif text-[1.5rem] leading-snug break-words">
             {channel.href ? (
               <a
                 href={channel.href}

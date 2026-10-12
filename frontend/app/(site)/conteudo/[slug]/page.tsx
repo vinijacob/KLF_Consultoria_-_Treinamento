@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowLink, Container, FramedImage, Prose } from "@/components/site/blocks";
+import { ArrowLink, Badge, Container, FramedImage, Prose } from "@/components/site/blocks";
 import { ClosingCta } from "@/components/site/contact";
-import { Kicker, Rule } from "@/components/ui/typography";
 import { copy } from "@/content/site-copy";
 import { getPost, getSettings, mediaUrl } from "@/lib/api/public";
 import { formatDate, postTypeLabel } from "@/lib/format";
@@ -35,28 +34,26 @@ export default async function PostPage({ params }: PageProps<"/conteudo/[slug]">
       <article>
         <Container className="pt-12 sm:pt-16">
           <div className="mx-auto max-w-[42rem]">
-            <Kicker>
-              {postTypeLabel[post.type]}
+            <p className="flex flex-wrap items-center gap-3">
+              <Badge tone="brand">{postTypeLabel[post.type]}</Badge>
               {post.publishedAt && (
-                <>
-                  {" · "}
-                  <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
-                </>
+                <time dateTime={post.publishedAt} className="font-sans text-sm text-ink-soft">
+                  {formatDate(post.publishedAt)}
+                </time>
               )}
-            </Kicker>
+            </p>
             <h1 className="mt-4 text-[clamp(2.25rem,6vw,4rem)] leading-[1.05]">{post.title}</h1>
             {post.summary && <p className="mt-6 text-[1.375rem] leading-relaxed text-ink-soft">{post.summary}</p>}
             <p className="mt-6 font-sans text-[0.9375rem]">
               Por <span className="font-semibold">{copy.person.name}</span>
             </p>
-            <Rule variant="double" className="mt-8" />
           </div>
         </Container>
 
         {post.coverId && (
           <Container className="mt-10">
             <div className="mx-auto max-w-[42rem]">
-              <FramedImage src={mediaUrl(post.coverId)} alt="" ratio="aspect-[16/9]" sizes="(min-width: 1024px) 896px, 100vw" />
+              <FramedImage src={mediaUrl(post.coverId)} alt="" ratio="aspect-video" sizes="(min-width: 1024px) 896px, 100vw" />
             </div>
           </Container>
         )}
@@ -64,8 +61,7 @@ export default async function PostPage({ params }: PageProps<"/conteudo/[slug]">
         <Container className="mt-12">
           <Prose html={post.contentHtml} className="mx-auto" />
           <div className="mx-auto mt-16 max-w-[42rem]">
-            <Rule />
-            <ArrowLink href="/conteudo" className="mt-6">
+            <ArrowLink href="/conteudo">
               Ver todas as publicações
             </ArrowLink>
           </div>

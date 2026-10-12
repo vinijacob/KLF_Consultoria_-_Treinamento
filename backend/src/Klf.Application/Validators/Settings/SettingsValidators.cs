@@ -15,6 +15,9 @@ public sealed class AboutSettingsValidator : AbstractValidator<AboutSettings>
         RuleFor(x => x.History).MaximumLength(5000).WithMessage("A história pode ter no máximo 5000 caracteres.");
         RuleFor(x => x.Values).MustBeShortList("valores");
         RuleFor(x => x.Differentials).MustBeShortList("diferenciais");
+        RuleFor(x => x.PortraitId)
+            .NotEqual(Guid.Empty).When(x => x.PortraitId is not null)
+            .WithMessage("Imagem inválida.");
     }
 }
 

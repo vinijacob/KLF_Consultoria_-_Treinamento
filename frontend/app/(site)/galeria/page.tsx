@@ -23,7 +23,7 @@ export default async function GalleryPage() {
           <ul className="grid gap-x-10 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {albums.map((album) => (
               <li key={album.id}>
-                <Link href={`/galeria/${album.slug}`} className="group block">
+                <Link href={`/galeria/${album.slug}`} className="lift group block rounded-2xl">
                   <FramedImage src={album.coverUrl} alt="" ratio="aspect-[4/3]" placeholder="Sem capa" sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" />
                   <Kicker className="mt-4">{album.itemCount === 1 ? "1 foto" : `${album.itemCount} fotos`}</Kicker>
                   <p className="mt-1 font-serif text-2xl leading-snug group-hover:underline group-hover:decoration-1 group-hover:underline-offset-[6px]">

@@ -41,7 +41,7 @@ function Block<T>({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        void save();
+        if (event.target === event.currentTarget) void save();
       }}
     >
       <Section title={title} description={description}>
@@ -79,6 +79,7 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
     values: (settings.about?.values ?? []).join("\n"),
     differentials: (settings.about?.differentials ?? []).join("\n"),
     history: settings.about?.history ?? "",
+    portraitId: settings.about?.portraitId ?? null,
   });
   const [contact, setContact] = useState({
     whatsapp: settings.contact?.whatsapp ?? "",
@@ -104,17 +105,25 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
       <Block<AboutSettings>
         settingKey="about"
         title="Sobre"
-        description="Textos da página Sobre e do trecho “Quem é” da página inicial."
+        description="Retrato e textos da página Sobre e do trecho “Quem é” da página inicial."
         toPayload={() => ({
           mission: optional(about.mission),
           vision: optional(about.vision),
           values: lines(about.values),
           differentials: lines(about.differentials),
           history: optional(about.history),
+          portraitId: about.portraitId,
         })}
       >
         {(errors) => (
           <>
+            <MediaField
+              label="Retrato da Kilciene"
+              hint="Aparece no topo da página inicial e na página Sobre. Prefira foto vertical (proporção 4:5), com boa luz."
+              value={about.portraitId}
+              onChange={(id) => setAbout({ ...about, portraitId: id })}
+              error={fieldError(errors, "portraitId")}
+            />
             <Textarea
               label="História"
               hint="Texto corrido, com parágrafos separados por uma linha em branco."

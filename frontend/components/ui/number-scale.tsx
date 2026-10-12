@@ -23,7 +23,7 @@ export function NumberScale({ name, min, max, value, onChange, minLabel, maxLabe
           <label
             key={number}
             className={cn(
-              "grid min-h-12 cursor-pointer place-items-center rounded-xs border bg-card font-mono text-lg font-medium",
+              "grid min-h-12 cursor-pointer place-items-center rounded-md border bg-card font-mono text-lg font-medium",
               "transition-colors hover:border-ink has-checked:border-brand has-checked:bg-brand has-checked:text-brand-contrast",
               "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring",
               invalid ? "border-danger" : "border-rule-strong",

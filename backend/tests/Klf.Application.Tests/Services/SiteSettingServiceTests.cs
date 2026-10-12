@@ -11,12 +11,14 @@ namespace Klf.Application.Tests.Services;
 public sealed class SiteSettingServiceTests
 {
     private readonly InMemorySiteSettingRepository _repository = new();
+    private readonly InMemoryMediaAssetRepository _media = new();
     private readonly SiteSettingService _service;
 
     public SiteSettingServiceTests()
     {
         _service = new SiteSettingService(
             _repository,
+            _media,
             _repository,
             new AboutSettingsValidator(),
             new ContactSettingsValidator(),
@@ -133,6 +135,29 @@ public sealed class SiteSettingServiceTests
     {
         await Assert.ThrowsAsync<NotFoundException>(() =>
             _service.GetAsync("inventada", TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Upsert_about_saves_portrait_when_image_exists_and_rejects_unknown_image()
+    {
+        var portrait = _media.Seed();
+        var token = TestContext.Current.CancellationToken;
+
+        var saved = await _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"mission":"Missão","portraitId":"{{portrait.Id}}"}"""), token);
+        var missing = await Assert.ThrowsAsync<ValidationException>(() =>
+            _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"portraitId":"{{Guid.CreateVersion7()}}"}"""), token));
+
+        Assert.Equal(portrait.Id, saved.GetProperty("portraitId").GetGuid());
+        Assert.Contains("PortraitId", missing.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task Upsert_seo_rejects_share_image_that_does_not_exist()
+    {
+        var exception = await Assert.ThrowsAsync<ValidationException>(() =>
+            _service.UpsertAsync(SiteSettingKeys.Seo, Json($$"""{"shareImageId":"{{Guid.CreateVersion7()}}"}"""), TestContext.Current.CancellationToken));
+
+        Assert.Contains("ShareImageId", exception.Errors.Keys);
     }
 
     private static JsonElement Json(string json)

@@ -52,7 +52,7 @@ export function ClientsList() {
 
 type Form = { name: string; websiteUrl: string; logoId: string | null; displayOrder: string; isActive: boolean };
 
-function ClientForm({ client }: { client?: AdminClient }) {
+function ClientForm({ client, onReset }: { onReset: () => void; client?: AdminClient }) {
   const [form, setForm] = useState<Form>(() => ({
     name: client?.name ?? "",
     websiteUrl: client?.websiteUrl ?? "",
@@ -65,6 +65,7 @@ function ClientForm({ client }: { client?: AdminClient }) {
     listHref: LIST,
     id: client?.id,
     created: "Cliente criado.",
+    onReset,
     deleted: "Cliente excluído.",
   });
   const error = (field: string) => fieldError(editor.errors, field);
@@ -134,7 +135,7 @@ function ClientForm({ client }: { client?: AdminClient }) {
 export function ClientEditor({ id }: { id?: string }) {
   return (
     <EntityLoader<AdminClient> path={id ? `/admin/clients/${id}` : null}>
-      {(client) => <ClientForm client={client} />}
+      {(client, _replace, reset) => <ClientForm client={client} onReset={reset} />}
     </EntityLoader>
   );
 }

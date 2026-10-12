@@ -26,12 +26,12 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
   ].filter((entry): entry is [string, string] => !!entry[1]);
 
   return (
-    <footer className="bg-footer text-footer-ink">
+    <footer className="mt-24 bg-footer text-footer-ink">
       <div className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8">
         <p className="max-w-3xl font-serif text-[clamp(2rem,5vw,3.25rem)] leading-[1.05]">{siteConfig.name}</p>
         <p className="mt-3 max-w-xl font-sans text-base text-footer-ink/80">{copy.footer.tagline}</p>
 
-        <div className="mt-12 grid gap-10 border-t border-footer-ink/30 pt-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <Column title="Navegação">
             {siteConfig.nav.map((item) => (
               <li key={item.href}>

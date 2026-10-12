@@ -142,7 +142,7 @@ function LinkBar({ editor, onClose }: { editor: Editor; onClose: () => void }) {
           }
           if (event.key === "Escape") onClose();
         }}
-        className="min-h-10 min-w-0 flex-1 rounded-xs border border-rule-strong bg-paper px-3 font-sans text-sm"
+        className="min-h-10 min-w-0 flex-1 rounded-md border border-rule-strong bg-paper px-3 font-sans text-sm"
       />
       <button type="button" onClick={apply} className="min-h-10 border border-ink px-3 font-sans text-sm font-medium">
         Aplicar
@@ -217,7 +217,7 @@ export function RichTextEditor({
       {hint && <p className="mb-2 font-sans text-sm text-ink-soft">{hint}</p>}
       <div
         className={cn(
-          "rounded-xs border bg-card has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring",
+          "rounded-md border bg-card has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring",
           error ? "border-2 border-danger" : "border-rule-strong",
         )}
       >

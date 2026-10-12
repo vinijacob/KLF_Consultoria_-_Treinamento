@@ -8,7 +8,7 @@ import { ApiError, fieldError } from "@/lib/api/client";
 import { authRequest, refreshSession, startSession } from "@/lib/auth/session";
 import type { LoginResponse, TwoFactorEnabledResponse, TwoFactorSetupResponse } from "@/types/admin";
 import { Button } from "@/components/ui/button";
-import { Checkbox, Input } from "@/components/ui/field";
+import { Checkbox, Input, PasswordInput } from "@/components/ui/field";
 import { DownloadIcon, KeyIcon, LockIcon } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
 import { Kicker } from "@/components/ui/typography";
@@ -246,9 +246,8 @@ export function LoginFlow({ returnTo, signedOut }: { returnTo: string; signedOut
         onChange={(event) => setEmail(event.target.value)}
         error={fieldError(errors, "email")}
       />
-      <Input
+      <PasswordInput
         label="Senha"
-        type="password"
         autoComplete="current-password"
         required
         value={password}
@@ -446,9 +445,8 @@ export function ResetPasswordForm({ email, token }: { email: string; token: stri
           </Link>
         </Notice>
       )}
-      <Input
+      <PasswordInput
         label="Nova senha"
-        type="password"
         autoComplete="new-password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
@@ -465,9 +463,8 @@ export function ResetPasswordForm({ email, token }: { email: string; token: stri
           );
         })}
       </ul>
-      <Input
+      <PasswordInput
         label="Repita a nova senha"
-        type="password"
         autoComplete="new-password"
         value={confirmation}
         onChange={(event) => setConfirmation(event.target.value)}

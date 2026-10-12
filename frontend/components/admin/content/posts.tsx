@@ -184,7 +184,7 @@ function Counter({ value, max }: { value: string; max: number }) {
   );
 }
 
-function PostForm({ post }: { post?: AdminPost }) {
+function PostForm({ post, onReset }: { onReset: () => void; post?: AdminPost }) {
   const [form, setForm] = useState(() => toForm(post));
   const [slugTouched, setSlugTouched] = useState(Boolean(post));
   const editor = useEntityEditor<AdminPost>({
@@ -192,6 +192,7 @@ function PostForm({ post }: { post?: AdminPost }) {
     listHref: LIST,
     id: post?.id,
     created: "Publicação criada.",
+    onReset,
     deleted: "Publicação excluída.",
   });
   const error = (field: string) => fieldError(editor.errors, field);
@@ -345,7 +346,7 @@ function PostForm({ post }: { post?: AdminPost }) {
 export function PostEditor({ id }: { id?: string }) {
   return (
     <EntityLoader<AdminPost> path={id ? `/admin/posts/${id}` : null}>
-      {(post) => <PostForm post={post} />}
+      {(post, _replace, reset) => <PostForm post={post} onReset={reset} />}
     </EntityLoader>
   );
 }

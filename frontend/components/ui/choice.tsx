@@ -26,7 +26,7 @@ export function ChoiceList({ name, type, options, value, onChange, describedBy, 
         <label
           key={option.id}
           className={cn(
-            "flex min-h-12 cursor-pointer items-center gap-3.5 rounded-xs border bg-card px-4 py-2.5 font-sans text-base",
+            "flex min-h-12 cursor-pointer items-center gap-3.5 rounded-md border bg-card px-4 py-2.5 font-sans text-base",
             "transition-colors hover:border-ink has-checked:border-brand has-checked:bg-brand-soft",
             "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring",
             invalid ? "border-danger" : "border-rule-strong",
@@ -46,7 +46,7 @@ export function ChoiceList({ name, type, options, value, onChange, describedBy, 
               <span className="size-2.5 rounded-full bg-brand transition-transform" />
             </span>
           ) : (
-            <span className="grid size-5 shrink-0 place-items-center rounded-xs border border-rule-strong bg-card text-brand-contrast peer-checked:border-brand peer-checked:bg-brand *:scale-0 peer-checked:*:scale-100">
+            <span className="grid size-5 shrink-0 place-items-center rounded-md border border-rule-strong bg-card text-brand-contrast peer-checked:border-brand peer-checked:bg-brand *:scale-0 peer-checked:*:scale-100">
               <CheckIcon className="text-sm transition-transform" />
             </span>
           )}

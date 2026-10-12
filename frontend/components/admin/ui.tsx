@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -183,12 +184,13 @@ export function AdminForm({
   children: ReactNode;
   pending: boolean;
   message?: string | null;
-  savedNote?: string | null;
+  savedNote?: ReactNode;
   submitLabel?: string;
   extraActions?: ReactNode;
 }) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (event.target !== event.currentTarget) return;
     onSubmit();
   }
 
@@ -217,7 +219,22 @@ export function AdminForm({
   );
 }
 
-/** Diálogo modal nativo (`<dialog>`): foco preso e Esc para fechar já vêm do navegador. */
+const noop = () => () => {};
+
+/** `true` só no navegador, depois da hidratação (o servidor não tem `document.body` para o portal). */
+function useIsClient() {
+  return useSyncExternalStore(
+    noop,
+    () => true,
+    () => false,
+  );
+}
+
+/**
+ * Diálogo modal nativo (`<dialog>`): foco preso e Esc para fechar já vêm do navegador.
+ * Vai para o fim do `<body>` (portal), então um formulário dentro dele (ex.: enviar imagem) nunca fica dentro do
+ * formulário da página; e o envio de dentro não sobe para o formulário de fora.
+ */
 export function Dialog({
   open,
   onClose,
@@ -233,18 +250,22 @@ export function Dialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const isClient = useIsClient();
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
-  }, [open]);
+  }, [open, isClient]);
 
-  return (
+  if (!isClient) return null;
+
+  return createPortal(
     <dialog
       ref={ref}
       onClose={onClose}
+      onSubmit={(event) => event.stopPropagation()}
       aria-labelledby={titleId}
       className={cn(
         "m-auto max-h-[90vh] w-[calc(100%-2rem)] overflow-y-auto border-2 border-ink bg-paper p-0 text-ink backdrop:bg-paper-deep",
@@ -269,7 +290,8 @@ export function Dialog({
           {children}
         </div>
       )}
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }
 

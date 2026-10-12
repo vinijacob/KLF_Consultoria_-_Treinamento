@@ -2,16 +2,17 @@
 
 import {
   useId,
+  useState,
   type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
 import { cn } from "@/lib/cn";
-import { AlertIcon, CheckIcon, ChevronDownIcon } from "./icons";
+import { AlertIcon, CheckIcon, ChevronDownIcon, EyeIcon, EyeOffIcon } from "./icons";
 
 export const controlClasses =
-  "w-full rounded-xs border border-rule-strong bg-card px-3.5 py-3 font-sans text-base text-ink " +
+  "w-full rounded-md border border-rule-strong bg-card px-3.5 py-3 font-sans text-base text-ink " +
   "placeholder:text-ink-soft/70 transition-colors hover:border-ink aria-[invalid=true]:border-danger aria-[invalid=true]:border-2";
 
 export function FieldError({ id, children }: { id?: string; children?: ReactNode }) {
@@ -38,8 +39,9 @@ export function Input({
   error,
   optional,
   className,
+  trailing,
   ...props
-}: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
+}: FieldProps & InputHTMLAttributes<HTMLInputElement> & { trailing?: ReactNode }) {
   const id = useId();
   const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
 
@@ -54,15 +56,45 @@ export function Input({
           {hint}
         </p>
       )}
-      <input
-        id={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy}
-        className={cn(controlClasses, className)}
-        {...props}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={cn(controlClasses, trailing ? "pr-14" : undefined, className)}
+          {...props}
+        />
+        {trailing}
+      </div>
       <FieldError id={`${id}-error`}>{error}</FieldError>
     </div>
+  );
+}
+
+/** Campo de senha com o botão de olho para mostrar ou esconder o que foi digitado. */
+export function PasswordInput(props: FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+  const [visible, setVisible] = useState(false);
+  const Icon = visible ? EyeOffIcon : EyeIcon;
+
+  return (
+    <Input
+      {...props}
+      type={visible ? "text" : "password"}
+      autoCapitalize="none"
+      autoCorrect="off"
+      spellCheck={false}
+      trailing={
+        <button
+          type="button"
+          aria-label={visible ? "Esconder senha" : "Mostrar senha"}
+          aria-pressed={visible}
+          onClick={() => setVisible((current) => !current)}
+          className="absolute top-1/2 right-1 grid size-11 -translate-y-1/2 place-items-center rounded-md text-ink-soft transition-colors hover:text-ink"
+        >
+          <Icon className="text-xl" />
+        </button>
+      }
+    />
   );
 }
 
@@ -160,7 +192,7 @@ export function Checkbox({
         )}
       >
         <input id={id} type="checkbox" className="peer sr-only" aria-describedby={hint ? `${id}-hint` : undefined} {...props} />
-        <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-xs border border-rule-strong bg-card text-brand-contrast peer-checked:border-brand peer-checked:bg-brand peer-disabled:opacity-50 *:scale-0 peer-checked:*:scale-100">
+        <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border border-rule-strong bg-card text-brand-contrast peer-checked:border-brand peer-checked:bg-brand peer-disabled:opacity-50 *:scale-0 peer-checked:*:scale-100">
           <CheckIcon className="text-sm transition-transform" />
         </span>
         <span>

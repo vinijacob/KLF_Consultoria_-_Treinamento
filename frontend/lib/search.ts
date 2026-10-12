@@ -16,24 +16,12 @@ export function matchesQuery(query: string, ...fields: (string | null | undefine
   return terms.every((term) => haystack.includes(term));
 }
 
-/** Letra do índice alfabético; nomes que começam com número ou símbolo vão para "#". */
-export function initialOf(name: string) {
-  const first = normalizeText(name).charAt(0);
-  return /[a-z]/.test(first) ? first.toUpperCase() : "#";
-}
-
-const collator = new Intl.Collator("pt-BR", { sensitivity: "base", numeric: true });
-
-/** Agrupa por letra inicial, em ordem alfabética (com "#" no fim), e ordena os itens de cada grupo. */
-export function groupByInitial<T>(items: readonly T[], nameOf: (item: T) => string) {
-  const groups = new Map<string, T[]>();
-
-  for (const item of [...items].sort((a, b) => collator.compare(nameOf(a), nameOf(b)))) {
-    const letter = initialOf(nameOf(item));
-    groups.set(letter, [...(groups.get(letter) ?? []), item]);
+/** Até `count` itens sorteados, sem repetir (Fisher–Yates). `random` pode ser trocado nos testes. */
+export function pickRandom<T>(items: readonly T[], count: number, random: () => number = Math.random) {
+  const pool = [...items];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-
-  return [...groups.entries()].sort(([a], [b]) => (a === "#" ? 1 : b === "#" ? -1 : a.localeCompare(b)));
+  return pool.slice(0, count);
 }
-
-export const ALPHABET = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "#"];

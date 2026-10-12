@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { serviceFormatLabel } from "@/lib/format";
 import { matchesQuery } from "@/lib/search";
 import type { ServiceListItem } from "@/types/site";
-import { ServiceIndex } from "./lists";
+import { ServiceGrid } from "./lists";
 import { SearchField } from "./search-field";
 
 const FIRST_PAGE = 6;
@@ -41,11 +41,10 @@ export function ServiceCatalog({ services }: { services: ServiceListItem[] }) {
         className="mb-8 max-w-2xl"
       />
       {shown.length > 0 && (
-        <ServiceIndex
+        <ServiceGrid
           key={searching ? "busca" : "catalogo"}
           services={shown.map(({ service }) => service)}
           numbers={shown.map(({ number }) => number)}
-          itemClassName="motion-safe:animate-rise"
         />
       )}
       {hidden > 0 && (

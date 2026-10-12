@@ -41,7 +41,17 @@ internal sealed class MediaAssetRepository(AppDbContext context) : IMediaAssetRe
         || await context.Posts.AnyAsync(post => post.CoverId == id, cancellationToken)
         || await context.Services.AnyAsync(service => service.CoverId == id, cancellationToken)
         || await context.Clients.AnyAsync(client => client.LogoId == id, cancellationToken)
-        || await context.Testimonials.AnyAsync(testimonial => testimonial.PhotoId == id, cancellationToken);
+        || await context.Testimonials.AnyAsync(testimonial => testimonial.PhotoId == id, cancellationToken)
+        || await IsUsedInSettingsAsync(id, cancellationToken);
+
+    /// <summary>Settings keep image ids inside their JSON (portrait, share image), so there is no foreign key to check.</summary>
+    private async Task<bool> IsUsedInSettingsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var values = await context.SiteSettings.AsNoTracking().Select(setting => setting.ValueJson).ToListAsync(cancellationToken);
+        var text = id.ToString();
+
+        return values.Exists(json => json.Contains(text, StringComparison.OrdinalIgnoreCase));
+    }
 
     public void Add(MediaAsset mediaAsset) => context.MediaAssets.Add(mediaAsset);
 

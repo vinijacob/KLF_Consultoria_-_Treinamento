@@ -89,13 +89,22 @@ function toForm(item?: AdminTestimonial): Form {
   };
 }
 
-function TestimonialForm({ item, onReplace }: { item?: AdminTestimonial; onReplace: (item: AdminTestimonial) => void }) {
+function TestimonialForm({
+  item,
+  onReplace,
+  onReset,
+}: {
+  item?: AdminTestimonial;
+  onReplace: (item: AdminTestimonial) => void;
+  onReset: () => void;
+}) {
   const [form, setForm] = useState(() => toForm(item));
   const editor = useEntityEditor<AdminTestimonial>({
     apiPath: "/admin/testimonials",
     listHref: LIST,
     id: item?.id,
     created: "Depoimento criado.",
+    onReset,
     deleted: "Depoimento excluído.",
   });
   const error = (field: string) => fieldError(editor.errors, field);
@@ -249,7 +258,7 @@ function TestimonialForm({ item, onReplace }: { item?: AdminTestimonial; onRepla
 export function TestimonialEditor({ id }: { id?: string }) {
   return (
     <EntityLoader<AdminTestimonial> path={id ? `/admin/testimonials/${id}` : null}>
-      {(item, replace) => <TestimonialForm key={item?.consentRevokedAt ?? "active"} item={item} onReplace={replace} />}
+      {(item, replace, reset) => <TestimonialForm key={item?.consentRevokedAt ?? "active"} item={item} onReplace={replace} onReset={reset} />}
     </EntityLoader>
   );
 }

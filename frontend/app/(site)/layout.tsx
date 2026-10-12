@@ -33,7 +33,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
         Pular para o conteúdo
       </a>
       <SiteHeader />
-      <main id="conteudo" className="flex-1 pb-24">
+      <main id="conteudo" className="flex-1">
         {children}
       </main>
       <SiteFooter settings={settings} />

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowLink, Container, FramedImage, Prose } from "@/components/site/blocks";
+import { ArrowLink, Badge, Container, FramedImage, Prose } from "@/components/site/blocks";
 import { FactList } from "@/components/site/lists";
 import { buttonClasses, ButtonLink } from "@/components/ui/button";
-import { Kicker, Rule } from "@/components/ui/typography";
+import { Kicker } from "@/components/ui/typography";
 import { getService, getSettings, mediaUrl } from "@/lib/api/public";
 import { formatWorkload, serviceFormatLabel, whatsappLink } from "@/lib/format";
 
@@ -32,28 +32,29 @@ export default async function ServicePage({ params }: PageProps<"/servicos/[slug
   return (
     <article>
       <Container className="pt-12 sm:pt-16">
-        <Kicker>
-          Serviço · {serviceFormatLabel[service.format]} · {formatWorkload(service.workloadHours)}
-        </Kicker>
+        <p className="flex flex-wrap gap-2">
+          <Badge tone="brand">Serviço</Badge>
+          <Badge>{serviceFormatLabel[service.format]}</Badge>
+          <Badge>{formatWorkload(service.workloadHours)}</Badge>
+        </p>
         <h1 className="mt-4 max-w-4xl text-[clamp(2.5rem,7vw,4.75rem)] leading-[1.02]">{service.title}</h1>
         {service.summary && <p className="mt-6 max-w-2xl text-[1.375rem] leading-relaxed">{service.summary}</p>}
-        <Rule variant="double" className="mt-10" />
       </Container>
 
       <Container className="mt-12 grid gap-14 lg:grid-cols-12">
         <div className="lg:col-span-8">
           {service.coverId && (
             <div className="mb-12">
-              <FramedImage src={mediaUrl(service.coverId)} alt="" ratio="aspect-[16/9]" sizes="(min-width: 1024px) 60vw, 100vw" />
+              <FramedImage src={mediaUrl(service.coverId)} alt="" ratio="aspect-video" sizes="(min-width: 1024px) 60vw, 100vw" />
             </div>
           )}
           <Prose html={service.contentHtml} />
         </div>
 
         <aside className="lg:col-span-4" aria-label="Ficha do treinamento">
-          <div className="lg:sticky lg:top-8">
+          <div className="rounded-2xl border border-rule bg-card p-7 lg:sticky lg:top-28">
             <Kicker>Ficha técnica</Kicker>
-            <div className="mt-4">
+            <div className="mt-5">
               <FactList
                 items={[
                   { label: "Formato", value: serviceFormatLabel[service.format] },
@@ -79,8 +80,7 @@ export default async function ServicePage({ params }: PageProps<"/servicos/[slug
       </Container>
 
       <Container className="mt-20">
-        <Rule />
-        <ArrowLink href="/servicos" className="mt-6">
+        <ArrowLink href="/servicos">
           Ver todos os serviços
         </ArrowLink>
       </Container>
