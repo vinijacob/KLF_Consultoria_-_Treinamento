@@ -17,14 +17,20 @@ import { FormBuilder, PreviewButton } from "./builder";
 
 const LIST = "/painel/avaliacoes/formularios";
 
-/** Avaliações são só da administração (a API devolve 403 para Edição; aqui só explicamos). */
-export function AdminOnly({ children }: { children: ReactNode }) {
+/** Áreas só da administração (a API devolve 403 para Edição; aqui só explicamos o porquê). */
+export function AdminOnly({
+  children,
+  reason = "Avaliações e resultados das turmas ficam só com a administração, porque as respostas falam de empresas clientes.",
+}: {
+  children: ReactNode;
+  reason?: string;
+}) {
   const { isAdmin } = useAuth();
   if (isAdmin) return <>{children}</>;
 
   return (
     <Notice tone="privacy" title="Área da administração">
-      Avaliações e resultados das turmas ficam só com a administração, porque as respostas falam de empresas clientes.
+      {reason}
     </Notice>
   );
 }

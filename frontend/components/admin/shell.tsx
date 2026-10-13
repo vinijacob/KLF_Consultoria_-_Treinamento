@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { isActive, navFor, roleInfo } from "@/config/admin";
 import { datelineFor } from "@/lib/admin/datetime";
+import { useUnreadMessageCount } from "@/lib/admin/unread";
 import { cn } from "@/lib/cn";
 import type { Role } from "@/types/admin";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -68,7 +69,18 @@ function PanelWordmark() {
   );
 }
 
-function Navigation({ onNavigate }: { onNavigate?: () => void }) {
+function CountBadge({ count }: { count: number }) {
+  return (
+    <span
+      aria-hidden
+      className="grid h-6 min-w-6 place-items-center self-center rounded-full bg-accent px-1.5 font-mono text-xs font-medium text-accent-contrast"
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+function Navigation({ onNavigate, counts = {} }: { onNavigate?: () => void; counts?: Record<string, number> }) {
   const pathname = usePathname();
   const { role } = useAuth();
   const groups = navFor(role);
@@ -83,6 +95,7 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
             {group.items.map((item, i) => {
               const current = isActive(item, pathname);
               const index = String(firstNumber[g] + i).padStart(2, "0");
+              const unread = counts[item.href] ?? 0;
 
               return (
                 <li key={item.href} className="border-b border-rule">
@@ -96,8 +109,12 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
                     )}
                   >
                     <span className="w-5 font-mono text-xs font-normal text-ink-soft">{index}</span>
-                    <span className="flex-1">{item.label}</span>
-                    {current && <span aria-hidden className="h-px w-4 self-center bg-accent" />}
+                    <span className="flex-1">
+                      {item.label}
+                      {unread > 0 && <span className="sr-only">, {unread} não lida{unread > 1 ? "s" : ""}</span>}
+                    </span>
+                    {unread > 0 && <CountBadge count={unread} />}
+                    {current && unread === 0 && <span aria-hidden className="h-px w-4 self-center bg-accent" />}
                   </Link>
                 </li>
               );
@@ -140,6 +157,9 @@ function AccountFooter() {
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { isAdmin } = useAuth();
+  const unread = useUnreadMessageCount(isAdmin);
+  const counts = { "/painel/mensagens": unread };
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -155,7 +175,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col overflow-y-auto border-r border-rule px-7 py-8 lg:flex">
           <PanelWordmark />
           <Rule variant="double" className="mt-4 mb-7" />
-          <Navigation />
+          <Navigation counts={counts} />
           <div className="flex-1" />
           <AccountFooter />
         </aside>
@@ -171,11 +191,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 aria-controls="menu-painel"
                 onClick={() => setOpen((value) => !value)}
               >
-                {open ? "Fechar" : "Menu"}
+                <span className="flex items-center gap-2">
+                  {open ? "Fechar" : "Menu"}
+                  {!open && unread > 0 && (
+                    <>
+                      <CountBadge count={unread} />
+                      <span className="sr-only">{unread} mensage{unread > 1 ? "ns" : "m"} não lida{unread > 1 ? "s" : ""}</span>
+                    </>
+                  )}
+                </span>
               </button>
             </div>
             <div id="menu-painel" className={cn("pb-6", open ? "block" : "hidden")}>
-              <Navigation onNavigate={() => setOpen(false)} />
+              <Navigation counts={counts} onNavigate={() => setOpen(false)} />
               <AccountFooter />
             </div>
           </div>

@@ -19,9 +19,13 @@ internal static class Policies
     /// <summary>Manage feedback forms and sessions and see responses. Admin only.</summary>
     public const string ManageFeedback = nameof(ManageFeedback);
 
+    /// <summary>Read and manage the messages of the contact form (personal data of prospective clients). Admin only.</summary>
+    public const string ManageContactMessages = nameof(ManageContactMessages);
+
     /// <summary>Registers every policy.</summary>
     public static AuthorizationBuilder AddKlfPolicies(this AuthorizationBuilder builder) => builder
         .AddPolicy(ManageUsers, policy => policy.RequireRole(Roles.Admin))
         .AddPolicy(ManageContent, policy => policy.RequireRole(Roles.Admin, Roles.Editor))
-        .AddPolicy(ManageFeedback, policy => policy.RequireRole(Roles.Admin));
+        .AddPolicy(ManageFeedback, policy => policy.RequireRole(Roles.Admin))
+        .AddPolicy(ManageContactMessages, policy => policy.RequireRole(Roles.Admin));
 }

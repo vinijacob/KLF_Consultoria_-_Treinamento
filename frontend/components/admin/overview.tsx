@@ -136,6 +136,7 @@ export function Overview() {
   const published = useApi<Paged<AdminPostListItem>>("/admin/posts?status=Published&pageSize=1");
   const testimonials = useApi<AdminTestimonial[]>("/admin/testimonials");
   const media = useApi<Paged<MediaAsset>>("/admin/media?pageSize=100");
+  const messages = useApi<{ newCount: number }>(isAdmin ? "/admin/contact-messages/summary" : null);
 
   const activeServices = services.data?.filter((service) => service.isActive).length;
   const visibleTestimonials = testimonials.data?.filter(
@@ -144,6 +145,7 @@ export function Overview() {
   const withoutConsent = testimonials.data?.filter((item) => !item.consentGivenAt && !item.consentRevokedAt).length ?? 0;
   const withoutAlt = media.data?.items.filter((asset) => !asset.altText).length ?? 0;
   const draftCount = drafts.data?.totalItems ?? 0;
+  const newMessages = messages.data?.newCount ?? 0;
 
   return (
     <div>
@@ -174,6 +176,11 @@ export function Overview() {
               Pendências
             </h2>
             <ul className="mt-4 border-t-2 border-ink">
+              {newMessages > 0 && (
+                <Pending href="/painel/mensagens?status=New">
+                  {plural(newMessages, "mensagem nova pelo site", "mensagens novas pelo site")}
+                </Pending>
+              )}
               {draftCount > 0 && (
                 <Pending href="/painel/publicacoes?status=Draft">
                   {plural(draftCount, "publicação em rascunho", "publicações em rascunho")}
@@ -189,7 +196,7 @@ export function Overview() {
                   {plural(withoutConsent, "depoimento sem consentimento registrado", "depoimentos sem consentimento registrado")}
                 </Pending>
               )}
-              {draftCount === 0 && withoutAlt === 0 && withoutConsent === 0 && (
+              {newMessages === 0 && draftCount === 0 && withoutAlt === 0 && withoutConsent === 0 && (
                 <li className="flex items-center gap-3 border-b border-rule py-3 font-sans text-[0.9375rem] text-ink-soft">
                   <CheckIcon className="text-success" /> Nada pendente por aqui.
                 </li>

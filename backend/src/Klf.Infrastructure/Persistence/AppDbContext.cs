@@ -60,6 +60,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Anonymous feedback responses (no IP, user agent, exact time or user).</summary>
     public DbSet<FeedbackResponse> FeedbackResponses => Set<FeedbackResponse>();
 
+    /// <summary>Messages sent through the contact form (personal data: deleted for real, kept at most 2 years).</summary>
+    public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
+
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

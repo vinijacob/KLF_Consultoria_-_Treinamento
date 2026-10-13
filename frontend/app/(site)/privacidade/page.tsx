@@ -63,9 +63,12 @@ export default async function PrivacyPage() {
               </ul>
               <h3>Quando você fala com a gente</h3>
               <p>
-                Pelo WhatsApp, e-mail ou telefone, recebemos o que você decidir enviar: normalmente nome, contato, empresa e a
-                mensagem. Usamos para responder e preparar uma proposta (procedimentos preliminares a um contrato, a seu pedido).
-                O WhatsApp é um serviço da Meta e segue também a política de privacidade dela.
+                No formulário de contato do site pedimos nome, e-mail e a mensagem; telefone, empresa e o serviço de interesse são
+                opcionais. Pelo WhatsApp, e-mail ou telefone, recebemos o que você decidir enviar. Usamos esses dados só para
+                responder e preparar uma proposta (procedimentos preliminares a um contrato, a seu pedido). Quando a mensagem
+                chega pelo formulário, a KLF recebe um aviso por e-mail com o conteúdo, e guardamos a data e a versão desta
+                política que você confirmou ter lido. O WhatsApp é um serviço da Meta e segue também a política de privacidade
+                dela.
               </p>
               <h3>Nas avaliações por QR Code</h3>
               <p>
@@ -103,7 +106,10 @@ export default async function PrivacyPage() {
           body: (
             <ul>
               <li>Registros de acesso ao site: 6 meses.</li>
-              <li>Conversas e pedidos de contato: até 2 anos depois do último contato, a menos que vire um contrato.</li>
+              <li>
+                Mensagens do formulário e outros pedidos de contato: até 2 anos depois do último contato, a menos que vire um
+                contrato. As do formulário são excluídas automaticamente ao fim desse prazo.
+              </li>
               <li>Depoimentos: enquanto a autorização valer. Retirada a autorização, o depoimento sai do site.</li>
               <li>Avaliações: as respostas anônimas ficam como histórico das turmas, sem prazo, porque não identificam ninguém.</li>
               <li>Contas do painel: enquanto a pessoa trabalhar com a KLF.</li>

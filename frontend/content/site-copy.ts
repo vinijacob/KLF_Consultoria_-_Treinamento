@@ -83,7 +83,6 @@ export const copy = {
       "Conte o momento da sua empresa, o tamanho do time e o que você espera do treinamento. A Kilciene responde pessoalmente.",
     whatsappMessage: "Olá, Kilciene! Gostaria de conversar sobre um treinamento para a minha equipe.",
     hours: "Atendimento de segunda a sexta, em horário comercial.",
-    formSoon: "Em breve, também um formulário para pedir proposta por aqui.",
   },
 
   footer: {

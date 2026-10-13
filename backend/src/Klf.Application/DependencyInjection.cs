@@ -6,6 +6,7 @@ using Klf.Application.Services.Auth;
 using Klf.Application.Services.Career;
 using Klf.Application.Services.Catalog;
 using Klf.Application.Services.Clients;
+using Klf.Application.Services.Contact;
 using Klf.Application.Services.Feedback;
 using Klf.Application.Services.Media;
 using Klf.Application.Services.Posts;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IFeedbackFormService, FeedbackFormService>();
         services.AddScoped<IFeedbackSessionService, FeedbackSessionService>();
         services.AddScoped<IPublicFeedbackService, PublicFeedbackService>();
+        services.AddScoped<IContactMessageService, ContactMessageService>();
 
         return services;
     }

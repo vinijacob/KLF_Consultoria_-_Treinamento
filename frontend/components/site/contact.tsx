@@ -46,7 +46,7 @@ export function ClosingCta({ contact, message }: { contact?: ContactSettings; me
 }
 
 /** Canais de contato em caixas, cada um com o que fazer (abrir conversa, escrever, ligar). */
-export function ContactChannels({ contact }: { contact: ContactSettings }) {
+export function ContactChannels({ contact, stacked = false }: { contact: ContactSettings; stacked?: boolean }) {
   const channels = [
     contact.whatsapp && {
       label: "WhatsApp",
@@ -63,13 +63,13 @@ export function ContactChannels({ contact }: { contact: ContactSettings }) {
   }
 
   return (
-    <dl className="grid gap-4 sm:grid-cols-2">
+    <dl className={stacked ? "grid gap-4" : "grid gap-4 sm:grid-cols-2"}>
       {channels.map((channel) => (
         <div key={channel.label} className="reveal rounded-2xl border border-rule bg-card p-6">
           <dt>
             <Kicker>{channel.label}</Kicker>
           </dt>
-          <dd className="mt-2 font-serif text-[1.5rem] leading-snug break-words">
+          <dd className={`mt-2 font-serif leading-snug break-words ${stacked ? "text-xl" : "text-[1.5rem]"}`}>
             {channel.href ? (
               <a
                 href={channel.href}

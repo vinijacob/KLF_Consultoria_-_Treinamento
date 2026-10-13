@@ -47,6 +47,7 @@ public class KlfApiFactory : WebApplicationFactory<Program>
             ["ConnectionStrings:Default"] = "Host=localhost;Database=klf_test_never_opened",
             ["RateLimiting:LoginPerMinute"] = "1000",
             ["TwoFactor:Required"] = "false",
+            ["Jobs:Enabled"] = "false",
         }));
 
         builder.ConfigureTestServices(services =>

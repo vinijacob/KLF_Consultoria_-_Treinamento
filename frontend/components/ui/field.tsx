@@ -9,6 +9,8 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import { cn } from "@/lib/cn";
+import { nextCnpjValue } from "@/lib/cnpj";
+import { nextPhoneValue } from "@/lib/phone";
 import { AlertIcon, CheckIcon, ChevronDownIcon, EyeIcon, EyeOffIcon } from "./icons";
 
 export const controlClasses =
@@ -96,6 +98,24 @@ export function PasswordInput(props: FieldProps & Omit<InputHTMLAttributes<HTMLI
       }
     />
   );
+}
+
+type MaskedProps = FieldProps &
+  Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> & { value: string; onValueChange: (value: string) => void };
+
+/** Campo com pontuação aplicada enquanto a pessoa digita; `next` recebe o valor anterior e o digitado e devolve o formatado. */
+function MaskedInput({ value, onValueChange, next, ...props }: MaskedProps & { next: (previous: string, raw: string) => string }) {
+  return <Input {...props} value={value} onChange={(event) => onValueChange(next(value, event.target.value))} />;
+}
+
+/** Telefone: +55 (92) 98888-7777. Sem "+", o número é brasileiro e ganha o 55. */
+export function PhoneInput(props: MaskedProps) {
+  return <MaskedInput type="tel" inputMode="tel" placeholder="+55 (92) 99999-9999" maxLength={19} {...props} next={nextPhoneValue} />;
+}
+
+/** CNPJ numérico ou alfanumérico: 12.ABC.345/01DE-35. */
+export function CnpjInput(props: MaskedProps) {
+  return <MaskedInput autoCapitalize="characters" spellCheck={false} placeholder="00.000.000/0000-00" maxLength={18} {...props} next={nextCnpjValue} />;
 }
 
 export function Textarea({

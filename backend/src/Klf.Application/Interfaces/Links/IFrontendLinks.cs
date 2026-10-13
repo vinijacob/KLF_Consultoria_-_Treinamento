@@ -11,4 +11,8 @@ public interface IFrontendLinks
     /// <summary>Address of the anonymous feedback page of a session (the one encoded in the QR Code).</summary>
     /// <param name="publicCode">Public code of the session.</param>
     Uri FeedbackForm(string publicCode);
+
+    /// <summary>Address of a contact message in the admin panel.</summary>
+    /// <param name="id">Message id.</param>
+    Uri ContactMessage(Guid id);
 }

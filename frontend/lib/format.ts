@@ -52,6 +52,12 @@ export function whatsappLink(number: string, message: string) {
   return `https://wa.me/${number.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
 }
 
+/** Só os dígitos do telefone, com o 55 do Brasil na frente quando vier só com DDD (10 ou 11 dígitos). */
+export function phoneDigits(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 || digits.length === 11 ? `55${digits}` : digits;
+}
+
 export function phoneHref(phone: string) {
-  return `tel:+${phone.replace(/\D/g, "")}`;
+  return `tel:+${phoneDigits(phone)}`;
 }

@@ -11,4 +11,7 @@ internal sealed class FrontendLinks(IOptions<FrontendOptions> options) : IFronte
 
     public Uri FeedbackForm(string publicCode) =>
         new($"{options.Value.BaseUrl.TrimEnd('/')}/avaliar/{Uri.EscapeDataString(publicCode)}");
+
+    public Uri ContactMessage(Guid id) =>
+        new($"{options.Value.BaseUrl.TrimEnd('/')}/painel/mensagens/{id}");
 }

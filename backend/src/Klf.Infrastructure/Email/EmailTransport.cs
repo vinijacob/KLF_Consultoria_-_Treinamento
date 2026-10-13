@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Klf.Application.Interfaces.Email;
 
@@ -29,6 +31,8 @@ internal sealed partial class LogEmailTransport(ILogger<LogEmailTransport> logge
 
 internal sealed class ResendEmailTransport(HttpClient httpClient, IOptions<EmailOptions> options) : IEmailTransport
 {
+    private static readonly JsonSerializerOptions SkipNulls = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+
     public async Task DeliverAsync(EmailMessage message, CancellationToken cancellationToken)
     {
         var settings = options.Value;
@@ -47,7 +51,8 @@ internal sealed class ResendEmailTransport(HttpClient httpClient, IOptions<Email
                 subject = message.Subject,
                 html = message.HtmlBody,
                 text = message.TextBody,
-            }),
+                reply_to = message.ReplyTo,
+            }, options: SkipNulls),
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", settings.ResendApiKey);
 

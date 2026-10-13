@@ -24,6 +24,11 @@ internal static class AuthenticationExtensions
     public const string FeedbackRateLimitPolicy = "feedback";
 
     /// <summary>
+    /// Rate limiting policy of the contact form: <c>RateLimiting:ContactPer10Minutes</c> messages per 10 minutes per IP (default 5).
+    /// </summary>
+    public const string ContactRateLimitPolicy = "contact";
+
+    /// <summary>
     /// Validates incoming JWTs with the same <see cref="JwtOptions"/> used to issue them.
     /// Inbound claim mapping is disabled, so claims keep their short names (<c>sub</c>, <c>role</c>, <c>name</c>).
     /// </summary>
@@ -70,6 +75,13 @@ internal static class AuthenticationExtensions
                 {
                     PermitLimit = context.RequestServices.GetRequiredService<IConfiguration>().GetValue("RateLimiting:FeedbackPerMinute", 120),
                     Window = TimeSpan.FromMinutes(1),
+                }));
+            options.AddPolicy(ContactRateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = context.RequestServices.GetRequiredService<IConfiguration>().GetValue("RateLimiting:ContactPer10Minutes", 5),
+                    Window = TimeSpan.FromMinutes(10),
                 }));
         });
 

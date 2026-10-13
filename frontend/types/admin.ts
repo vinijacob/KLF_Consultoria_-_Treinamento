@@ -210,3 +210,33 @@ export type FeedbackSummary = {
   nps?: NpsResult | null;
   sessions: { id: string; title: string; opensAt: string; responseCount: number; nps?: NpsResult | null }[];
 };
+
+export type ContactMessageStatus = "New" | "Read" | "Answered";
+
+export type ContactMessageListItem = {
+  id: string;
+  name: string;
+  email: string;
+  company?: string | null;
+  serviceTitle?: string | null;
+  excerpt: string;
+  status: ContactMessageStatus;
+  receivedAt: string;
+};
+
+export type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  serviceId?: string | null;
+  serviceTitle?: string | null;
+  message: string;
+  status: ContactMessageStatus;
+  receivedAt: string;
+  readAt?: string | null;
+  answeredAt?: string | null;
+  privacyPolicyVersion: string;
+  deleteAfter: string;
+};

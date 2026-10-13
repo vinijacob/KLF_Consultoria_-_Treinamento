@@ -5,7 +5,8 @@ namespace Klf.Application.Interfaces.Email;
 /// <param name="Subject">Subject line.</param>
 /// <param name="HtmlBody">Message as HTML. Any user-provided text must be HTML-encoded by the caller.</param>
 /// <param name="TextBody">The same message as plain text.</param>
-public sealed record EmailMessage(string To, string Subject, string HtmlBody, string TextBody);
+/// <param name="ReplyTo">Address that receives the replies, when it is not the sender (e.g. the visitor who filled the contact form).</param>
+public sealed record EmailMessage(string To, string Subject, string HtmlBody, string TextBody, string? ReplyTo = null);
 
 /// <summary>Sends e-mails. Implemented in Infrastructure; sending is queued, so callers do not wait for the provider.</summary>
 public interface IEmailSender

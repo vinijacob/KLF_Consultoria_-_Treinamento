@@ -64,14 +64,13 @@ export default async function ServicePage({ params }: PageProps<"/servicos/[slug
               />
             </div>
             <div className="mt-8 flex flex-col gap-3">
-              {whatsapp ? (
-                <a href={whatsappLink(whatsapp, message)} rel="noopener" className={buttonClasses({ size: "lg" }, "w-full")}>
-                  Pedir proposta pelo WhatsApp
+              <ButtonLink href={`/contato?servico=${encodeURIComponent(service.slug)}#formulario`} size="lg" className="w-full">
+                Pedir proposta
+              </ButtonLink>
+              {whatsapp && (
+                <a href={whatsappLink(whatsapp, message)} rel="noopener" className={buttonClasses({ variant: "outline", size: "lg" }, "w-full")}>
+                  Conversar pelo WhatsApp
                 </a>
-              ) : (
-                <ButtonLink href="/contato" size="lg" className="w-full">
-                  Pedir proposta
-                </ButtonLink>
               )}
               <p className="font-sans text-sm text-ink-soft">O conteúdo é ajustado à realidade da sua equipe.</p>
             </div>

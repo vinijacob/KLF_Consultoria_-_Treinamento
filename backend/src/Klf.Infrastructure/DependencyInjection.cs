@@ -8,6 +8,7 @@ using Klf.Application.Interfaces.Storage;
 using Klf.Infrastructure.Documents;
 using Klf.Infrastructure.Email;
 using Klf.Infrastructure.Identity;
+using Klf.Infrastructure.Jobs;
 using Klf.Infrastructure.Persistence;
 using Klf.Infrastructure.Repositories;
 using Klf.Infrastructure.Services;
@@ -121,6 +122,8 @@ public static class DependencyInjection
         services.AddScoped<IFeedbackSessionRepository, FeedbackSessionRepository>();
         services.AddScoped<IFeedbackResponseRepository, FeedbackResponseRepository>();
         services.AddSingleton<IFeedbackPosterRenderer, FeedbackPosterRenderer>();
+        services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
+        services.AddHostedService<ContactRetentionJob>();
 
         return services;
     }

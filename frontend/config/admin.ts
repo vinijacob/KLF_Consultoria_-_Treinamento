@@ -19,6 +19,11 @@ export const adminNav: AdminNavGroup[] = [
     ],
   },
   {
+    title: "Atendimento",
+    adminOnly: true,
+    items: [{ href: "/painel/mensagens", label: "Mensagens" }],
+  },
+  {
     title: "Avaliações",
     adminOnly: true,
     items: [
@@ -47,6 +52,7 @@ export const roleInfo: Record<Role, { label: string; summary: string; can: strin
       "Editar todo o conteúdo do site",
       "Criar turmas, formulários e ver resultados das avaliações",
       "Baixar QR Code e cartaz das turmas",
+      "Ler e responder as mensagens do formulário de contato",
     ],
     cannot: [],
   },
@@ -54,6 +60,6 @@ export const roleInfo: Record<Role, { label: string; summary: string; can: strin
     label: "Edição",
     summary: "Conteúdo do site: serviços, publicações, trajetória, depoimentos, clientes e galeria.",
     can: ["Editar serviços, publicações e trajetória", "Cuidar de depoimentos, clientes, imagens e galeria", "Atualizar os dados do site"],
-    cannot: ["Avaliações e resultados das turmas ficam com a administração"],
+    cannot: ["Avaliações, resultados das turmas e mensagens de contato ficam com a administração"],
   },
 };

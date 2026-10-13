@@ -5,10 +5,12 @@ import { optional } from "@/lib/admin/editor";
 import { useApi, useSubmit } from "@/lib/admin/hooks";
 import { adminFetch } from "@/lib/auth/session";
 import { fieldError } from "@/lib/api/client";
+import { formatCnpj } from "@/lib/cnpj";
 import { formatDay } from "@/lib/format";
+import { phoneFieldValue } from "@/lib/phone";
 import type { AboutSettings, ContactSettings, LegalSettings, SeoSettings, SiteSettings, SocialSettings } from "@/types/admin";
 import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/field";
+import { CnpjInput, Input, PhoneInput, Textarea } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { MediaField } from "../media";
 import { AdminHeader, FieldRow, LoadError, Loading, Section } from "../ui";
@@ -83,9 +85,9 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
     portraitId: settings.about?.portraitId ?? null,
   });
   const [contact, setContact] = useState({
-    whatsapp: settings.contact?.whatsapp ?? "",
+    whatsapp: phoneFieldValue(settings.contact?.whatsapp),
     email: settings.contact?.email ?? "",
-    phone: settings.contact?.phone ?? "",
+    phone: phoneFieldValue(settings.contact?.phone),
     address: settings.contact?.address ?? "",
     mapUrl: settings.contact?.mapUrl ?? "",
   });
@@ -173,21 +175,19 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
         {(errors) => (
           <>
             <FieldRow>
-              <Input
+              <PhoneInput
                 label="WhatsApp"
-                hint="Com código do país e DDD, ex.: 5592999999999."
-                inputMode="tel"
+                hint="Número do WhatsApp da KLF, com DDD."
                 value={contact.whatsapp}
-                onChange={(event) => setContact({ ...contact, whatsapp: event.target.value })}
+                onValueChange={(whatsapp) => setContact({ ...contact, whatsapp })}
                 error={fieldError(errors, "whatsapp")}
               />
-              <Input
+              <PhoneInput
                 label="Telefone"
                 optional
-                hint="Como deve aparecer, ex.: +55 (92) 3333-3333."
-                inputMode="tel"
+                hint="Aparece no site exatamente assim."
                 value={contact.phone}
-                onChange={(event) => setContact({ ...contact, phone: event.target.value })}
+                onValueChange={(phone) => setContact({ ...contact, phone })}
                 error={fieldError(errors, "phone")}
               />
             </FieldRow>
@@ -273,7 +273,7 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
 function LegalBlock({ initial }: { initial?: LegalSettings }) {
   const [legal, setLegal] = useState({
     companyName: initial?.companyName ?? "",
-    cnpj: initial?.cnpj ?? "",
+    cnpj: formatCnpj(initial?.cnpj ?? ""),
     address: initial?.address ?? "",
     forumCity: initial?.forumCity ?? "",
     dpoName: initial?.dpoName ?? "",
@@ -305,13 +305,11 @@ function LegalBlock({ initial }: { initial?: LegalSettings }) {
         <>
           <FieldRow>
             <Input label="Razão social" value={legal.companyName} maxLength={200} onChange={set("companyName")} error={fieldError(errors, "companyName")} />
-            <Input
+            <CnpjInput
               label="CNPJ"
-              hint="Com ou sem pontuação. Aceita o CNPJ novo, com letras."
+              hint="Aceita o CNPJ novo, com letras."
               value={legal.cnpj}
-              maxLength={18}
-              autoCapitalize="characters"
-              onChange={set("cnpj")}
+              onValueChange={(cnpj) => setLegal({ ...legal, cnpj })}
               error={fieldError(errors, "cnpj")}
             />
           </FieldRow>

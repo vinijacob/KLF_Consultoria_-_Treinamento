@@ -1,4 +1,4 @@
-import type { PostStatus } from "@/types/admin";
+import type { ContactMessageStatus, PostStatus } from "@/types/admin";
 
 /** Só volta para dentro do painel (evita redirecionamento aberto para outro site). */
 export function safeReturnPath(value: unknown) {
@@ -11,4 +11,10 @@ const postStatuses: readonly string[] = ["Draft", "Scheduled", "Published"] sati
 
 export function isPostStatus(value: unknown): value is PostStatus {
   return typeof value === "string" && postStatuses.includes(value);
+}
+
+const contactStatuses: readonly string[] = ["New", "Read", "Answered"] satisfies ContactMessageStatus[];
+
+export function isContactStatus(value: unknown): value is ContactMessageStatus {
+  return typeof value === "string" && contactStatuses.includes(value);
 }
