@@ -12,6 +12,7 @@ using Klf.Application.Services.Media;
 using Klf.Application.Services.Posts;
 using Klf.Application.Services.Settings;
 using Klf.Application.Services.Testimonials;
+using Klf.Application.Services.Users;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -40,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IFeedbackSessionService, FeedbackSessionService>();
         services.AddScoped<IPublicFeedbackService, PublicFeedbackService>();
         services.AddScoped<IContactMessageService, ContactMessageService>();
+        services.AddScoped<IUserManagementService, UserManagementService>();
 
         return services;
     }

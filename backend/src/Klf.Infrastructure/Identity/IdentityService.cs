@@ -140,7 +140,7 @@ internal sealed class IdentityService(UserManager<ApplicationUser> userManager) 
     {
         var user = await userManager.FindByEmailAsync(email);
 
-        if (user?.Email is null)
+        if (user?.Email is null || !user.IsActive)
         {
             return null;
         }
@@ -172,10 +172,12 @@ internal sealed class IdentityService(UserManager<ApplicationUser> userManager) 
             return new PasswordResetResult(PasswordResetStatus.InvalidToken, [], null);
         }
 
-        var messages = result.Errors.Select(error => PasswordErrorMessages.GetValueOrDefault(error.Code, "A senha não atende aos requisitos.")).Distinct();
-
-        return new PasswordResetResult(PasswordResetStatus.WeakPassword, [.. messages], null);
+        return new PasswordResetResult(PasswordResetStatus.WeakPassword, [.. PasswordErrors(result)], null);
     }
+
+    /// <summary>Password policy failures in Portuguese, one per rule.</summary>
+    internal static IEnumerable<string> PasswordErrors(IdentityResult result) =>
+        result.Errors.Select(error => PasswordErrorMessages.GetValueOrDefault(error.Code, "A senha não atende aos requisitos.")).Distinct();
 
     private async Task<TwoFactorCheckStatus> CheckAuthenticatorCodeAsync(ApplicationUser user, string code)
     {
@@ -211,5 +213,5 @@ internal sealed class IdentityService(UserManager<ApplicationUser> userManager) 
         string.Join(' ', Enumerable.Range(0, (key.Length + 3) / 4).Select(i => key.Substring(i * 4, Math.Min(4, key.Length - (i * 4))))).ToLowerInvariant();
 
     private async Task<UserAccount> ToAccountAsync(ApplicationUser user) =>
-        new(user.Id, user.Email ?? string.Empty, user.FullName, [.. await userManager.GetRolesAsync(user)], user.TwoFactorEnabled);
+        new(user.Id, user.Email ?? string.Empty, user.FullName, [.. await userManager.GetRolesAsync(user)], user.TwoFactorEnabled, user.IsActive);
 }

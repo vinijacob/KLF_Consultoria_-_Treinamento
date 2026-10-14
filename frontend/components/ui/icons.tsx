@@ -169,3 +169,61 @@ export function MoonIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function AlignLeftIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h16M4 10h10M4 14h16M4 18h10" />
+    </Icon>
+  );
+}
+
+export function AlignCenterIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h16M7 10h10M4 14h16M7 18h10" />
+    </Icon>
+  );
+}
+
+export function AlignRightIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h16M10 10h10M4 14h16M10 18h10" />
+    </Icon>
+  );
+}
+
+export function AlignJustifyIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    </Icon>
+  );
+}
+
+export function ImageIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.5" y="5" width="17" height="14" />
+      <path d="m3.5 16 5-5 4 4 3-3 4.5 4.5" />
+      <circle cx="15.5" cy="9" r="1.25" />
+    </Icon>
+  );
+}
+
+export function IndentIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 5h16M10 10h10M10 14h10M4 19h16M4 9.5l3 2.5-3 2.5" />
+    </Icon>
+  );
+}
+
+export function OutdentIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 5h16M10 10h10M10 14h10M4 19h16M7 9.5 4 12l3 2.5" />
+    </Icon>
+  );
+}

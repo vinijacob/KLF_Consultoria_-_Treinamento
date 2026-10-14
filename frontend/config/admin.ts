@@ -32,6 +32,7 @@ export const adminNav: AdminNavGroup[] = [
       { href: "/painel/avaliacoes/formularios", label: "Formulários" },
     ],
   },
+  { title: "Administração", adminOnly: true, items: [{ href: "/painel/equipe", label: "Equipe" }] },
   { title: "Conta", items: [{ href: "/painel/conta", label: "Segurança" }] },
 ];
 
@@ -53,6 +54,7 @@ export const roleInfo: Record<Role, { label: string; summary: string; can: strin
       "Criar turmas, formulários e ver resultados das avaliações",
       "Baixar QR Code e cartaz das turmas",
       "Ler e responder as mensagens do formulário de contato",
+      "Convidar pessoas para a equipe e definir o perfil de cada uma",
     ],
     cannot: [],
   },
@@ -60,6 +62,6 @@ export const roleInfo: Record<Role, { label: string; summary: string; can: strin
     label: "Edição",
     summary: "Conteúdo do site: serviços, publicações, trajetória, depoimentos, clientes e galeria.",
     can: ["Editar serviços, publicações e trajetória", "Cuidar de depoimentos, clientes, imagens e galeria", "Atualizar os dados do site"],
-    cannot: ["Avaliações, resultados das turmas e mensagens de contato ficam com a administração"],
+    cannot: ["Avaliações, mensagens de contato e a equipe do painel ficam com a administração"],
   },
 };

@@ -22,4 +22,7 @@ public sealed class FakeFrontendLinks : IFrontendLinks
     public Uri FeedbackForm(string publicCode) => new($"https://klf.test/avaliar/{publicCode}");
 
     public Uri ContactMessage(Guid id) => new($"https://klf.test/painel/mensagens/{id}");
+
+    public Uri Invite(string email, string token) =>
+        new($"https://klf.test/painel/aceitar-convite?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}");
 }

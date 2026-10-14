@@ -12,6 +12,8 @@ internal sealed class FakeIdentityService(UserAccount user, CredentialsCheckResu
 
     public IReadOnlyList<string> UserRoles { get; set; } = user.Roles;
 
+    public bool IsActive { get; set; } = user.IsActive;
+
     public HashSet<string> RecoveryCodes { get; } = [ValidRecoveryCode];
 
     public int FailedAttempts { get; private set; }
@@ -86,7 +88,7 @@ internal sealed class FakeIdentityService(UserAccount user, CredentialsCheckResu
         return Task.FromResult(new PasswordResetResult(PasswordResetStatus.Success, [], Current));
     }
 
-    private UserAccount Current => user with { TwoFactorEnabled = TwoFactorEnabled, Roles = UserRoles };
+    private UserAccount Current => user with { TwoFactorEnabled = TwoFactorEnabled, Roles = UserRoles, IsActive = IsActive };
 
     private TwoFactorEnableResult Result(TwoFactorCheckStatus status)
     {

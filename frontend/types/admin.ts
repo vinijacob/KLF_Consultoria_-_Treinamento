@@ -240,3 +240,16 @@ export type ContactMessage = {
   privacyPolicyVersion: string;
   deleteAfter: string;
 };
+
+export type TeamMember = {
+  id: string;
+  email: string;
+  fullName: string;
+  role: Role | "";
+  isActive: boolean;
+  twoFactorEnabled: boolean;
+  invitePending: boolean;
+  createdAt: string;
+};
+
+export type TeamInvite = { user: TeamMember; inviteLink: string; expiresAt: string };

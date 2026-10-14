@@ -15,4 +15,9 @@ public interface IFrontendLinks
     /// <summary>Address of a contact message in the admin panel.</summary>
     /// <param name="id">Message id.</param>
     Uri ContactMessage(Guid id);
+
+    /// <summary>Address of the page where an invited person chooses the first password.</summary>
+    /// <param name="email">Account e-mail.</param>
+    /// <param name="token">Invitation token.</param>
+    Uri Invite(string email, string token);
 }

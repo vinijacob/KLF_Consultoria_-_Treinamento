@@ -30,6 +30,8 @@
 
   --ring: light-dark(#15294d, #8fb4e3);
   --selection: light-dark(#c9d4e6, #2c4466);
+  /* Marca-texto do editor: todo texto do site sobre ele passa de 4,5:1 (tijolo no claro: 4,64; tijolo no escuro: 4,82). */
+  --highlight: light-dark(#f1e2a6, #3a3114);
 
   --footer: light-dark(#15294d, #0d1424);
   --footer-ink: light-dark(#f4efe6, #ece6d8);
@@ -57,6 +59,7 @@
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-highlight: var(--highlight);
   --color-paper-deep: var(--paper-deep);
   --color-card: var(--card);
   --color-rule: var(--rule);
@@ -271,6 +274,14 @@
     line-height: 1.25;
   }
 
+  .prose-klf h4 {
+    margin-top: 1.6em;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
   .prose-klf a {
     color: var(--brand);
     text-decoration: underline;
@@ -288,6 +299,39 @@
 
   .prose-klf ol {
     list-style: decimal;
+  }
+
+  .prose-klf ul.klf-list-disc {
+    list-style-type: disc;
+  }
+
+  .prose-klf ul.klf-list-circle {
+    list-style-type: circle;
+  }
+
+  .prose-klf ul.klf-list-dash {
+    list-style-type: "—  ";
+  }
+
+  .prose-klf ol.klf-list-lower-alpha {
+    list-style-type: lower-alpha;
+  }
+
+  .prose-klf ol.klf-list-upper-alpha {
+    list-style-type: upper-alpha;
+  }
+
+  .prose-klf ol.klf-list-lower-roman {
+    list-style-type: lower-roman;
+  }
+
+  .prose-klf ol.klf-list-upper-roman {
+    list-style-type: upper-roman;
+  }
+
+  .prose-klf li > ul,
+  .prose-klf li > ol {
+    margin-top: 0.4em;
   }
 
   .prose-klf li + li {
@@ -313,8 +357,41 @@
   }
 
   .prose-klf img {
-    border: 1px solid var(--ink);
-    padding: 0.4rem;
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 1rem;
+  }
+
+  .prose-klf img.ProseMirror-selectednode {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  .prose-klf u {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .prose-klf sub,
+  .prose-klf sup {
+    font-size: 0.7em;
+    line-height: 0;
+  }
+
+  .prose-klf mark {
+    background: var(--highlight);
+    color: inherit;
+    padding: 0 0.15em;
+    border-radius: 2px;
+  }
+
+  .prose-klf .klf-color-brand {
+    color: var(--brand);
+  }
+
+  .prose-klf .klf-color-accent {
+    color: var(--accent);
   }
 
   .prose-klf strong {

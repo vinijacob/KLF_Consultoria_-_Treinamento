@@ -58,7 +58,8 @@ public static class DependencyInjection
             })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddTokenProvider<InviteTokenProvider>(InviteTokenProvider.ProviderName);
 
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))
@@ -89,6 +90,7 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IUserDirectory, UserDirectory>();
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<IHtmlContentSanitizer, HtmlContentSanitizer>();
         services.AddHostedService<AdminSeeder>();

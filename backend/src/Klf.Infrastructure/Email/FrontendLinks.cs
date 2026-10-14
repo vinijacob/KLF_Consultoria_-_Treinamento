@@ -14,4 +14,7 @@ internal sealed class FrontendLinks(IOptions<FrontendOptions> options) : IFronte
 
     public Uri ContactMessage(Guid id) =>
         new($"{options.Value.BaseUrl.TrimEnd('/')}/painel/mensagens/{id}");
+
+    public Uri Invite(string email, string token) =>
+        new($"{options.Value.BaseUrl.TrimEnd('/')}/painel/aceitar-convite?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}");
 }

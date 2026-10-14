@@ -65,6 +65,30 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
+    public async Task Login_tells_that_the_account_was_deactivated_when_it_is_inactive()
+    {
+        var inactive = User with { IsActive = false };
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            CreateService(CredentialsCheckResult.Success(inactive), identity: new FakeIdentityService(inactive))
+                .LoginAsync(ValidLogin, TestContext.Current.CancellationToken));
+
+        Assert.Contains("desativada", exception.Message, StringComparison.Ordinal);
+        Assert.Empty(_refreshTokens.Tokens);
+    }
+
+    [Fact]
+    public async Task Refresh_ends_session_when_the_account_was_deactivated()
+    {
+        var identity = new FakeIdentityService(User);
+        var service = CreateService(CredentialsCheckResult.Success(User), identity: identity);
+        var login = await LoginSessionAsync(service);
+        identity.IsActive = false;
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() => service.RefreshAsync(login.RefreshToken, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task Refresh_ends_session_when_user_lost_every_panel_role()
     {
         var identity = new FakeIdentityService(User);

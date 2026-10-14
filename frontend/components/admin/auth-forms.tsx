@@ -383,22 +383,54 @@ const passwordRules = [
   { test: (value: string) => /[^a-zA-Z0-9]/.test(value), label: "Pelo menos um símbolo (ex.: ! @ # %)" },
 ];
 
-export function ResetPasswordForm({ email, token }: { email: string; token: string }) {
+const passwordSetupTexts = {
+  reset: {
+    endpoint: "/reset",
+    step: "Nova senha",
+    title: "Crie uma senha nova",
+    submit: "Salvar nova senha",
+    incomplete: "Abra o link exatamente como chegou no e-mail, ou peça um novo.",
+    newLinkHref: "/painel/esqueci-a-senha",
+    newLinkLabel: "Pedir um novo link",
+    doneTitle: "Senha trocada",
+    doneText:
+      "Por segurança, encerramos as sessões abertas em outros aparelhos. Entre de novo com a senha nova; o código do aplicativo de verificação continua sendo pedido.",
+  },
+  invite: {
+    endpoint: "/invite/accept",
+    step: "Convite",
+    title: "Escolha sua senha",
+    submit: "Criar senha e continuar",
+    incomplete: "Abra o link exatamente como chegou no convite. Se não funcionar, peça um novo convite à administração.",
+    newLinkHref: null,
+    newLinkLabel: null,
+    doneTitle: "Tudo pronto",
+    doneText:
+      "Sua senha foi criada. Agora entre no painel: no primeiro acesso, configure a verificação em duas etapas com um aplicativo autenticador no celular.",
+  },
+} as const;
+
+/** Escolher a senha: pelo link de "esqueci a senha" (`reset`) ou pelo convite para a equipe (`invite`). */
+function PasswordSetupForm({ email, token, mode }: { email: string; token: string; mode: keyof typeof passwordSetupTexts }) {
+  const text = passwordSetupTexts[mode];
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [mismatch, setMismatch] = useState(false);
   const [done, setDone] = useState(false);
   const { pending, errors, message, run } = useSubmit();
+  const newLink = text.newLinkHref && (
+    <Link href={text.newLinkHref} className="font-sans text-sm text-brand underline underline-offset-4">
+      {text.newLinkLabel}
+    </Link>
+  );
 
   if (!email || !token) {
     return (
       <div>
-        <StepHeading step="Nova senha" title="Link incompleto">
-          Abra o link exatamente como chegou no e-mail, ou peça um novo.
+        <StepHeading step={text.step} title="Link incompleto">
+          {text.incomplete}
         </StepHeading>
-        <Link href="/painel/esqueci-a-senha" className="font-sans text-sm text-brand underline underline-offset-4">
-          Pedir um novo link
-        </Link>
+        {newLink}
       </div>
     );
   }
@@ -406,9 +438,8 @@ export function ResetPasswordForm({ email, token }: { email: string; token: stri
   if (done) {
     return (
       <div>
-        <StepHeading step="Nova senha" title="Senha trocada">
-          Por segurança, encerramos as sessões abertas em outros aparelhos. Entre de novo com a senha nova; o código do
-          aplicativo de verificação continua sendo pedido.
+        <StepHeading step={text.step} title={text.doneTitle}>
+          {text.doneText}
         </StepHeading>
         <Link href="/painel/entrar" className="font-sans text-sm text-brand underline underline-offset-4">
           Ir para a entrada
@@ -425,7 +456,7 @@ export function ResetPasswordForm({ email, token }: { email: string; token: stri
     }
     setMismatch(false);
     const ok = await run(async () => {
-      await authRequest("/reset", { email, token, newPassword: password });
+      await authRequest(text.endpoint, { email, token, newPassword: password });
       return true;
     });
     if (ok) setDone(true);
@@ -435,18 +466,16 @@ export function ResetPasswordForm({ email, token }: { email: string; token: stri
 
   return (
     <form onSubmit={submit} noValidate className="grid gap-6">
-      <StepHeading step="Nova senha" title="Crie uma senha nova">
+      <StepHeading step={text.step} title={text.title}>
         Conta: <span className="font-medium text-ink">{email}</span>
       </StepHeading>
       {tokenProblem && (
         <Notice tone="error" role="alert" title={tokenProblem}>
-          <Link href="/painel/esqueci-a-senha" className="text-brand underline underline-offset-4">
-            Pedir um novo link
-          </Link>
+          {newLink}
         </Notice>
       )}
       <PasswordInput
-        label="Nova senha"
+        label={mode === "invite" ? "Senha" : "Nova senha"}
         autoComplete="new-password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
@@ -464,7 +493,7 @@ export function ResetPasswordForm({ email, token }: { email: string; token: stri
         })}
       </ul>
       <PasswordInput
-        label="Repita a nova senha"
+        label={mode === "invite" ? "Repita a senha" : "Repita a nova senha"}
         autoComplete="new-password"
         value={confirmation}
         onChange={(event) => setConfirmation(event.target.value)}
@@ -473,11 +502,19 @@ export function ResetPasswordForm({ email, token }: { email: string; token: stri
       <ErrorMessage message={errors ? null : message} />
       <div>
         <Button type="submit" size="lg" disabled={pending || !passwordRules.every((rule) => rule.test(password))}>
-          {pending ? "Salvando…" : "Salvar nova senha"}
+          {pending ? "Salvando…" : text.submit}
         </Button>
       </div>
     </form>
   );
+}
+
+export function ResetPasswordForm({ email, token }: { email: string; token: string }) {
+  return <PasswordSetupForm email={email} token={token} mode="reset" />;
+}
+
+export function AcceptInviteForm({ email, token }: { email: string; token: string }) {
+  return <PasswordSetupForm email={email} token={token} mode="invite" />;
 }
 
 export function AccessFrame({ children }: { children: ReactNode }) {

@@ -25,9 +25,11 @@ internal sealed class AuthService(
     {
         var result = await identityService.CheckCredentialsAsync(request.Email.Trim(), request.Password, cancellationToken);
 
-        if (result.User is { } account && !Roles.CanSignIn(account.Roles))
+        if (result.User is { } account && !account.CanSignIn())
         {
-            throw new UnauthorizedException("Esta conta não tem acesso ao painel.");
+            throw new UnauthorizedException(account.IsActive
+                ? "Esta conta não tem acesso ao painel."
+                : "Esta conta foi desativada. Fale com a administração da KLF.");
         }
 
         return result switch
@@ -163,7 +165,7 @@ internal sealed class AuthService(
 
         var user = await identityService.FindByIdAsync(stored.UserId, cancellationToken);
 
-        if (user is null || !Roles.CanSignIn(user.Roles))
+        if (user is null || !user.CanSignIn())
         {
             stored.Revoke(now);
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -237,7 +239,7 @@ internal sealed class AuthService(
         var userId = await tokenService.ReadTwoFactorChallengeAsync(token) ?? throw ChallengeExpired();
         var user = await identityService.FindByIdAsync(userId, cancellationToken);
 
-        return user is not null && Roles.CanSignIn(user.Roles) ? user : throw ChallengeExpired();
+        return user is not null && user.CanSignIn() ? user : throw ChallengeExpired();
     }
 
     private static UnauthorizedException ChallengeExpired() =>

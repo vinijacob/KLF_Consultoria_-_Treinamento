@@ -18,6 +18,9 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     /// <summary>Name shown in the admin panel.</summary>
     public required string FullName { get; set; }
 
+    /// <summary>Whether the account is enabled. Deactivated accounts cannot sign in; the row stays for history.</summary>
+    public bool IsActive { get; set; } = true;
+
     /// <summary>When the account was created, in UTC.</summary>
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 }
