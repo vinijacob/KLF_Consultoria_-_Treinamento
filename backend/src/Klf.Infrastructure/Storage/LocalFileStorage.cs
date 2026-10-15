@@ -24,11 +24,13 @@ internal sealed class LocalFileStorage(string rootDirectory, string publicBaseUr
 
     public string GetPublicUrl(string key) => $"{publicBaseUrl.TrimEnd('/')}/{key}";
 
-    private string ResolvePath(string key)
-    {
-        var path = Path.GetFullPath(Path.Combine(_root, key));
+    private string ResolvePath(string key) => ResolvePath(_root, key);
 
-        if (!path.StartsWith(_root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+    internal static string ResolvePath(string root, string key)
+    {
+        var path = Path.GetFullPath(Path.Combine(root, key));
+
+        if (!path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
         {
             throw new ArgumentException("Chave de arquivo inválida.", nameof(key));
         }

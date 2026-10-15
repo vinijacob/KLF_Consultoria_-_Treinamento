@@ -63,6 +63,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Messages sent through the contact form (personal data: deleted for real, kept at most 2 years).</summary>
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
 
+    /// <summary>Actions done in the admin panel (RF38), kept 2 years.</summary>
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

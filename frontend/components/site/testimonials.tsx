@@ -46,7 +46,7 @@ export function TestimonialSpotlight({ testimonials }: { testimonials: Testimoni
       </div>
 
       {count > 1 && (
-        <div role="tablist" aria-label="Escolha um depoimento" className="-mx-1 mt-5 flex snap-x gap-3 overflow-x-auto px-1 pb-2">
+        <div role="tablist" aria-label="Escolha um depoimento" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {testimonials.map((testimonial, position) => {
             const current = position === index;
 
@@ -63,12 +63,12 @@ export function TestimonialSpotlight({ testimonials }: { testimonials: Testimoni
                   setIndex(position);
                 }}
                 className={cn(
-                  "relative flex min-h-16 shrink-0 snap-start items-center gap-3 overflow-hidden rounded-2xl border px-3 py-2.5 text-left transition-colors",
+                  "relative flex min-h-16 min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3 py-2.5 text-left transition-colors",
                   current ? "border-brand bg-brand-soft" : "border-rule bg-card hover:border-rule-strong",
                 )}
               >
                 <Avatar name={testimonial.authorName} src={testimonial.photoId ? mediaUrl(testimonial.photoId) : null} size="sm" />
-                <span className="max-w-44 pr-1">
+                <span className="min-w-0 pr-1">
                   <span className="block truncate font-sans text-sm font-semibold text-ink">{testimonial.authorName}</span>
                   {testimonial.companyName && <span className="block truncate font-sans text-xs text-ink-soft">{testimonial.companyName}</span>}
                 </span>

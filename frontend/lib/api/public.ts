@@ -51,6 +51,13 @@ export const getCareer = () => orFallback(get<CareerEntry[]>("/career", "career"
 
 export const getTestimonials = () => orFallback(get<Testimonial[]>("/testimonials", "testimonials"), []);
 
+/** Quantos depoimentos o destaque mostra. Os outros ficam no mural de /clientes. */
+const SPOTLIGHT_TESTIMONIALS = 5;
+
+/** Os depoimentos cadastrados por último, para o destaque da home e de /clientes. */
+export const getLatestTestimonials = () =>
+  orFallback(get<Testimonial[]>(`/testimonials?latest=${SPOTLIGHT_TESTIMONIALS}`, "testimonials"), []);
+
 export const getClients = () => orFallback(get<Client[]>("/clients", "clients"), []);
 
 export const getAlbums = () => orFallback(get<AlbumListItem[]>("/albums", "albums"), []);

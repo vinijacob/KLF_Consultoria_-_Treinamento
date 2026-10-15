@@ -7,6 +7,7 @@ using Klf.Application.DTOs.Clients;
 using Klf.Application.DTOs.Testimonials;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Interfaces.Repositories;
+using Klf.Application.Interfaces.Storage;
 using Klf.Domain.Common;
 using Klf.Domain.Entities;
 
@@ -28,6 +29,7 @@ public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfAp
 
     private readonly InMemoryClientRepository _clients = new();
     private readonly InMemoryTestimonialRepository _testimonials = new();
+    private readonly FakePrivateFileStorage _privateFiles = new();
     private readonly WebApplicationFactory<Program> _factory;
 
     public ClientsAndTestimonialsControllersTests(KlfApiFactory factory)
@@ -40,6 +42,8 @@ public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfAp
             services.AddSingleton<IClientRepository>(_clients);
             services.AddSingleton<ITestimonialRepository>(_testimonials);
             services.AddSingleton<IUnitOfWork>(_clients);
+            services.RemoveAll<IPrivateFileStorage>();
+            services.AddSingleton<IPrivateFileStorage>(_privateFiles);
         }));
     }
 
@@ -120,6 +124,16 @@ public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfAp
     }
 
     [Fact]
+    public async Task Public_testimonials_return_400_when_latest_is_out_of_range()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync(new Uri($"{PublicTestimonials}?latest=0", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Admin_testimonials_create_returns_400_when_publishing_without_consent()
     {
         using var client = CreateClientAs(Roles.Admin);
@@ -180,6 +194,58 @@ public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfAp
 
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, notFound.StatusCode);
+    }
+
+    [Fact]
+    public async Task Consent_document_is_uploaded_and_downloaded_only_by_the_panel()
+    {
+        var testimonial = new Testimonial("Ana", null, null, "Ótimo", null, DateTime.UtcNow.AddDays(-1), false, true, 0);
+        _testimonials.Testimonials.Add(testimonial);
+        var uri = new Uri($"{AdminTestimonials}/{testimonial.Id}/consent-document", UriKind.Relative);
+        var pdf = "%PDF-1.7\n%%EOF"u8.ToArray();
+        using var anonymous = _factory.CreateClient();
+        using var admin = CreateClientAs(Roles.Admin);
+
+        var unauthorized = await anonymous.GetAsync(uri, TestContext.Current.CancellationToken);
+        var missing = await admin.GetAsync(uri, TestContext.Current.CancellationToken);
+        var upload = await admin.PutAsync(uri, PdfForm(pdf, "termo-ana.pdf"), TestContext.Current.CancellationToken);
+        var body = await upload.Content.ReadFromJsonAsync<TestimonialResponse>(TestContext.Current.CancellationToken);
+        var download = await admin.GetAsync(uri, TestContext.Current.CancellationToken);
+        var publicJson = await anonymous.GetStringAsync(PublicTestimonials, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, upload.StatusCode);
+        Assert.Equal("termo-ana.pdf", body!.ConsentDocument!.FileName);
+        Assert.Equal("application/pdf", download.Content.Headers.ContentType!.MediaType);
+        Assert.Equal("termo-ana.pdf", download.Content.Headers.ContentDisposition!.FileNameStar);
+        Assert.True(download.Headers.CacheControl!.NoStore);
+        Assert.Equal(pdf, await download.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
+        Assert.DoesNotContain("termo", publicJson, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Consent_document_upload_returns_400_when_the_file_is_not_a_pdf()
+    {
+        var testimonial = new Testimonial("Ana", null, null, "Ótimo", null, DateTime.UtcNow.AddDays(-1), false, true, 0);
+        _testimonials.Testimonials.Add(testimonial);
+        using var admin = CreateClientAs(Roles.Admin);
+
+        var response = await admin.PutAsync(
+            new Uri($"{AdminTestimonials}/{testimonial.Id}/consent-document", UriKind.Relative),
+            PdfForm("<html>oi</html>"u8.ToArray(), "termo.pdf"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(_privateFiles.Files);
+    }
+
+    private static MultipartFormDataContent PdfForm(byte[] content, string fileName)
+    {
+        var file = new ByteArrayContent(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+
+        return new MultipartFormDataContent { { file, "file", fileName } };
     }
 
     private HttpClient CreateClientAs(string role)

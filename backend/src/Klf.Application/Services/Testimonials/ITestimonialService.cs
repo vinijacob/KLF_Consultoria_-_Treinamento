@@ -5,8 +5,11 @@ namespace Klf.Application.Services.Testimonials;
 /// <summary>Manages testimonials and the consent of their authors, for the admin panel and the public site.</summary>
 public interface ITestimonialService
 {
-    /// <summary>Lists the testimonials that are published with valid consent, in display order (public site).</summary>
-    Task<IReadOnlyList<PublicTestimonialResponse>> ListPublicAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// Lists the testimonials that are published with valid consent (public site): all of them in display order, or only
+    /// the latest ones when <see cref="PublicTestimonialListRequest.Latest"/> is set.
+    /// </summary>
+    Task<IReadOnlyList<PublicTestimonialResponse>> ListPublicAsync(PublicTestimonialListRequest request, CancellationToken cancellationToken);
 
     /// <summary>Lists every testimonial, published or not, in display order (admin panel).</summary>
     Task<IReadOnlyList<TestimonialResponse>> ListAsync(CancellationToken cancellationToken);

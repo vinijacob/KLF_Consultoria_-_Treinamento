@@ -32,7 +32,14 @@ export const adminNav: AdminNavGroup[] = [
       { href: "/painel/avaliacoes/formularios", label: "Formulários" },
     ],
   },
-  { title: "Administração", adminOnly: true, items: [{ href: "/painel/equipe", label: "Equipe" }] },
+  {
+    title: "Administração",
+    adminOnly: true,
+    items: [
+      { href: "/painel/equipe", label: "Equipe" },
+      { href: "/painel/atividades", label: "Atividades" },
+    ],
+  },
   { title: "Conta", items: [{ href: "/painel/conta", label: "Segurança" }] },
 ];
 
@@ -55,6 +62,7 @@ export const roleInfo: Record<Role, { label: string; summary: string; can: strin
       "Baixar QR Code e cartaz das turmas",
       "Ler e responder as mensagens do formulário de contato",
       "Convidar pessoas para a equipe e definir o perfil de cada uma",
+      "Ver o registro de atividades do painel",
     ],
     cannot: [],
   },

@@ -70,6 +70,7 @@ public sealed class PersistenceRegistrationTests(RealPersistenceApiFactory facto
         Assert.NotNull(scope.ServiceProvider.GetService<IMediaAssetRepository>());
         Assert.NotNull(scope.ServiceProvider.GetService<IAlbumRepository>());
         Assert.NotNull(scope.ServiceProvider.GetService<IFileStorage>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IPrivateFileStorage>());
     }
 
     [Fact]

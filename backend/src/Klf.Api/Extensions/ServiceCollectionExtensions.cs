@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 using Klf.Api.Filters;
+using Klf.Application.Interfaces.Audit;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,8 @@ internal static class ServiceCollectionExtensions
         services.AddProblemDetails();
         services.AddJwtAuthentication();
         services.AddSingleton<FeedbackCookie>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentActor, HttpCurrentActor>();
 
         services.AddCors(options => options.AddPolicy(FrontendCorsPolicy, policy =>
             policy

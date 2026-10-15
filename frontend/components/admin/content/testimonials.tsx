@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { formatShortDate, fromLocalInput, toLocalInput } from "@/lib/admin/datetime";
 import { optional, toInt, useEntityEditor } from "@/lib/admin/editor";
 import { useApi } from "@/lib/admin/hooks";
-import { adminFetch } from "@/lib/auth/session";
+import { formatBytes } from "@/lib/admin/text";
+import { adminDownload, adminFetch } from "@/lib/auth/session";
 import { ApiError, fieldError } from "@/lib/api/client";
 import type { AdminTestimonial } from "@/types/admin";
-import { Checkbox, Input, Textarea } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Checkbox, FieldError, Input, Textarea } from "@/components/ui/field";
+import { DownloadIcon } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
 import { EntityLoader, FlashNotice } from "../entity";
 import { MediaField } from "../media";
@@ -19,6 +22,130 @@ function stateTag(item: AdminTestimonial) {
   if (item.consentRevokedAt) return <Tag tone="danger">Consentimento revogado</Tag>;
   if (!item.consentGivenAt) return <Tag tone="warning">Sem consentimento</Tag>;
   return item.isPublished ? <Tag tone="success">No site</Tag> : <Tag>Oculto</Tag>;
+}
+
+function listTags(item: AdminTestimonial) {
+  return (
+    <>
+      {stateTag(item)}
+      {item.consentGivenAt && !item.consentDocument && <Tag tone="warning">Sem termo em PDF</Tag>}
+    </>
+  );
+}
+
+const PDF_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Termo de consentimento assinado (PDF). Vai na hora para o armazenamento privado da API (não depende do botão
+ * Salvar) e só sai de lá baixado por quem está no painel.
+ */
+function ConsentDocumentField({ item, onReplace }: { item: AdminTestimonial; onReplace: (item: AdminTestimonial) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hintId = useId();
+  const [pending, setPending] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const path = `/admin/testimonials/${item.id}/consent-document`;
+  const attached = item.consentDocument;
+
+  async function upload(file: File) {
+    setProblem(null);
+    if (file.type && file.type !== "application/pdf") return setProblem("Envie o termo em PDF.");
+    if (file.size > PDF_MAX_BYTES) return setProblem(`O arquivo tem ${formatBytes(file.size)}; o limite é 10 MB.`);
+
+    const body = new FormData();
+    body.append("file", file);
+    setPending(true);
+    try {
+      onReplace(await adminFetch<AdminTestimonial>(path, { method: "PUT", body }));
+    } catch (failure) {
+      setProblem(
+        failure instanceof ApiError ? (fieldError(failure.errors, "file") ?? failure.message) : "Não foi possível enviar o termo. Tente de novo.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function download() {
+    setProblem(null);
+    try {
+      const { blob, fileName } = await adminDownload(path);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName ?? "termo.pdf";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (failure) {
+      setProblem(failure instanceof ApiError ? failure.message : "Não foi possível baixar o termo. Tente de novo.");
+    }
+  }
+
+  async function remove() {
+    try {
+      onReplace(await adminFetch<AdminTestimonial>(path, { method: "DELETE" }));
+      setProblem(null);
+      return null;
+    } catch (failure) {
+      return failure instanceof ApiError ? failure.message : "Não foi possível remover o termo. Tente de novo.";
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-rule bg-card p-5">
+      <p className="font-sans font-medium">Termo assinado (PDF)</p>
+      <p id={hintId} className="mt-1 font-sans text-sm leading-relaxed text-ink-soft">
+        Fica guardado em área privada: não aparece no site e só quem entra no painel consegue baixar. O envio é na hora,
+        sem precisar salvar. Até 10 MB.
+      </p>
+
+      {attached && (
+        <p className="mt-4 font-sans text-[0.9375rem]">
+          <span className="font-medium break-all">{attached.fileName}</span>
+          <span className="text-ink-soft">
+            {" "}
+            · {formatBytes(attached.sizeBytes)} · enviado em {formatShortDate(attached.uploadedAt)}
+          </span>
+        </p>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) void upload(file);
+        }}
+      />
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {attached && (
+          <Button variant="outline" onClick={() => void download()}>
+            <DownloadIcon /> Baixar termo
+          </Button>
+        )}
+        <Button variant={attached ? "quiet" : "outline"} disabled={pending} aria-describedby={hintId} onClick={() => inputRef.current?.click()}>
+          {pending ? "Enviando…" : attached ? "Trocar arquivo" : "Anexar termo em PDF"}
+        </Button>
+        {attached && (
+          <ConfirmButton
+            label="Remover"
+            title="Remover o termo?"
+            description={<p>O arquivo {attached.fileName} é apagado do armazenamento e não pode ser recuperado. O depoimento continua como está.</p>}
+            confirmLabel="Remover termo"
+            variant="quiet"
+            onConfirm={remove}
+          />
+        )}
+      </div>
+      <div aria-live="polite">{problem && <FieldError>{problem}</FieldError>}</div>
+    </div>
+  );
 }
 
 export function TestimonialsList() {
@@ -54,7 +181,7 @@ export function TestimonialsList() {
                   <span className="mt-1 block truncate italic">“{item.quote}”</span>
                 </>
               }
-              tags={stateTag(item)}
+              tags={listTags(item)}
             />
           ))}
         </IndexList>
@@ -224,10 +351,11 @@ function TestimonialForm({
             onChange={(event) => set("consentCoversImage", event.target.checked)}
             error={error("consentCoversImage")}
           />
-          <Notice tone="privacy">
-            Guarde o termo assinado (PDF) em local seguro. O envio do arquivo para o painel, em armazenamento privado, ainda
-            está em desenvolvimento.
-          </Notice>
+          {item ? (
+            <ConsentDocumentField item={item} onReplace={onReplace} />
+          ) : (
+            <Notice tone="privacy">Depois de criar o depoimento, abra-o de novo para anexar o termo assinado em PDF.</Notice>
+          )}
         </Section>
 
         <Section title="Publicação">

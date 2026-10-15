@@ -28,17 +28,19 @@ internal sealed class R2FileStorage : IFileStorage, IDisposable
         _bucket = r2.BucketName;
         _publicBaseUrl = options.PublicBaseUrl.TrimEnd('/');
 
-        _client = new AmazonS3Client(
-            new BasicAWSCredentials(r2.AccessKeyId, r2.SecretAccessKey),
-            new AmazonS3Config
-            {
-                ServiceURL = $"https://{r2.AccountId}.r2.cloudflarestorage.com",
-                AuthenticationRegion = "auto",
-                ForcePathStyle = true,
-                RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
-                ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED,
-            });
+        _client = CreateClient(r2);
     }
+
+    internal static AmazonS3Client CreateClient(R2Options r2) => new(
+        new BasicAWSCredentials(r2.AccessKeyId, r2.SecretAccessKey),
+        new AmazonS3Config
+        {
+            ServiceURL = $"https://{r2.AccountId}.r2.cloudflarestorage.com",
+            AuthenticationRegion = "auto",
+            ForcePathStyle = true,
+            RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
+            ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED,
+        });
 
     public async Task SaveAsync(string key, Stream content, string contentType, CancellationToken cancellationToken)
     {

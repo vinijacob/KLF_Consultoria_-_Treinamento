@@ -17,6 +17,8 @@ public sealed class PasswordRecoveryServiceTests
     private readonly FakeEmailSender _email = new();
     private readonly AuthService _service;
 
+    private readonly FakeAuditTrail _audit = new();
+
     public PasswordRecoveryServiceTests()
     {
         _service = new AuthService(
@@ -27,7 +29,8 @@ public sealed class PasswordRecoveryServiceTests
             new FakeFrontendLinks(),
             _refreshTokens,
             _refreshTokens,
-            _clock);
+            _clock,
+            _audit);
     }
 
     [Fact]
@@ -62,7 +65,7 @@ public sealed class PasswordRecoveryServiceTests
         Assert.All(_refreshTokens.Tokens, t => Assert.False(t.IsActive(_clock.Now.UtcDateTime)));
         Assert.NotEmpty(login);
         var notice = Assert.Single(_email.Sent);
-        Assert.Contains("alterada", notice.Subject, StringComparison.Ordinal);
+        Assert.Contains("alterada", notice.Subject, StringComparison.Ordinal); Assert.Contains(_audit.Entries, entry => entry.Action == "auth.password-reset");
     }
 
     [Fact]

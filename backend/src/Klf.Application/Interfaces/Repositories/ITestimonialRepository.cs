@@ -12,6 +12,9 @@ public interface ITestimonialRepository
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<IReadOnlyList<Testimonial>> ListAsync(bool onlyVisible, CancellationToken cancellationToken);
 
+    /// <summary>Returns up to <paramref name="count"/> visible testimonials, the most recently added first, read-only.</summary>
+    Task<IReadOnlyList<Testimonial>> ListLatestVisibleAsync(int count, CancellationToken cancellationToken);
+
     /// <summary>Returns the testimonial with the given id, tracked for changes, or <see langword="null"/>.</summary>
     Task<Testimonial?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 

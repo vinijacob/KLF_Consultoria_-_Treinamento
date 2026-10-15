@@ -6,7 +6,7 @@ import { PostGrid, ServiceGrid } from "@/components/site/lists";
 import { TestimonialSpotlight } from "@/components/site/testimonials";
 import { ButtonLink } from "@/components/ui/button";
 import { copy } from "@/content/site-copy";
-import { getClients, getPosts, getServices, getSettings, getTestimonials, mediaUrl } from "@/lib/api/public";
+import { getClients, getLatestTestimonials, getPosts, getServices, getSettings, mediaUrl } from "@/lib/api/public";
 import { pickRandom } from "@/lib/search";
 
 const romans = ["I", "II", "III"];
@@ -15,7 +15,7 @@ export default async function HomePage() {
   const [settings, services, testimonials, clients, posts] = await Promise.all([
     getSettings(),
     getServices(),
-    getTestimonials(),
+    getLatestTestimonials(),
     getClients(),
     getPosts({ pageSize: 3 }),
   ]);

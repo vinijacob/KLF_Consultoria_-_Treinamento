@@ -1,7 +1,9 @@
 using FluentValidation;
 
 using Klf.Application.DTOs;
+using Klf.Application.Interfaces.Audit;
 using Klf.Application.Services.Albums;
+using Klf.Application.Services.Audit;
 using Klf.Application.Services.Auth;
 using Klf.Application.Services.Career;
 using Klf.Application.Services.Catalog;
@@ -35,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<ISiteSettingService, SiteSettingService>();
         services.AddScoped<IClientService, ClientService>();
         services.AddScoped<ITestimonialService, TestimonialService>();
+        services.AddScoped<ITestimonialConsentDocumentService, TestimonialConsentDocumentService>();
         services.AddScoped<IMediaService, MediaService>();
         services.AddScoped<IAlbumService, AlbumService>();
         services.AddScoped<IFeedbackFormService, FeedbackFormService>();
@@ -42,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<IPublicFeedbackService, PublicFeedbackService>();
         services.AddScoped<IContactMessageService, ContactMessageService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
+        services.AddScoped<IAuditTrail, AuditTrail>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
 
         return services;
     }

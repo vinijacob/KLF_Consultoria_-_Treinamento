@@ -88,7 +88,11 @@ export type AdminTestimonial = {
   consentRevokedAt?: string | null;
   isPublished: boolean;
   displayOrder: number;
+  consentDocument?: ConsentDocument | null;
 };
+
+/** Termo de consentimento assinado (PDF), guardado em armazenamento privado: só o painel baixa. */
+export type ConsentDocument = { fileName: string; sizeBytes: number; uploadedAt: string };
 
 export type AdminClient = {
   id: string;

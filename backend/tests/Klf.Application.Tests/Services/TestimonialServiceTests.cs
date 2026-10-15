@@ -1,6 +1,7 @@
 using Klf.Application.DTOs.Testimonials;
 using Klf.Application.Services.Testimonials;
 using Klf.Application.Tests.Fakes;
+using Klf.Application.Validators.Testimonials;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -57,11 +58,38 @@ public sealed class TestimonialServiceTests
         revoked.RevokeConsent(Now.UtcDateTime);
         _repository.Testimonials.Add(revoked);
 
-        var list = await _service.ListPublicAsync(TestContext.Current.CancellationToken);
+        var list = await _service.ListPublicAsync(new PublicTestimonialListRequest(), TestContext.Current.CancellationToken);
 
         var item = Assert.Single(list);
         Assert.Equal("Visível", item.AuthorName);
         Assert.Equal(photo, item.PhotoId);
+    }
+
+    [Fact]
+    public async Task Public_list_returns_only_the_latest_visible_ones_when_latest_is_set()
+    {
+        var signed = Now.UtcDateTime.AddDays(-10);
+        for (var order = 0; order < 7; order++)
+        {
+            _repository.Testimonials.Add(new Testimonial($"Pessoa {order}", null, null, "ok", null, signed, false, true, order));
+        }
+
+        _repository.Testimonials.Add(new Testimonial("Rascunho", null, null, "ok", null, signed, false, false, 99));
+
+        var list = await _service.ListPublicAsync(new PublicTestimonialListRequest { Latest = 5 }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(5, list.Count);
+        Assert.DoesNotContain(list, item => item.AuthorName == "Rascunho");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(21)]
+    public void Latest_outside_the_allowed_range_is_rejected(int latest)
+    {
+        var result = new PublicTestimonialListRequestValidator().Validate(new PublicTestimonialListRequest { Latest = latest });
+
+        Assert.False(result.IsValid);
     }
 
     [Fact]

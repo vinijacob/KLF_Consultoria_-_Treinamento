@@ -21,6 +21,9 @@ public sealed class StorageOptions
     /// <summary>Folder for the <c>Local</c> provider, relative to the API content root.</summary>
     public string LocalDirectory { get; init; } = "uploads";
 
+    /// <summary>Folder for private files (consent terms) with the <c>Local</c> provider; never served by the API.</summary>
+    public string PrivateLocalDirectory { get; init; } = "private-uploads";
+
     /// <summary>Cloudflare R2 credentials and bucket; only read when <see cref="Provider"/> is <c>R2</c>.</summary>
     public R2Options R2 { get; init; } = new();
 }
@@ -37,6 +40,9 @@ public sealed class R2Options
     /// <summary>R2 API token secret access key.</summary>
     public string SecretAccessKey { get; init; } = string.Empty;
 
-    /// <summary>Bucket name.</summary>
+    /// <summary>Bucket name (public: images of the site).</summary>
     public string BucketName { get; init; } = string.Empty;
+
+    /// <summary>Private bucket (no public access) for consent terms; files only leave through the API.</summary>
+    public string PrivateBucketName { get; init; } = string.Empty;
 }

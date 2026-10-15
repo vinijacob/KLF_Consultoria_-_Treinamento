@@ -106,6 +106,48 @@ namespace Klf.Infrastructure.Persistence.Migrations
                     b.ToTable("AlbumMedia");
                 });
 
+            modelBuilder.Entity("Klf.Domain.Entities.AuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorName")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TargetLabel")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("ActorId", "OccurredAt");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("Klf.Domain.Entities.CareerEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -676,6 +718,20 @@ namespace Klf.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("ConsentCoversImage")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ConsentDocumentKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ConsentDocumentName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long?>("ConsentDocumentSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ConsentDocumentUploadedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("ConsentGivenAt")
                         .HasColumnType("timestamp with time zone");

@@ -13,6 +13,8 @@ internal sealed class TestimonialConfiguration : IEntityTypeConfiguration<Testim
         builder.Property(x => x.AuthorRole).HasMaxLength(120);
         builder.Property(x => x.CompanyName).HasMaxLength(200);
         builder.Property(x => x.Quote).HasMaxLength(1000);
+        builder.Property(x => x.ConsentDocumentKey).HasMaxLength(200);
+        builder.Property(x => x.ConsentDocumentName).HasMaxLength(200);
 
         builder.HasIndex(x => new { x.IsPublished, x.DisplayOrder });
 

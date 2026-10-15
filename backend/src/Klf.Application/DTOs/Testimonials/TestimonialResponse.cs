@@ -12,6 +12,7 @@ namespace Klf.Application.DTOs.Testimonials;
 /// <param name="ConsentRevokedAt">When the author revoked the consent; empty while it stands.</param>
 /// <param name="IsPublished">Whether the testimonial is shown on the public site.</param>
 /// <param name="DisplayOrder">Position in the public list.</param>
+/// <param name="ConsentDocument">The signed consent term (PDF) kept in private storage; empty while none is attached.</param>
 public sealed record TestimonialResponse(
     Guid Id,
     string AuthorName,
@@ -23,4 +24,5 @@ public sealed record TestimonialResponse(
     bool ConsentCoversImage,
     DateTimeOffset? ConsentRevokedAt,
     bool IsPublished,
-    int DisplayOrder);
+    int DisplayOrder,
+    ConsentDocumentResponse? ConsentDocument);

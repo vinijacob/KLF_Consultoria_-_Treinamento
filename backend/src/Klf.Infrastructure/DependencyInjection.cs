@@ -10,6 +10,7 @@ using Klf.Infrastructure.Email;
 using Klf.Infrastructure.Identity;
 using Klf.Infrastructure.Jobs;
 using Klf.Infrastructure.Persistence;
+using Klf.Infrastructure.Persistence.Audit;
 using Klf.Infrastructure.Repositories;
 using Klf.Infrastructure.Services;
 using Klf.Infrastructure.Storage;
@@ -36,8 +37,11 @@ public static class DependencyInjection
     /// </remarks>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
+        services.AddScoped<AuditChangesInterceptor>();
+        services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         {
+            options.AddInterceptors(serviceProvider.GetRequiredService<AuditChangesInterceptor>());
+
             var connectionString = configuration.GetConnectionString("Default")
                 ?? throw new InvalidOperationException(
                     "Connection string 'Default' não configurada. Em desenvolvimento, use: dotnet user-secrets set \"ConnectionStrings:Default\" \"...\" --project src/Klf.Api");
@@ -109,6 +113,18 @@ public static class DependencyInjection
                 _ => throw new InvalidOperationException($"Storage:Provider inválido: '{options.Provider}'. Use Local ou R2."),
             };
         });
+        services.AddSingleton<IPrivateFileStorage>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<StorageOptions>>().Value;
+
+            return options.Provider switch
+            {
+                StorageOptions.R2Provider => new R2PrivateFileStorage(options),
+                StorageOptions.LocalProvider => new LocalPrivateFileStorage(
+                    Path.Combine(sp.GetRequiredService<IHostEnvironment>().ContentRootPath, options.PrivateLocalDirectory)),
+                _ => throw new InvalidOperationException($"Storage:Provider inválido: '{options.Provider}'. Use Local ou R2."),
+            };
+        });
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ICareerEntryRepository, CareerEntryRepository>();
@@ -125,7 +141,8 @@ public static class DependencyInjection
         services.AddScoped<IFeedbackResponseRepository, FeedbackResponseRepository>();
         services.AddSingleton<IFeedbackPosterRenderer, FeedbackPosterRenderer>();
         services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
-        services.AddHostedService<ContactRetentionJob>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddHostedService<DataRetentionJob>();
 
         return services;
     }

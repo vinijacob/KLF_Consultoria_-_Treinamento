@@ -38,3 +38,4 @@ AGENTS.md
 
 # Uploads locais (desenvolvimento)
 backend/src/Klf.Api/uploads/
+backend/src/Klf.Api/private-uploads/

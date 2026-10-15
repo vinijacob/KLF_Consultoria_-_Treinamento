@@ -16,7 +16,13 @@ internal static class TestimonialMappings
         testimonial.ConsentCoversImage,
         Utc(testimonial.ConsentRevokedAt),
         testimonial.IsPublished,
-        testimonial.DisplayOrder);
+        testimonial.DisplayOrder,
+        testimonial.ConsentDocumentKey is null
+            ? null
+            : new ConsentDocumentResponse(
+                testimonial.ConsentDocumentName ?? "termo.pdf",
+                testimonial.ConsentDocumentSize ?? 0,
+                Utc(testimonial.ConsentDocumentUploadedAt) ?? default));
 
     public static PublicTestimonialResponse ToPublicResponse(this Testimonial testimonial) => new(
         testimonial.Id,

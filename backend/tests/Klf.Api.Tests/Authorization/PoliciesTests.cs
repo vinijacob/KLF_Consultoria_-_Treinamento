@@ -20,6 +20,8 @@ public sealed class PoliciesTests(KlfApiFactory factory) : IClassFixture<KlfApiF
         { Policies.ManageFeedback, Roles.Editor, false },
         { Policies.ManageContactMessages, Roles.Admin, true },
         { Policies.ManageContactMessages, Roles.Editor, false },
+        { Policies.ViewAuditLog, Roles.Admin, true },
+        { Policies.ViewAuditLog, Roles.Editor, false },
     };
 
     [Theory]

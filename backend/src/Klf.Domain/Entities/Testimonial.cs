@@ -68,6 +68,18 @@ public sealed class Testimonial : SoftDeletableEntity
     /// <summary>Position in the public list; lower numbers come first.</summary>
     public int DisplayOrder { get; private set; }
 
+    /// <summary>Key of the signed consent term (PDF) in the private storage; <see langword="null"/> while none is attached.</summary>
+    public string? ConsentDocumentKey { get; private set; }
+
+    /// <summary>File name of the consent term as it was uploaded, to recognize it in the panel.</summary>
+    public string? ConsentDocumentName { get; private set; }
+
+    /// <summary>Size of the consent term in bytes.</summary>
+    public long? ConsentDocumentSize { get; private set; }
+
+    /// <summary>When the consent term was attached (UTC).</summary>
+    public DateTime? ConsentDocumentUploadedAt { get; private set; }
+
     /// <summary>
     /// The rule for "visible on the public site": published, consent given and not revoked.
     /// Written as an expression so repositories can use it in database queries.
@@ -111,6 +123,38 @@ public sealed class Testimonial : SoftDeletableEntity
     {
         ConsentRevokedAt ??= utcNow;
         IsPublished = false;
+    }
+
+    /// <summary>Attaches the signed consent term, replacing the previous one.</summary>
+    /// <param name="key">Key of the file in the private storage.</param>
+    /// <param name="fileName">File name as it was uploaded.</param>
+    /// <param name="size">File size in bytes.</param>
+    /// <param name="utcNow">Current time in UTC.</param>
+    /// <returns>The key of the replaced file, to be deleted from the storage, or <see langword="null"/>.</returns>
+    public string? AttachConsentDocument(string key, string fileName, long size, DateTime utcNow)
+    {
+        var previous = ConsentDocumentKey;
+
+        ConsentDocumentKey = key;
+        ConsentDocumentName = fileName;
+        ConsentDocumentSize = size;
+        ConsentDocumentUploadedAt = utcNow;
+
+        return previous;
+    }
+
+    /// <summary>Detaches the consent term.</summary>
+    /// <returns>The key of the removed file, to be deleted from the storage, or <see langword="null"/> if there was none.</returns>
+    public string? RemoveConsentDocument()
+    {
+        var previous = ConsentDocumentKey;
+
+        ConsentDocumentKey = null;
+        ConsentDocumentName = null;
+        ConsentDocumentSize = null;
+        ConsentDocumentUploadedAt = null;
+
+        return previous;
     }
 
     private void Apply(

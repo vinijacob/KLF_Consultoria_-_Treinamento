@@ -13,9 +13,11 @@ internal sealed class TestimonialService(
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider) : ITestimonialService
 {
-    public async Task<IReadOnlyList<PublicTestimonialResponse>> ListPublicAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<PublicTestimonialResponse>> ListPublicAsync(PublicTestimonialListRequest request, CancellationToken cancellationToken)
     {
-        var testimonials = await repository.ListAsync(onlyVisible: true, cancellationToken);
+        var testimonials = request.Latest is { } count
+            ? await repository.ListLatestVisibleAsync(count, cancellationToken)
+            : await repository.ListAsync(onlyVisible: true, cancellationToken);
 
         return [.. testimonials.Select(testimonial => testimonial.ToPublicResponse())];
     }

@@ -4,7 +4,7 @@ import { ClientShowcase } from "@/components/site/client-showcase";
 import { ClosingCta } from "@/components/site/contact";
 import { TestimonialSpotlight, TestimonialWall } from "@/components/site/testimonials";
 import { copy } from "@/content/site-copy";
-import { getClients, getSettings, getTestimonials } from "@/lib/api/public";
+import { getClients, getLatestTestimonials, getSettings, getTestimonials } from "@/lib/api/public";
 import { pickRandom } from "@/lib/search";
 
 export const metadata: Metadata = {
@@ -13,7 +13,12 @@ export const metadata: Metadata = {
 };
 
 export default async function ClientsPage() {
-  const [clients, testimonials, settings] = await Promise.all([getClients(), getTestimonials(), getSettings()]);
+  const [clients, testimonials, latestTestimonials, settings] = await Promise.all([
+    getClients(),
+    getTestimonials(),
+    getLatestTestimonials(),
+    getSettings(),
+  ]);
   const featured = pickRandom(clients, 20).map((client) => client.id);
 
   return (
@@ -30,7 +35,7 @@ export default async function ClientsPage() {
             <SectionHeading kicker={copy.testimonials.kicker} title={copy.testimonials.title} />
           </div>
           <div className="mt-10">
-            <TestimonialSpotlight testimonials={testimonials} />
+            <TestimonialSpotlight testimonials={latestTestimonials} />
           </div>
           {testimonials.length > 1 && (
             <div className="mt-20">

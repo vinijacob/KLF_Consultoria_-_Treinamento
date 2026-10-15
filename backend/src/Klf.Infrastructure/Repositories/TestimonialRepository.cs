@@ -23,6 +23,15 @@ internal sealed class TestimonialRepository(AppDbContext context) : ITestimonial
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Testimonial>> ListLatestVisibleAsync(int count, CancellationToken cancellationToken) =>
+        await context.Testimonials
+            .AsNoTracking()
+            .Where(Testimonial.IsVisible)
+            .OrderByDescending(testimonial => testimonial.CreatedAt)
+            .ThenByDescending(testimonial => testimonial.Id)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+
     public Task<Testimonial?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         context.Testimonials.FirstOrDefaultAsync(testimonial => testimonial.Id == id, cancellationToken);
 

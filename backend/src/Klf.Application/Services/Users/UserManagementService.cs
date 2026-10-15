@@ -1,4 +1,5 @@
 using Klf.Application.DTOs.Users;
+using Klf.Application.Interfaces.Audit;
 using Klf.Application.Interfaces.Email;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Interfaces.Links;
@@ -14,7 +15,8 @@ internal sealed class UserManagementService(
     IUnitOfWork unitOfWork,
     IEmailSender emailSender,
     IFrontendLinks links,
-    TimeProvider timeProvider) : IUserManagementService
+    TimeProvider timeProvider,
+    IAuditTrail auditTrail) : IUserManagementService
 {
     private static readonly Dictionary<string, string> RoleLabels = new()
     {
@@ -38,8 +40,10 @@ internal sealed class UserManagementService(
         }
 
         var user = await directory.CreateAsync(email, request.FullName.Trim(), request.Role, cancellationToken);
+        var invite = await SendInviteAsync(actorId, user, cancellationToken);
+        await AuditAsync(AuditActions.UserInvited, user, cancellationToken);
 
-        return await SendInviteAsync(actorId, user, cancellationToken);
+        return invite;
     }
 
     public async Task<UserInviteResponse> ResendInviteAsync(Guid actorId, Guid userId, CancellationToken cancellationToken)
@@ -56,7 +60,10 @@ internal sealed class UserManagementService(
             throw new ConflictException("A conta está desativada. Reative antes de enviar o convite de novo.");
         }
 
-        return await SendInviteAsync(actorId, user, cancellationToken);
+        var invite = await SendInviteAsync(actorId, user, cancellationToken);
+        await AuditAsync(AuditActions.UserInviteResent, user, cancellationToken);
+
+        return invite;
     }
 
     public async Task<UserResponse> UpdateAsync(Guid actorId, Guid userId, UpdateUserRequest request, CancellationToken cancellationToken)
@@ -86,6 +93,11 @@ internal sealed class UserManagementService(
             await EndSessionsAsync(userId, cancellationToken);
         }
 
+        foreach (var action in Changes(user, updated))
+        {
+            await AuditAsync(action, updated, cancellationToken);
+        }
+
         return ToResponse(updated);
     }
 
@@ -100,6 +112,7 @@ internal sealed class UserManagementService(
 
         await directory.ResetTwoFactorAsync(userId, cancellationToken);
         await EndSessionsAsync(userId, cancellationToken);
+        await AuditAsync(AuditActions.UserTwoFactorReset, user, cancellationToken);
         await emailSender.SendAsync(UserEmailTemplates.TwoFactorReset(user.Email, user.FullName), cancellationToken);
 
         return ToResponse(await GetOrThrowAsync(userId, cancellationToken));
@@ -112,6 +125,7 @@ internal sealed class UserManagementService(
         switch (result.Status)
         {
             case PasswordResetStatus.Success:
+                await auditTrail.RecordAsync(new AuditEntry(AuditActions.UserInviteAccepted, ActorName: request.Email.Trim()), cancellationToken);
                 return;
             case PasswordResetStatus.WeakPassword:
                 throw new ValidationException(new Dictionary<string, string[]> { ["NewPassword"] = [.. result.Errors] });
@@ -132,6 +146,32 @@ internal sealed class UserManagementService(
 
         return new UserInviteResponse(ToResponse(user), link, timeProvider.GetUtcNow().UtcDateTime.AddDays(IUserDirectory.InviteLifetimeDays));
     }
+
+    private static IEnumerable<string> Changes(ManagedUser before, ManagedUser after)
+    {
+        if (before.IsActive && !after.IsActive)
+        {
+            yield return AuditActions.UserDeactivated;
+        }
+
+        if (!before.IsActive && after.IsActive)
+        {
+            yield return AuditActions.UserReactivated;
+        }
+
+        if (before.Role != after.Role)
+        {
+            yield return AuditActions.UserRoleChanged;
+        }
+
+        if (before.FullName != after.FullName)
+        {
+            yield return AuditActions.UserUpdated;
+        }
+    }
+
+    private Task AuditAsync(string action, ManagedUser user, CancellationToken cancellationToken) =>
+        auditTrail.RecordAsync(new AuditEntry(action, user.Id, user.FullName), cancellationToken);
 
     private async Task<int> CountActiveAdminsAsync(CancellationToken cancellationToken) =>
         (await directory.ListAsync(cancellationToken)).Count(user => user.IsActive && user.Role == Roles.Admin);

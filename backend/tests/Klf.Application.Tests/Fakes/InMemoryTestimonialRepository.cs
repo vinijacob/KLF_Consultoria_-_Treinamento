@@ -12,6 +12,9 @@ internal sealed class InMemoryTestimonialRepository : ITestimonialRepository, IU
     public Task<IReadOnlyList<Testimonial>> ListAsync(bool onlyVisible, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Testimonial>>([.. Testimonials.Where(x => !onlyVisible || Compiled(x)).OrderBy(x => x.DisplayOrder).ThenBy(x => x.AuthorName)]);
 
+    public Task<IReadOnlyList<Testimonial>> ListLatestVisibleAsync(int count, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Testimonial>>([.. Testimonials.Where(Compiled).OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id).Take(count)]);
+
     public Task<Testimonial?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Testimonials.SingleOrDefault(x => x.Id == id));
 

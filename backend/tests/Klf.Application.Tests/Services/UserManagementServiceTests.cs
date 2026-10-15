@@ -15,12 +15,13 @@ public sealed class UserManagementServiceTests
     private readonly InMemoryRefreshTokenRepository _sessions = new();
     private readonly FakeEmailSender _email = new();
     private readonly MutableTimeProvider _clock = new(Now);
+    private readonly FakeAuditTrail _audit = new();
     private readonly UserManagementService _service;
     private readonly Guid _kilciene;
 
     public UserManagementServiceTests()
     {
-        _service = new UserManagementService(_directory, _sessions, _sessions, _email, new FakeFrontendLinks(), _clock);
+        _service = new UserManagementService(_directory, _sessions, _sessions, _email, new FakeFrontendLinks(), _clock, _audit);
         _kilciene = _directory.Seed("Kilciene", Roles.Admin).Id;
     }
 
@@ -88,6 +89,8 @@ public sealed class UserManagementServiceTests
 
         Assert.False(updated.IsActive);
         Assert.NotNull(session.RevokedAt);
+        Assert.Equal(["user.updated", "user.deactivated"], _audit.Entries.Select(entry => entry.Action));
+        Assert.All(_audit.Entries, entry => Assert.Equal(editor.Id, entry.TargetId));
     }
 
     [Fact]

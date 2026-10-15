@@ -22,10 +22,14 @@ internal static class Policies
     /// <summary>Read and manage the messages of the contact form (personal data of prospective clients). Admin only.</summary>
     public const string ManageContactMessages = nameof(ManageContactMessages);
 
+    /// <summary>Read the audit log of the panel (who did what and when). Admin only.</summary>
+    public const string ViewAuditLog = nameof(ViewAuditLog);
+
     /// <summary>Registers every policy.</summary>
     public static AuthorizationBuilder AddKlfPolicies(this AuthorizationBuilder builder) => builder
         .AddPolicy(ManageUsers, policy => policy.RequireRole(Roles.Admin))
         .AddPolicy(ManageContent, policy => policy.RequireRole(Roles.Admin, Roles.Editor))
         .AddPolicy(ManageFeedback, policy => policy.RequireRole(Roles.Admin))
-        .AddPolicy(ManageContactMessages, policy => policy.RequireRole(Roles.Admin));
+        .AddPolicy(ManageContactMessages, policy => policy.RequireRole(Roles.Admin))
+        .AddPolicy(ViewAuditLog, policy => policy.RequireRole(Roles.Admin));
 }

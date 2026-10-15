@@ -14,6 +14,7 @@ public sealed class AuthServiceTests
     private readonly InMemoryRefreshTokenRepository _refreshTokens = new();
     private readonly MutableTimeProvider _clock = new(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero));
     private readonly FakeTokenService _tokens;
+    private readonly FakeAuditTrail _audit = new();
 
     public AuthServiceTests()
     {
@@ -30,6 +31,17 @@ public sealed class AuthServiceTests
         Assert.Equal(Hash(session.RefreshToken), stored.TokenHash);
         Assert.NotEqual(session.RefreshToken, stored.TokenHash);
         Assert.Equal(_clock.Now.UtcDateTime.AddHours(8), session.SessionExpiresAt);
+    }
+
+    [Fact]
+    public async Task Login_is_recorded_in_the_audit_log_with_the_person_as_actor()
+    {
+        await LoginSessionAsync(CreateService(CredentialsCheckResult.Success(User)));
+
+        var entry = Assert.Single(_audit.Entries);
+        Assert.Equal("login.succeeded", entry.Action);
+        Assert.Equal(User.Id, entry.ActorId);
+        Assert.Equal(User.FullName, entry.ActorName);
     }
 
     [Fact]
@@ -200,7 +212,7 @@ public sealed class AuthServiceTests
     private static string Hash(string token) => FakeTokenService.Hash(token);
 
     private AuthService CreateService(CredentialsCheckResult result, bool twoFactorRequired = false, FakeIdentityService? identity = null) =>
-        new(identity ?? new FakeIdentityService(User, result), _tokens, new FakeTwoFactorPolicy(twoFactorRequired), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock);
+        new(identity ?? new FakeIdentityService(User, result), _tokens, new FakeTwoFactorPolicy(twoFactorRequired), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock, _audit);
 
     private static async Task<AuthSession> LoginSessionAsync(AuthService service) =>
         (await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken)).Session!;

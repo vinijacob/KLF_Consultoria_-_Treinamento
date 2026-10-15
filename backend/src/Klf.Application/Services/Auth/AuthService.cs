@@ -1,4 +1,5 @@
 using Klf.Application.DTOs.Auth;
+using Klf.Application.Interfaces.Audit;
 using Klf.Application.Interfaces.Email;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Interfaces.Links;
@@ -17,7 +18,8 @@ internal sealed class AuthService(
     IFrontendLinks links,
     IRefreshTokenRepository refreshTokens,
     IUnitOfWork unitOfWork,
-    TimeProvider timeProvider) : IAuthService
+    TimeProvider timeProvider,
+    IAuditTrail auditTrail) : IAuthService
 {
     private const int PasswordResetLifetimeMinutes = 30;
 
@@ -68,8 +70,10 @@ internal sealed class AuthService(
         }
 
         var status = await identityService.RedeemRecoveryCodeAsync(user.Id, request.RecoveryCode, cancellationToken);
+        var session = await StartSessionOrFailAsync(status, user, cancellationToken);
+        await AuditAsync(AuditActions.RecoveryCodeUsed, user, cancellationToken);
 
-        return await StartSessionOrFailAsync(status, user, cancellationToken);
+        return session;
     }
 
     public async Task<TwoFactorSetup> StartTwoFactorSetupAsync(TwoFactorSetupRequest request, CancellationToken cancellationToken)
@@ -90,6 +94,7 @@ internal sealed class AuthService(
         ThrowIfNotSuccess(result.Status);
 
         var session = await StartNewSessionAsync(user with { TwoFactorEnabled = true }, cancellationToken);
+        await AuditAsync(AuditActions.TwoFactorEnabled, user, cancellationToken);
 
         return new TwoFactorEnabledResult(session, result.RecoveryCodes);
     }
@@ -109,6 +114,7 @@ internal sealed class AuthService(
 
         var result = await identityService.RegenerateRecoveryCodesAsync(userId, request.Code, cancellationToken);
         ThrowIfNotSuccess(result.Status);
+        await AuditAsync(AuditActions.RecoveryCodesRegenerated, user, cancellationToken);
 
         return result.RecoveryCodes;
     }
@@ -137,6 +143,7 @@ internal sealed class AuthService(
         {
             case { Status: PasswordResetStatus.Success, User: { } user }:
                 await RevokeAllSessionsAsync(user.Id, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+                await AuditAsync(AuditActions.PasswordReset, user, cancellationToken);
                 await emailSender.SendAsync(PasswordEmailTemplates.PasswordChanged(user.Email, user.FullName), cancellationToken);
                 return;
             case { Status: PasswordResetStatus.WeakPassword }:
@@ -203,8 +210,16 @@ internal sealed class AuthService(
         return new CurrentUserResponse(user.Id, user.Email, user.FullName, user.Roles, user.TwoFactorEnabled);
     }
 
-    private Task<AuthSession> StartNewSessionAsync(UserAccount user, CancellationToken cancellationToken) =>
-        IssueSessionAsync(user, Guid.CreateVersion7(), sessionExpiresAt: null, cancellationToken);
+    private async Task<AuthSession> StartNewSessionAsync(UserAccount user, CancellationToken cancellationToken)
+    {
+        var session = await IssueSessionAsync(user, Guid.CreateVersion7(), sessionExpiresAt: null, cancellationToken);
+        await AuditAsync(AuditActions.LoginSucceeded, user, cancellationToken);
+
+        return session;
+    }
+
+    private Task AuditAsync(string action, UserAccount user, CancellationToken cancellationToken) =>
+        auditTrail.RecordAsync(new AuditEntry(action, user.Id, ActorId: user.Id, ActorName: user.FullName), cancellationToken);
 
     private async Task<AuthSession> StartSessionOrFailAsync(TwoFactorCheckStatus status, UserAccount user, CancellationToken cancellationToken)
     {
