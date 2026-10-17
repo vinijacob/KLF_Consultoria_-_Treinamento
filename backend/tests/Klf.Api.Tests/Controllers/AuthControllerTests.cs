@@ -96,13 +96,18 @@ public sealed class AuthControllerTests(KlfApiFactory factory) : IClassFixture<K
         using var client = factory.CreateHttpsClient();
 
         var response = await client.PostAsJsonAsync(LoginUri, new LoginRequest(KlfApiFactory.AdminEmail, KlfApiFactory.AdminPassword), TestContext.Current.CancellationToken);
-        var cookie = Assert.Single(response.Headers.GetValues("Set-Cookie"));
+        var cookies = response.Headers.GetValues("Set-Cookie").ToList();
 
-        Assert.StartsWith("klf_refresh=", cookie, StringComparison.Ordinal);
-        Assert.Contains("path=/api/v1/auth", cookie, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("samesite=strict", cookie, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(2, cookies.Count);
+        Assert.Contains(cookies, cookie => cookie.StartsWith("klf_refresh=", StringComparison.Ordinal));
+        Assert.Contains(cookies, cookie => cookie.StartsWith("klf_device=", StringComparison.Ordinal) && cookie.Contains("max-age=31536000", StringComparison.OrdinalIgnoreCase));
+        Assert.All(cookies, cookie =>
+        {
+            Assert.Contains("path=/api/v1/auth", cookie, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("samesite=strict", cookie, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
+        });
     }
 
     [Fact]
@@ -133,7 +138,7 @@ public sealed class AuthControllerTests(KlfApiFactory factory) : IClassFixture<K
     {
         using var client = factory.CreateHttpsClient();
         var login = await client.PostAsJsonAsync(LoginUri, new LoginRequest(KlfApiFactory.AdminEmail, KlfApiFactory.AdminPassword), TestContext.Current.CancellationToken);
-        var oldCookie = login.Headers.GetValues("Set-Cookie").Single().Split(';')[0];
+        var oldCookie = login.Headers.GetValues("Set-Cookie").Single(cookie => cookie.StartsWith("klf_refresh=", StringComparison.Ordinal)).Split(';')[0];
         await client.PostAsync(RefreshUri, content: null, TestContext.Current.CancellationToken);
 
         using var attacker = factory.CreateHttpsClient();

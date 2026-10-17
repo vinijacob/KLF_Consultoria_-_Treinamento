@@ -35,4 +35,13 @@ internal sealed class InMemoryMediaAssetRepository : IMediaAssetRepository, IUni
         Media.Add(media);
         return media;
     }
+
+    public Task<MediaAsset?> GetIncludingDeletedAsync(Guid id, CancellationToken cancellationToken) =>
+        Task.FromResult(Media.SingleOrDefault(x => x.Id == id));
+
+    public Task EraseAsync(Guid id, CancellationToken cancellationToken)
+    {
+        Media.RemoveAll(x => x.Id == id);
+        return Task.CompletedTask;
+    }
 }

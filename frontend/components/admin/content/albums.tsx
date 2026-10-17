@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { optional, toInt, useEntityEditor } from "@/lib/admin/editor";
+import { optional, optionalInt, useEntityEditor } from "@/lib/admin/editor";
 import { useApi, useSubmit } from "@/lib/admin/hooks";
 import { plural, slugify } from "@/lib/admin/text";
 import { adminFetch } from "@/lib/auth/session";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox, Input, Textarea } from "@/components/ui/field";
 import { ArrowDownIcon, ArrowUpIcon } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
+import { DisplayOrderField, useDisplayOrder } from "../display-order";
 import { EntityLoader, FlashNotice } from "../entity";
 import { AltTextTag, MediaField, MediaPicker, Thumb } from "../media";
 import { visibilityTag } from "../tags";
@@ -190,7 +191,7 @@ function AlbumForm({ album }: { album?: AdminAlbum }) {
     slug: album?.slug ?? "",
     description: album?.description ?? "",
     coverId: album?.coverId ?? null,
-    displayOrder: String(album?.displayOrder ?? 0),
+    displayOrder: album ? String(album.displayOrder) : "",
     isActive: album?.isActive ?? true,
   }));
   const [slugTouched, setSlugTouched] = useState(Boolean(album));
@@ -201,6 +202,7 @@ function AlbumForm({ album }: { album?: AdminAlbum }) {
     created: "Álbum criado. Agora adicione as fotos.",
     deleted: "Álbum excluído.",
   });
+  const order = useDisplayOrder<AdminAlbum>({ listPath: "/admin/albums", selfId: album?.id, name: (other) => other.title });
   const error = (field: string) => fieldError(editor.errors, field);
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -219,7 +221,7 @@ function AlbumForm({ album }: { album?: AdminAlbum }) {
         savedNote={editor.savedNote}
         submitLabel={album ? "Salvar dados do álbum" : "Criar álbum"}
         onSubmit={() =>
-          void editor.save({ ...form, description: optional(form.description), displayOrder: toInt(form.displayOrder) })
+          void order.guard(form.displayOrder, () => editor.save({ ...form, description: optional(form.description), displayOrder: optionalInt(form.displayOrder) }))
         }
         extraActions={
           album && (
@@ -265,18 +267,12 @@ function AlbumForm({ album }: { album?: AdminAlbum }) {
           />
           <MediaField label="Capa" hint="Aparece na lista de álbuns do site." value={form.coverId} onChange={(id) => set("coverId", id)} error={error("coverId")} />
           <FieldRow>
-            <Input
-              label="Ordem de exibição"
-              type="number"
-              min={0}
-              value={form.displayOrder}
-              onChange={(event) => set("displayOrder", event.target.value)}
-              error={error("displayOrder")}
-            />
+            <DisplayOrderField order={order} value={form.displayOrder} onChange={(value) => set("displayOrder", value)} error={error("displayOrder")} />
           </FieldRow>
           <Checkbox label="Mostrar no site" checked={form.isActive} onChange={(event) => set("isActive", event.target.checked)} />
         </Section>
       </AdminForm>
+      {order.dialog}
     </>
   );
 }

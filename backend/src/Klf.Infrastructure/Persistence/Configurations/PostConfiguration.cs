@@ -32,5 +32,17 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
             .WithMany()
             .HasForeignKey(x => x.CoverId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Category)
+            .WithMany()
+            .HasForeignKey(x => x.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(x => x.Tags)
+            .WithOne()
+            .HasForeignKey(x => x.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Tags).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

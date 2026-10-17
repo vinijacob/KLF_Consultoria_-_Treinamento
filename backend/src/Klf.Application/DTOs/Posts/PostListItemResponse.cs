@@ -11,6 +11,7 @@ namespace Klf.Application.DTOs.Posts;
 /// <param name="CoverId">Cover image id.</param>
 /// <param name="Status">Publishing status.</param>
 /// <param name="PublishedAt">When it goes (or went) live, in UTC; empty for drafts.</param>
+/// <param name="Category">Theme of the post.</param>
 public sealed record PostListItemResponse(
     Guid Id,
     PostType Type,
@@ -19,4 +20,5 @@ public sealed record PostListItemResponse(
     string? Summary,
     Guid? CoverId,
     PostStatus Status,
-    DateTime? PublishedAt);
+    DateTime? PublishedAt,
+    TaxonomyRef? Category);

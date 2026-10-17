@@ -1,27 +1,30 @@
-import { ArrowLink, Avatar, Badge, Container, FramedImage, SectionHeading } from "@/components/site/blocks";
+import { ArrowLink, Avatar, Badge, Container, SectionHeading } from "@/components/site/blocks";
 import { ClientShowcase } from "@/components/site/client-showcase";
 import { ClosingCta } from "@/components/site/contact";
 import { RevealObserver } from "@/components/site/reveal-observer";
 import { PostGrid, ServiceGrid } from "@/components/site/lists";
+import { PortraitCarousel } from "@/components/site/portrait-carousel";
 import { TestimonialSpotlight } from "@/components/site/testimonials";
 import { ButtonLink } from "@/components/ui/button";
 import { copy } from "@/content/site-copy";
-import { getClients, getLatestTestimonials, getPosts, getServices, getSettings, mediaUrl } from "@/lib/api/public";
+import { getClients, getFeaturedQuote, getLatestTestimonials, getPosts, getServices, getSettings, mediaUrl } from "@/lib/api/public";
 import { pickRandom } from "@/lib/search";
 
 const romans = ["I", "II", "III"];
 
 export default async function HomePage() {
-  const [settings, services, testimonials, clients, posts] = await Promise.all([
+  const [settings, services, testimonials, clients, posts, quote] = await Promise.all([
     getSettings(),
     getServices(),
     getLatestTestimonials(),
     getClients(),
     getPosts({ pageSize: 3 }),
+    getFeaturedQuote(),
   ]);
 
   const about = settings.about ?? {};
-  const portrait = about.portraitId ? mediaUrl(about.portraitId) : null;
+  const portraits = about.portraitIds ?? [];
+  const portrait = portraits[0] ? mediaUrl(portraits[0]) : null;
   const featuredClients = pickRandom(clients, 10).map((client) => client.id);
 
   return (
@@ -41,15 +44,8 @@ export default async function HomePage() {
               <ArrowLink href="/contato">{copy.hero.secondary}</ArrowLink>
             </div>
           </div>
-          <div className="relative lg:col-span-5">
-            <div aria-hidden className="absolute inset-0 translate-x-4 translate-y-4 rounded-2xl bg-brand-soft" />
-            <FramedImage
-              src={portrait}
-              alt={copy.person.name}
-              placeholder="Retrato em breve"
-              priority
-              className="relative motion-safe:animate-rise"
-            />
+          <div className="lg:col-span-5 motion-safe:animate-rise">
+            <PortraitCarousel ids={portraits} name={copy.person.name} priority />
           </div>
         </div>
       </Container>
@@ -65,6 +61,24 @@ export default async function HomePage() {
           ))}
         </ul>
       </Container>
+
+      {quote && (
+        <Container className="mt-24">
+          <figure className="reveal relative overflow-hidden rounded-3xl bg-brand px-8 pt-16 pb-12 text-brand-contrast sm:px-16 sm:pt-20 sm:pb-16">
+            <span aria-hidden className="absolute top-2 left-6 font-serif text-[9rem] leading-none select-none sm:left-12">
+              “
+            </span>
+            <blockquote className="relative max-w-4xl">
+              <p className="font-serif text-[clamp(1.75rem,3.6vw,2.75rem)] leading-[1.2] italic">{quote.text}</p>
+            </blockquote>
+            <figcaption className="relative mt-8 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs uppercase tracking-[0.16em]">
+              <span aria-hidden className="h-px w-10 bg-brand-contrast" />
+              <span>{quote.author}</span>
+              {quote.source && <span className="normal-case tracking-normal font-sans text-sm">{quote.source}</span>}
+            </figcaption>
+          </figure>
+        </Container>
+      )}
 
       <Container className="mt-28">
         <SectionHeading

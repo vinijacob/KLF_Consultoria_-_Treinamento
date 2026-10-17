@@ -1,6 +1,8 @@
 using Klf.Application.Interfaces.Audit;
 using Klf.Application.Services.Audit;
+using Klf.Application.Services.Auth;
 using Klf.Application.Services.Contact;
+using Klf.Application.Services.DataRequests;
 using Klf.Domain.Common;
 
 using Microsoft.Extensions.Configuration;
@@ -11,8 +13,8 @@ using Microsoft.Extensions.Logging;
 namespace Klf.Infrastructure.Jobs;
 
 /// <summary>
-/// Once a day, deletes what is past its retention period (LGPD): contact messages (2 years after the last contact) and
-/// audit log entries (2 years). Runs a few minutes after the app starts so a restart does not wait a whole day.
+/// Once a day, deletes what is past its retention period (LGPD): contact messages (2 years after the last contact),
+/// audit log entries (2 years), known devices of the panel unused for a year and data requests closed 5 years ago. Runs a few minutes after the app starts so a restart does not wait a whole day.
 /// Turned off with <c>Jobs:Enabled=false</c> (tests).
 /// </summary>
 internal sealed partial class DataRetentionJob(
@@ -48,6 +50,8 @@ internal sealed partial class DataRetentionJob(
             var services = scope.ServiceProvider;
             var messages = await services.GetRequiredService<IContactMessageService>().PurgeExpiredAsync(cancellationToken);
             var entries = await services.GetRequiredService<IAuditLogService>().PurgeExpiredAsync(cancellationToken);
+            var devices = await services.GetRequiredService<ILoginDeviceService>().PurgeUnusedAsync(cancellationToken);
+            var requests = await services.GetRequiredService<IDataRequestService>().PurgeExpiredAsync(cancellationToken);
 
             if (messages > 0)
             {
@@ -56,9 +60,16 @@ internal sealed partial class DataRetentionJob(
                     cancellationToken);
             }
 
-            if (messages > 0 || entries > 0)
+            if (requests > 0)
             {
-                LogDeleted(logger, messages, entries);
+                await services.GetRequiredService<IAuditTrail>().RecordAsync(
+                    new AuditEntry(AuditActions.DataRequestPurged, TargetLabel: requests == 1 ? "1 pedido" : $"{requests} pedidos"),
+                    cancellationToken);
+            }
+
+            if (messages > 0 || entries > 0 || devices > 0 || requests > 0)
+            {
+                LogDeleted(logger, messages, entries, devices, requests);
             }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -67,8 +78,8 @@ internal sealed partial class DataRetentionJob(
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Retenção: {Messages} mensagem(ns) de contato e {Entries} registro(s) de auditoria excluídos.")]
-    private static partial void LogDeleted(ILogger logger, int messages, int entries);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Retenção: {Messages} mensagem(ns) de contato, {Entries} registro(s) de auditoria, {Devices} aparelho(s) sem uso e {Requests} pedido(s) LGPD excluídos.")]
+    private static partial void LogDeleted(ILogger logger, int messages, int entries, int devices, int requests);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Falha na limpeza de dados vencidos; tenta de novo amanhã.")]
     private static partial void LogFailure(ILogger logger, Exception exception);

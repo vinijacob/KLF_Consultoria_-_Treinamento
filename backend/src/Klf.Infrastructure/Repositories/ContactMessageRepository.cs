@@ -62,6 +62,18 @@ internal sealed class ContactMessageRepository(AppDbContext context) : IContactM
 
     public void Remove(ContactMessage message) => context.ContactMessages.Remove(message);
 
+    public async Task<IReadOnlyList<ContactMessage>> ListByEmailAsync(string email, CancellationToken cancellationToken) =>
+        await context.ContactMessages
+            .AsNoTracking()
+            .Where(message => EF.Functions.ILike(message.Email, EscapeLike(email.Trim()), LikeEscape))
+            .OrderByDescending(message => message.ReceivedAt)
+            .ToListAsync(cancellationToken);
+
+    public Task<int> DeleteByEmailAsync(string email, CancellationToken cancellationToken) =>
+        context.ContactMessages
+            .Where(message => EF.Functions.ILike(message.Email, EscapeLike(email.Trim()), LikeEscape))
+            .ExecuteDeleteAsync(cancellationToken);
+
     private static string EscapeLike(string text) => text
         .Replace(LikeEscape, LikeEscape + LikeEscape, StringComparison.Ordinal)
         .Replace("%", LikeEscape + "%", StringComparison.Ordinal)

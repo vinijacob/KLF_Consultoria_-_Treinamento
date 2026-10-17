@@ -12,13 +12,20 @@ namespace Klf.Application.Services.Posts;
 internal sealed class PostService(
     IPostRepository repository,
     IMediaAssetRepository mediaRepository,
+    ICategoryRepository categoryRepository,
+    ITagRepository tagRepository,
     IUnitOfWork unitOfWork,
     IHtmlContentSanitizer sanitizer,
     TimeProvider timeProvider) : IPostService
 {
     public async Task<PagedResponse<PostListItemResponse>> ListPublicAsync(PostListRequest request, CancellationToken cancellationToken)
     {
-        var filter = new PostFilter(request.Type, Search: request.Search?.Trim(), VisibleAt: UtcNow);
+        var filter = new PostFilter(
+            request.Type,
+            Search: request.Search?.Trim(),
+            VisibleAt: UtcNow,
+            CategorySlug: NullIfBlank(request.Category),
+            TagSlug: NullIfBlank(request.Tag));
 
         return await ListPageAsync(filter, request, cancellationToken);
     }
@@ -33,7 +40,12 @@ internal sealed class PostService(
 
     public async Task<PagedResponse<PostListItemResponse>> ListAsync(AdminPostListRequest request, CancellationToken cancellationToken)
     {
-        var filter = new PostFilter(request.Type, request.Status, request.Search?.Trim());
+        var filter = new PostFilter(
+            request.Type,
+            request.Status,
+            request.Search?.Trim(),
+            CategorySlug: NullIfBlank(request.Category),
+            TagSlug: NullIfBlank(request.Tag));
 
         return await ListPageAsync(filter, request, cancellationToken);
     }
@@ -49,6 +61,8 @@ internal sealed class PostService(
     {
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: null, cancellationToken);
         await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
+        var category = await ResolveCategoryAsync(request.CategoryId, cancellationToken);
+        var tags = await ResolveTagsAsync(request.Tags, cancellationToken);
 
         var post = new Post(
             authorId,
@@ -65,6 +79,7 @@ internal sealed class PostService(
             NullIfBlank(request.SeoDescription),
             UtcNow);
 
+        post.Classify(category, tags);
         repository.Add(post);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -76,6 +91,8 @@ internal sealed class PostService(
         var post = await GetOrThrowAsync(id, cancellationToken);
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: id, cancellationToken);
         await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
+        var category = await ResolveCategoryAsync(request.CategoryId, cancellationToken);
+        var tags = await ResolveTagsAsync(request.Tags, cancellationToken);
 
         post.Update(
             request.Type,
@@ -90,6 +107,7 @@ internal sealed class PostService(
             NullIfBlank(request.SeoTitle),
             NullIfBlank(request.SeoDescription),
             UtcNow);
+        post.Classify(category, tags);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -113,6 +131,44 @@ internal sealed class PostService(
         var (posts, total) = await repository.ListAsync(filter, paging.Skip, paging.PageSize, cancellationToken);
 
         return new PagedResponse<PostListItemResponse>([.. posts.Select(post => post.ToListItem())], paging.Page, paging.PageSize, total);
+    }
+
+    private async Task<Category?> ResolveCategoryAsync(Guid? categoryId, CancellationToken cancellationToken) =>
+        categoryId is { } id
+            ? await categoryRepository.GetByIdAsync(id, cancellationToken)
+                ?? throw new ValidationException("CategoryId", "Essa categoria não existe mais. Escolha outra.")
+            : null;
+
+    /// <summary>Finds the tags by name (ignoring accents and case) and creates the missing ones, keeping the given order.</summary>
+    private async Task<IReadOnlyList<Tag>> ResolveTagsAsync(IReadOnlyList<string>? names, CancellationToken cancellationToken)
+    {
+        var wanted = (names ?? [])
+            .Select(TaxonomyText.CleanName)
+            .Select(name => (Name: name, Slug: TaxonomyText.ToSlug(name)))
+            .Where(tag => tag.Slug.Length > 0)
+            .DistinctBy(tag => tag.Slug)
+            .ToList();
+
+        if (wanted.Count == 0)
+        {
+            return [];
+        }
+
+        var existing = (await tagRepository.FindBySlugsAsync([.. wanted.Select(tag => tag.Slug)], cancellationToken))
+            .ToDictionary(tag => tag.Slug, StringComparer.Ordinal);
+
+        return [.. wanted.Select(tag =>
+        {
+            if (existing.TryGetValue(tag.Slug, out var found))
+            {
+                return found;
+            }
+
+            var created = new Tag(tag.Name, tag.Slug);
+            tagRepository.Add(created);
+
+            return created;
+        })];
     }
 
     private async Task<Post> GetOrThrowAsync(Guid id, CancellationToken cancellationToken) =>

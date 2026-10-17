@@ -9,7 +9,7 @@ namespace Klf.Application.DTOs.Career;
 /// <param name="Description">Short description (up to 1000 characters); optional.</param>
 /// <param name="StartDate">When it started (<c>yyyy-MM-dd</c>).</param>
 /// <param name="EndDate">When it ended (<c>yyyy-MM-dd</c>); leave empty while ongoing.</param>
-/// <param name="DisplayOrder">Position in the timeline; lower numbers come first.</param>
+/// <param name="DisplayOrder">Position inside the group of its type (0 = first); leave empty to keep it (or go to the end, when the type changes). If another entry holds it, the two swap places.</param>
 public sealed record UpdateCareerEntryRequest(
     CareerEntryType EntryType,
     string Title,
@@ -17,4 +17,4 @@ public sealed record UpdateCareerEntryRequest(
     string? Description,
     DateOnly StartDate,
     DateOnly? EndDate,
-    int DisplayOrder) : ICareerEntryFields;
+    int? DisplayOrder) : ICareerEntryFields;

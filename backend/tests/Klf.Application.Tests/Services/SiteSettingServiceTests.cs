@@ -99,9 +99,33 @@ public sealed class SiteSettingServiceTests
     public async Task Upsert_rejects_non_https_link_in_social_networks()
     {
         var exception = await Assert.ThrowsAsync<ValidationException>(() =>
-            _service.UpsertAsync(SiteSettingKeys.Social, Json("""{"instagram":"javascript:alert(1)"}"""), TestContext.Current.CancellationToken));
+            _service.UpsertAsync(SiteSettingKeys.Social, Json("""{"links":[{"name":"Instagram","url":"javascript:alert(1)"}]}"""), TestContext.Current.CancellationToken));
 
-        Assert.Contains("Instagram", exception.Errors.Keys);
+        Assert.Contains("Links[0].Url", exception.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task Upsert_social_saves_any_network_by_name_in_order_and_rejects_repeated_names()
+    {
+        var token = TestContext.Current.CancellationToken;
+
+        var saved = await _service.UpsertAsync(
+            SiteSettingKeys.Social,
+            Json("""{"links":[{"name":" TikTok ","url":"https://www.tiktok.com/@klf "},{"name":"LinkedIn","url":"https://www.linkedin.com/in/klf"}]}"""),
+            token);
+        var repeated = await Assert.ThrowsAsync<ValidationException>(() => _service.UpsertAsync(
+            SiteSettingKeys.Social,
+            Json("""{"links":[{"name":"TikTok","url":"https://a.com"},{"name":"tiktok","url":"https://b.com"}]}"""),
+            token));
+        var withoutName = await Assert.ThrowsAsync<ValidationException>(() => _service.UpsertAsync(
+            SiteSettingKeys.Social, Json("""{"links":[{"name":"","url":"https://a.com"}]}"""), token));
+
+        var first = saved.GetProperty("links")[0];
+        Assert.Equal("TikTok", first.GetProperty("name").GetString());
+        Assert.Equal("https://www.tiktok.com/@klf", first.GetProperty("url").GetString());
+        Assert.Equal("LinkedIn", saved.GetProperty("links")[1].GetProperty("name").GetString());
+        Assert.Contains("Links", repeated.Errors.Keys);
+        Assert.Contains("Links[0].Name", withoutName.Errors.Keys);
     }
 
     [Fact]
@@ -141,17 +165,24 @@ public sealed class SiteSettingServiceTests
     }
 
     [Fact]
-    public async Task Upsert_about_saves_portrait_when_image_exists_and_rejects_unknown_image()
+    public async Task Upsert_about_saves_the_portraits_in_order_and_rejects_unknown_or_repeated_images()
     {
-        var portrait = _media.Seed();
+        var first = _media.Seed();
+        var second = _media.Seed();
         var token = TestContext.Current.CancellationToken;
 
-        var saved = await _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"mission":"Missão","portraitId":"{{portrait.Id}}"}"""), token);
+        var saved = await _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"mission":"Missão","portraitIds":["{{second.Id}}","{{first.Id}}"]}"""), token);
         var missing = await Assert.ThrowsAsync<ValidationException>(() =>
-            _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"portraitId":"{{Guid.CreateVersion7()}}"}"""), token));
+            _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"portraitIds":["{{first.Id}}","{{Guid.CreateVersion7()}}"]}"""), token));
+        var repeated = await Assert.ThrowsAsync<ValidationException>(() =>
+            _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"portraitIds":["{{first.Id}}","{{first.Id}}"]}"""), token));
+        var old = await Assert.ThrowsAsync<ValidationException>(() =>
+            _service.UpsertAsync(SiteSettingKeys.About, Json($$"""{"portraitId":"{{first.Id}}"}"""), token));
 
-        Assert.Equal(portrait.Id, saved.GetProperty("portraitId").GetGuid());
-        Assert.Contains("PortraitId", missing.Errors.Keys);
+        Assert.Equal([second.Id, first.Id], saved.GetProperty("portraitIds").EnumerateArray().Select(item => item.GetGuid()));
+        Assert.Contains("PortraitIds", missing.Errors.Keys);
+        Assert.Contains("PortraitIds", repeated.Errors.Keys);
+        Assert.NotEmpty(old.Errors);
     }
 
     [Fact]

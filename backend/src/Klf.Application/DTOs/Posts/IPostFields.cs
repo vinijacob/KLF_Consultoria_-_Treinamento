@@ -37,4 +37,10 @@ public interface IPostFields
 
     /// <summary>Description for search engines.</summary>
     string? SeoDescription { get; }
+
+    /// <summary>Theme of the post.</summary>
+    Guid? CategoryId { get; }
+
+    /// <summary>Keywords of the post, by name.</summary>
+    IReadOnlyList<string>? Tags { get; }
 }

@@ -25,4 +25,10 @@ public interface IMediaAssetRepository
 
     /// <summary>Marks an image to be (soft) deleted on the next <see cref="IUnitOfWork.SaveChangesAsync"/>.</summary>
     void Remove(MediaAsset mediaAsset);
+
+    /// <summary>Returns the image even if it was (soft) deleted, read-only, or <see langword="null"/>.</summary>
+    Task<MediaAsset?> GetIncludingDeletedAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Deletes the image record for real, right away (no soft delete). The file is removed by the caller.</summary>
+    Task EraseAsync(Guid id, CancellationToken cancellationToken);
 }

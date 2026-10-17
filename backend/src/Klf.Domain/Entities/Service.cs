@@ -8,7 +8,7 @@ namespace Klf.Domain.Entities;
 /// <summary>
 /// A training or consulting service offered by KLF, shown on the public "Serviços" page and in its own detail page.
 /// </summary>
-public sealed class Service : SoftDeletableEntity
+public sealed class Service : SoftDeletableEntity, IOrderedEntity
 {
     /// <summary>Creates a service.</summary>
     /// <param name="title">Name of the service.</param>
@@ -33,7 +33,8 @@ public sealed class Service : SoftDeletableEntity
         int displayOrder,
         bool isActive)
     {
-        SetDetails(title, slug, summary, contentHtml, audience, workloadHours, format, coverId, displayOrder, isActive);
+        SetDetails(title, slug, summary, contentHtml, audience, workloadHours, format, coverId, isActive);
+        DisplayOrder = displayOrder;
     }
 
     /// <summary>Name of the service.</summary>
@@ -60,13 +61,13 @@ public sealed class Service : SoftDeletableEntity
     /// <summary>Cover image (will reference a <c>MediaAsset</c> once the images module exists); optional.</summary>
     public Guid? CoverId { get; private set; }
 
-    /// <summary>Position in the public list; lower numbers come first.</summary>
+    /// <summary>Position in the list; 0 comes first.</summary>
     public int DisplayOrder { get; private set; }
 
     /// <summary>Whether the service is visible on the public site. Inactive services stay in the admin panel only.</summary>
     public bool IsActive { get; private set; }
 
-    /// <summary>Replaces every editable field.</summary>
+    /// <summary>Replaces every editable field except the position, which changes through <see cref="DisplayOrdering"/>.</summary>
     /// <param name="title">Name of the service.</param>
     /// <param name="slug">Unique URL identifier.</param>
     /// <param name="summary">Short description for cards; optional.</param>
@@ -75,7 +76,6 @@ public sealed class Service : SoftDeletableEntity
     /// <param name="workloadHours">Duration, in hours.</param>
     /// <param name="format">How the service is delivered.</param>
     /// <param name="coverId">Cover image id; optional.</param>
-    /// <param name="displayOrder">Position in the public list.</param>
     /// <param name="isActive">Whether the service is visible on the public site.</param>
     public void Update(
         string title,
@@ -86,11 +86,13 @@ public sealed class Service : SoftDeletableEntity
         int workloadHours,
         ServiceFormat format,
         Guid? coverId,
-        int displayOrder,
         bool isActive)
     {
-        SetDetails(title, slug, summary, contentHtml, audience, workloadHours, format, coverId, displayOrder, isActive);
+        SetDetails(title, slug, summary, contentHtml, audience, workloadHours, format, coverId, isActive);
     }
+
+    /// <inheritdoc />
+    public void MoveTo(int position) => DisplayOrder = position;
 
     [MemberNotNull(nameof(Title), nameof(Slug), nameof(ContentHtml), nameof(Audience))]
     private void SetDetails(
@@ -102,7 +104,6 @@ public sealed class Service : SoftDeletableEntity
         int workloadHours,
         ServiceFormat format,
         Guid? coverId,
-        int displayOrder,
         bool isActive)
     {
         Title = title;
@@ -113,7 +114,6 @@ public sealed class Service : SoftDeletableEntity
         WorkloadHours = workloadHours;
         Format = format;
         CoverId = coverId;
-        DisplayOrder = displayOrder;
         IsActive = isActive;
     }
 }

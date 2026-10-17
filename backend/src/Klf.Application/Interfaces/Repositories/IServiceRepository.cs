@@ -21,6 +21,12 @@ public interface IServiceRepository
     /// <summary>Whether another service already uses the slug; <paramref name="excludingId"/> skips the service being edited.</summary>
     Task<bool> SlugExistsAsync(string slug, Guid? excludingId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Returns every service in the order of the panel list (position, then name), tracked for changes, so their
+    /// positions can be renumbered (see <see cref="Klf.Domain.Common.DisplayOrdering"/>).
+    /// </summary>
+    Task<IReadOnlyList<Service>> ListInOrderAsync(CancellationToken cancellationToken);
+
     /// <summary>Marks a new service to be inserted on the next <see cref="IUnitOfWork.SaveChangesAsync"/>.</summary>
     void Add(Service service);
 

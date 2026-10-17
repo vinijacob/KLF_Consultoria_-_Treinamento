@@ -24,6 +24,8 @@ public class KlfApiFactory : WebApplicationFactory<Program>
 
     public InMemoryRefreshTokenRepository RefreshTokens { get; } = new();
 
+    public InMemoryKnownDeviceRepository KnownDevices { get; } = new();
+
     public InMemoryMediaAssetRepository Media { get; } = new();
 
     public FakeFileStorage Storage { get; } = new();
@@ -62,6 +64,8 @@ public class KlfApiFactory : WebApplicationFactory<Program>
                 services.RemoveAll<IRefreshTokenRepository>();
                 services.RemoveAll<IUnitOfWork>();
                 services.AddSingleton<IRefreshTokenRepository>(RefreshTokens);
+                services.RemoveAll<IKnownDeviceRepository>();
+                services.AddSingleton<IKnownDeviceRepository>(KnownDevices);
                 services.AddSingleton<IUnitOfWork, NoOpUnitOfWork>();
                 services.RemoveAll<IMediaAssetRepository>();
                 services.RemoveAll<IFileStorage>();

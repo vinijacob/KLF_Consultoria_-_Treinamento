@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useId, useState } from "react";
 import { formatDateTime, fromLocalInput, toLocalInput } from "@/lib/admin/datetime";
 import { optional, useEntityEditor } from "@/lib/admin/editor";
 import { useApi } from "@/lib/admin/hooks";
+import { addTags, MAX_TAGS, TAG_MAX_LENGTH } from "@/lib/admin/post-tags";
 import { slugify } from "@/lib/admin/text";
 import { fieldError } from "@/lib/api/client";
 import { postTypeLabel } from "@/lib/format";
-import type { AdminPost, AdminPostListItem, Paged, PostStatus } from "@/types/admin";
+import type { AdminPost, AdminPostListItem, AdminTaxonomyItem, Paged, PostStatus } from "@/types/admin";
 import type { PostType } from "@/types/site";
 import { ChoiceList } from "@/components/ui/choice";
-import { Input, Select, Textarea } from "@/components/ui/field";
+import { FieldError, Input, Select, Textarea } from "@/components/ui/field";
+import { CloseIcon } from "@/components/ui/icons";
 import { EntityLoader, FlashNotice } from "../entity";
 import { MediaField } from "../media";
 import { RichTextEditor } from "../rich-text";
@@ -124,6 +127,7 @@ export function PostsList({ initialStatus }: { initialStatus?: PostStatus }) {
                 meta={
                   <>
                     {postTypeLabel[post.type]}
+                    {post.category && ` · ${post.category.name}`}
                     {post.publishedAt &&
                       ` · ${effectiveStatus(post.status, post.publishedAt) === "Scheduled" ? "sai em" : "publicada em"} ${formatDateTime(post.publishedAt)}`}
                   </>
@@ -151,6 +155,8 @@ type Form = {
   scheduledFor: string;
   seoTitle: string;
   seoDescription: string;
+  categoryId: string;
+  tags: string[];
 };
 
 function toForm(post?: AdminPost): Form {
@@ -166,7 +172,112 @@ function toForm(post?: AdminPost): Form {
     scheduledFor: post?.status === "Scheduled" ? toLocalInput(post.publishedAt) : "",
     seoTitle: post?.seoTitle ?? "",
     seoDescription: post?.seoDescription ?? "",
+    categoryId: post?.categoryId ?? "",
+    tags: post?.tags ?? [],
   };
+}
+
+/**
+ * Tags da publicação: digitar e apertar Enter (ou vírgula) acrescenta; sugere as que já existem. O que ficou digitado
+ * entra ao sair do campo, para não se perder ao salvar.
+ */
+function TagsField({ value, onChange, error }: { value: string[]; onChange: (tags: string[]) => void; error?: string }) {
+  const listId = useId();
+  const [draft, setDraft] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+  const { data } = useApi<AdminTaxonomyItem[]>("/admin/post-tags");
+  const existing = data?.map((tag) => tag.name) ?? [];
+
+  function commit(text: string) {
+    const result = addTags(value, text, existing);
+    setProblem(result.problem);
+    setDraft("");
+    if (result.tags.length !== value.length) onChange(result.tags);
+  }
+
+  return (
+    <div>
+      <Input
+        label="Tags"
+        optional
+        hint={`Palavras-chave, até ${MAX_TAGS}. Digite e aperte Enter ou vírgula. Quem lê clica numa tag e vê as outras publicações com ela.`}
+        list={listId}
+        value={draft}
+        maxLength={TAG_MAX_LENGTH * 3}
+        disabled={value.length >= MAX_TAGS}
+        onChange={(event) => {
+          const text = event.target.value;
+          if (text.includes(",")) commit(text);
+          else setDraft(text);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commit(draft);
+          } else if (event.key === "Backspace" && !draft && value.length > 0) {
+            onChange(value.slice(0, -1));
+          }
+        }}
+        onBlur={() => draft && commit(draft)}
+        error={problem ?? error}
+      />
+      <datalist id={listId}>
+        {existing
+          .filter((name) => !value.includes(name))
+          .map((name) => (
+            <option key={name} value={name} />
+          ))}
+      </datalist>
+      {value.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-2" aria-label="Tags escolhidas">
+          {value.map((tag) => (
+            <li key={tag}>
+              <button
+                type="button"
+                onClick={() => onChange(value.filter((item) => item !== tag))}
+                aria-label={`Tirar a tag ${tag}`}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-rule-strong bg-card px-4 font-sans text-[0.9375rem] hover:border-ink"
+              >
+                #{tag}
+                <CloseIcon aria-hidden className="text-ink-soft" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function CategoryField({ value, onChange, error }: { value: string; onChange: (id: string) => void; error?: string }) {
+  const { data, error: loadError } = useApi<AdminTaxonomyItem[]>("/admin/post-categories");
+
+  return (
+    <div>
+      <Select
+        label="Categoria"
+        optional
+        hint="O tema da publicação. No site, vira um filtro na página Conteúdo."
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        error={error}
+        disabled={!data && !loadError}
+      >
+        <option value="">Sem categoria</option>
+        {data?.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </Select>
+      <p className="mt-2 font-sans text-sm">
+        <Link href="/painel/categorias" className="inline-flex min-h-11 items-center text-brand underline underline-offset-4">
+          {data?.length === 0 ? "Criar a primeira categoria" : "Criar ou renomear categorias"}
+        </Link>
+      </p>
+      {loadError && <FieldError>Não foi possível carregar as categorias.</FieldError>}
+    </div>
+  );
 }
 
 const statusOptions = [
@@ -206,6 +317,7 @@ function PostForm({ post, onReset }: { onReset: () => void; post?: AdminPost }) 
       seoDescription: optional(form.seoDescription),
       contentJson: form.contentJson || JSON.stringify({ type: "doc", content: [] }),
       scheduledFor: form.status === "Scheduled" ? fromLocalInput(form.scheduledFor) : null,
+      categoryId: form.categoryId || null,
     });
   }
 
@@ -289,6 +401,15 @@ function PostForm({ post, onReset }: { onReset: () => void; post?: AdminPost }) 
             error={error("contentHtml") ?? error("contentJson")}
           />
           <MediaField label="Imagem de capa" value={form.coverId} onChange={(id) => set("coverId", id)} error={error("coverId")} />
+        </Section>
+
+        <Section title="Categoria e tags" description="Opcional. Ajudam quem lê a achar outras publicações do mesmo assunto.">
+          <CategoryField value={form.categoryId} onChange={(id) => set("categoryId", id)} error={error("categoryId")} />
+          <TagsField
+            value={form.tags}
+            onChange={(tags) => set("tags", tags)}
+            error={error("tags") ?? Object.entries(editor.errors ?? {}).find(([key]) => key.toLowerCase().startsWith("tags["))?.[1][0]}
+          />
         </Section>
 
         <Section title="Publicação" description="Agendadas entram no site sozinhas na data marcada (horário de Manaus).">

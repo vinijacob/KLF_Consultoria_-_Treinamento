@@ -10,6 +10,9 @@ public sealed class InMemoryAlbumRepository : IAlbumRepository, IUnitOfWork
     public Task<IReadOnlyList<Album>> ListAsync(bool onlyActive, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Album>>([.. Albums.Where(a => !onlyActive || a.IsActive).OrderBy(a => a.DisplayOrder).ThenBy(a => a.Title)]);
 
+    public Task<IReadOnlyList<Album>> ListInOrderAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Album>>([.. Albums.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Title, StringComparer.Ordinal)]);
+
     public Task<Album?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Albums.SingleOrDefault(a => a.Id == id));
 

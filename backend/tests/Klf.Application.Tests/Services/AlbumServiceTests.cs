@@ -120,7 +120,7 @@ public sealed class AlbumServiceTests
         _repository.Albums.Add(album);
         var token = TestContext.Current.CancellationToken;
 
-        var updated = await _service.UpdateAsync(album.Id, new UpdateAlbumRequest("Novo", "a", null, null, 2, false), token);
+        var updated = await _service.UpdateAsync(album.Id, new UpdateAlbumRequest("Novo", "a", null, null, null, false), token);
         await _service.DeleteAsync(album.Id, token);
 
         Assert.Equal("Novo", updated.Title);

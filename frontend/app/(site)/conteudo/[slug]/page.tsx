@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLink, Badge, Container, FramedImage, Prose } from "@/components/site/blocks";
 import { ClosingCta } from "@/components/site/contact";
@@ -36,6 +37,14 @@ export default async function PostPage({ params }: PageProps<"/conteudo/[slug]">
           <div className="mx-auto max-w-[42rem]">
             <p className="flex flex-wrap items-center gap-3">
               <Badge tone="brand">{postTypeLabel[post.type]}</Badge>
+              {post.category && (
+                <Link
+                  href={`/conteudo?categoria=${encodeURIComponent(post.category.slug)}`}
+                  className="inline-flex min-h-11 items-center font-mono text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-ink-soft underline underline-offset-4 hover:text-ink"
+                >
+                  {post.category.name}
+                </Link>
+              )}
               {post.publishedAt && (
                 <time dateTime={post.publishedAt} className="font-sans text-sm text-ink-soft">
                   {formatDate(post.publishedAt)}
@@ -60,6 +69,25 @@ export default async function PostPage({ params }: PageProps<"/conteudo/[slug]">
 
         <Container className="mt-12">
           <Prose html={post.contentHtml} className="mx-auto" />
+          {post.tags.length > 0 && (
+            <nav aria-labelledby="tags-da-publicacao" className="mx-auto mt-12 max-w-[42rem]">
+              <p id="tags-da-publicacao" className="font-mono text-xs uppercase tracking-[0.12em] text-ink-soft">
+                Tags
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-2 font-sans text-[0.9375rem]">
+                {post.tags.map((tag) => (
+                  <li key={tag.slug}>
+                    <Link
+                      href={`/conteudo?tag=${encodeURIComponent(tag.slug)}`}
+                      className="inline-flex min-h-11 items-center rounded-full border border-rule-strong px-4 transition-colors hover:border-ink"
+                    >
+                      #{tag.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
           <div className="mx-auto mt-16 max-w-[42rem]">
             <ArrowLink href="/conteudo">
               Ver todas as publicações

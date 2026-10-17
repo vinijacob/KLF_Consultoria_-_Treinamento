@@ -25,4 +25,8 @@ public sealed class FakeFrontendLinks : IFrontendLinks
 
     public Uri Invite(string email, string token) =>
         new($"https://klf.test/painel/aceitar-convite?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}");
+
+    public Uri ForgotPassword() => new("https://klf.test/painel/esqueci-a-senha");
+
+    public Uri DataRequest(Guid id) => new($"https://klf.test/painel/pedidos-lgpd/{id}");
 }

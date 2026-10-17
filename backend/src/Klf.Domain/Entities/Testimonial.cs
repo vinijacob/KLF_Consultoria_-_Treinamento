@@ -9,7 +9,7 @@ namespace Klf.Domain.Entities;
 /// A named testimonial from a person trained by KLF. It only goes public with a recorded consent,
 /// and revoking that consent hides it for good.
 /// </summary>
-public sealed class Testimonial : SoftDeletableEntity
+public sealed class Testimonial : SoftDeletableEntity, IOrderedEntity
 {
     /// <summary>Creates a testimonial.</summary>
     /// <param name="authorName">Who gave the testimonial.</param>
@@ -35,7 +35,8 @@ public sealed class Testimonial : SoftDeletableEntity
     {
         AuthorName = authorName;
         Quote = quote;
-        Apply(authorName, authorRole, companyName, quote, photoId, consentGivenAt, consentCoversImage, isPublished, displayOrder);
+        Apply(authorName, authorRole, companyName, quote, photoId, consentGivenAt, consentCoversImage, isPublished);
+        DisplayOrder = displayOrder;
     }
 
     /// <summary>Who gave the testimonial.</summary>
@@ -65,7 +66,7 @@ public sealed class Testimonial : SoftDeletableEntity
     /// <summary>Whether the testimonial is shown on the public site.</summary>
     public bool IsPublished { get; private set; }
 
-    /// <summary>Position in the public list; lower numbers come first.</summary>
+    /// <summary>Position in the list; 0 comes first.</summary>
     public int DisplayOrder { get; private set; }
 
     /// <summary>Key of the signed consent term (PDF) in the private storage; <see langword="null"/> while none is attached.</summary>
@@ -87,7 +88,7 @@ public sealed class Testimonial : SoftDeletableEntity
     public static Expression<Func<Testimonial, bool>> IsVisible { get; } =
         testimonial => testimonial.IsPublished && testimonial.ConsentGivenAt != null && testimonial.ConsentRevokedAt == null;
 
-    /// <summary>Replaces every editable field.</summary>
+    /// <summary>Replaces every editable field except the position, which changes through <see cref="DisplayOrdering"/>.</summary>
     /// <param name="authorName">Who gave the testimonial.</param>
     /// <param name="authorRole">Job title of the author; optional.</param>
     /// <param name="companyName">Company or store of the author; optional.</param>
@@ -96,7 +97,6 @@ public sealed class Testimonial : SoftDeletableEntity
     /// <param name="consentGivenAt">When the author signed the consent term; optional.</param>
     /// <param name="consentCoversImage">Whether the consent also covers the use of the author's image.</param>
     /// <param name="isPublished">Whether the testimonial is shown on the public site.</param>
-    /// <param name="displayOrder">Position in the public list.</param>
     /// <exception cref="ValidationException">
     /// Publishing without a consent date, publishing after the consent was revoked, or using a photo without image consent.
     /// </exception>
@@ -108,11 +108,13 @@ public sealed class Testimonial : SoftDeletableEntity
         Guid? photoId,
         DateTime? consentGivenAt,
         bool consentCoversImage,
-        bool isPublished,
-        int displayOrder)
+        bool isPublished)
     {
-        Apply(authorName, authorRole, companyName, quote, photoId, consentGivenAt, consentCoversImage, isPublished, displayOrder);
+        Apply(authorName, authorRole, companyName, quote, photoId, consentGivenAt, consentCoversImage, isPublished);
     }
+
+    /// <inheritdoc />
+    public void MoveTo(int position) => DisplayOrder = position;
 
     /// <summary>
     /// Records that the author withdrew the consent: the testimonial is unpublished and can never be published again
@@ -165,8 +167,7 @@ public sealed class Testimonial : SoftDeletableEntity
         Guid? photoId,
         DateTime? consentGivenAt,
         bool consentCoversImage,
-        bool isPublished,
-        int displayOrder)
+        bool isPublished)
     {
         if (isPublished && consentGivenAt is null)
         {
@@ -191,6 +192,5 @@ public sealed class Testimonial : SoftDeletableEntity
         ConsentGivenAt = consentGivenAt;
         ConsentCoversImage = consentCoversImage;
         IsPublished = isPublished;
-        DisplayOrder = displayOrder;
     }
 }

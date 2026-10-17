@@ -19,7 +19,8 @@ internal sealed class AuthService(
     IRefreshTokenRepository refreshTokens,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
-    IAuditTrail auditTrail) : IAuthService
+    IAuditTrail auditTrail,
+    ILoginDeviceService loginDevices) : IAuthService
 {
     private const int PasswordResetLifetimeMinutes = 30;
 
@@ -212,10 +213,16 @@ internal sealed class AuthService(
 
     private async Task<AuthSession> StartNewSessionAsync(UserAccount user, CancellationToken cancellationToken)
     {
+        var device = await loginDevices.RegisterSignInAsync(user.Id, user.Email, user.FullName, cancellationToken);
         var session = await IssueSessionAsync(user, Guid.CreateVersion7(), sessionExpiresAt: null, cancellationToken);
-        await AuditAsync(AuditActions.LoginSucceeded, user, cancellationToken);
 
-        return session;
+        await auditTrail.RecordAsync(
+            device.NewDevice is null
+                ? new AuditEntry(AuditActions.LoginSucceeded, user.Id, ActorId: user.Id, ActorName: user.FullName)
+                : new AuditEntry(AuditActions.LoginNewDevice, user.Id, device.NewDevice, user.Id, user.FullName),
+            cancellationToken);
+
+        return session with { DeviceToken = device.Token };
     }
 
     private Task AuditAsync(string action, UserAccount user, CancellationToken cancellationToken) =>

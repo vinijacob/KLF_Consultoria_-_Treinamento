@@ -9,6 +9,8 @@ using Klf.Application.Services.Career;
 using Klf.Application.Services.Catalog;
 using Klf.Application.Services.Clients;
 using Klf.Application.Services.Contact;
+using Klf.Application.Services.DataRequests;
+using Klf.Application.Services.FeaturedQuote;
 using Klf.Application.Services.Feedback;
 using Klf.Application.Services.Media;
 using Klf.Application.Services.Posts;
@@ -31,8 +33,11 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ILoginDeviceService, LoginDeviceService>();
         services.AddScoped<ICareerEntryService, CareerEntryService>();
         services.AddScoped<IPostService, PostService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<ITagService, TagService>();
         services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
         services.AddScoped<ISiteSettingService, SiteSettingService>();
         services.AddScoped<IClientService, ClientService>();
@@ -44,6 +49,8 @@ public static class DependencyInjection
         services.AddScoped<IFeedbackSessionService, FeedbackSessionService>();
         services.AddScoped<IPublicFeedbackService, PublicFeedbackService>();
         services.AddScoped<IContactMessageService, ContactMessageService>();
+        services.AddScoped<IDataRequestService, DataRequestService>();
+        services.AddScoped<IFeaturedQuoteService, FeaturedQuoteService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<IAuditTrail, AuditTrail>();
         services.AddScoped<IAuditLogService, AuditLogService>();

@@ -103,7 +103,7 @@ public sealed class AuthController(IAuthService authService) : ApiControllerBase
     public async Task<ActionResult<TwoFactorEnabledResponse>> EnableTwoFactorAsync(TwoFactorCodeRequest request, CancellationToken cancellationToken)
     {
         var result = await authService.EnableTwoFactorAsync(request, cancellationToken);
-        RefreshTokenCookie.Append(Response, result.Session.RefreshToken, result.Session.SessionExpiresAt);
+        AppendSessionCookies(result.Session);
 
         return Ok(new TwoFactorEnabledResponse(result.Session.AccessToken, result.Session.AccessTokenExpiresAt, result.RecoveryCodes));
     }
@@ -209,8 +209,18 @@ public sealed class AuthController(IAuthService authService) : ApiControllerBase
 
     private ActionResult<LoginResponse> StartSession(AuthSession session)
     {
-        RefreshTokenCookie.Append(Response, session.RefreshToken, session.SessionExpiresAt);
+        AppendSessionCookies(session);
 
         return Ok(new LoginResponse(session.AccessToken, session.AccessTokenExpiresAt));
+    }
+
+    private void AppendSessionCookies(AuthSession session)
+    {
+        RefreshTokenCookie.Append(Response, session.RefreshToken, session.SessionExpiresAt);
+
+        if (session.DeviceToken is { } deviceToken)
+        {
+            DeviceCookie.Append(Response, deviceToken);
+        }
     }
 }

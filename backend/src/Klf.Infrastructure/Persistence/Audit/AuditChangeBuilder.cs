@@ -22,21 +22,68 @@ internal static class AuditChangeBuilder
     public static IReadOnlyList<AuditDraft> Build(IEnumerable<TrackedChange> changes)
     {
         var drafts = new List<AuditDraft>();
+        var all = changes.ToList();
 
-        foreach (var change in changes)
+        foreach (var change in all)
         {
-            var draft = change.Entity is AlbumMedia item
-                ? new AuditDraft("album.updated", item.AlbumId, null)
-                : Describe(change);
+            if (IsSideEffectOfReordering(change, all))
+            {
+                continue;
+            }
 
-            if (draft is not null && !drafts.Contains(draft) && !drafts.Any(existing => existing.Action == draft.Action && existing.TargetId == draft.TargetId))
+            var draft = change.Entity switch
+            {
+                AlbumMedia item => new AuditDraft("album.updated", item.AlbumId, null),
+                PostTag link => new AuditDraft("post.updated", link.PostId, null),
+                _ when IsOnlyReordered(change) => Reordered(change),
+                _ => Describe(change),
+            };
+
+            if (draft is null)
+            {
+                continue;
+            }
+
+            var same = drafts.FindIndex(existing => existing.Action == draft.Action && existing.TargetId == draft.TargetId);
+
+            if (same < 0)
             {
                 drafts.Add(draft);
             }
+            else if (drafts[same].TargetLabel is null && draft.TargetLabel is not null)
+            {
+                drafts[same] = draft;
+            }
         }
 
-        return drafts;
+        return [.. drafts.Where(draft => !IsRedundantUpdate(draft, drafts))];
     }
+
+    /// <summary>
+    /// A record that only changed position, while another record of the same kind really changed in this save, was moved
+    /// by <see cref="DisplayOrdering"/> (the other side of a swap, or the ones closing the gap of a deleted record).
+    /// </summary>
+    private static bool IsSideEffectOfReordering(TrackedChange change, List<TrackedChange> all) =>
+        IsOnlyReordered(change)
+        && all.Any(other => other.Entity.GetType() == change.Entity.GetType() && !IsOnlyReordered(other));
+
+    /// <summary>
+    /// A save that only moved records (a swap of positions) changes two of them, but only one was chosen; which one is
+    /// unknown here, so it becomes a single "changed the order" entry for the whole list.
+    /// </summary>
+    private static AuditDraft? Reordered(TrackedChange change) =>
+        Describe(change) is { } draft ? new AuditDraft($"{draft.Action.Split('.')[0]}.reordered", null, null) : null;
+
+    private static bool IsOnlyReordered(TrackedChange change) =>
+        change is { Entity: IOrderedEntity, State: EntityState.Modified }
+        && change.Modified.ContainsKey(nameof(IOrderedEntity.DisplayOrder))
+        && change.Modified.Keys.All(name => name is nameof(IOrderedEntity.DisplayOrder) or nameof(Entity.UpdatedAt));
+
+    /// <summary>"Edited" adds nothing when the same record was also created, published or deleted in this save.</summary>
+    private static bool IsRedundantUpdate(AuditDraft draft, List<AuditDraft> drafts) =>
+        draft.Action.EndsWith(".updated", StringComparison.Ordinal)
+        && drafts.Any(other => other.TargetId == draft.TargetId && other.Action != draft.Action
+            && other.Action.Split('.')[0] == draft.Action.Split('.')[0]);
 
     private static AuditDraft? Describe(TrackedChange change)
     {
@@ -47,12 +94,16 @@ internal static class AuditChangeBuilder
             CareerEntry entry => ("career", entry.Title),
             Testimonial => ("testimonial", null),
             Client client => ("client", client.Name),
+            Category category => ("post-category", category.Name),
+            Tag tag => ("post-tag", tag.Name),
             MediaAsset media => ("media", media.AltText),
             Album album => ("album", album.Title),
             SiteSetting setting => ("settings", setting.Key),
             FeedbackForm form => ("feedback-form", form.Title),
             FeedbackSession session => ("feedback-session", session.Title),
             ContactMessage => ("contact", (string?)null),
+            DataRequest => ("data-request", null),
+            FeaturedQuote quote => ("featured-quote", quote.Author),
             _ => (null, null),
         };
 
@@ -75,6 +126,7 @@ internal static class AuditChangeBuilder
                 {
                     "media" => "uploaded",
                     "contact" => "received",
+                    "data-request" => "received",
                     "settings" => "updated",
                     _ => "created",
                 };
@@ -97,6 +149,14 @@ internal static class AuditChangeBuilder
             Testimonial when Changed(change, nameof(Testimonial.ConsentRevokedAt), out var before, out var after) && before is null && after is not null => "consent-revoked",
             FeedbackSession when Changed(change, nameof(FeedbackSession.ClosedAt), out var before, out var after) =>
                 after is not null && before is null ? "closed" : after is null ? "reopened" : "updated",
+            DataRequest => Changed(change, nameof(DataRequest.Status), out _, out var status)
+                ? status switch
+                {
+                    DataRequestStatus.Completed => "completed",
+                    DataRequestStatus.Declined => "declined",
+                    _ => "reopened",
+                }
+                : null,
             ContactMessage => Changed(change, nameof(ContactMessage.Status), out _, out var status) && status is ContactMessageStatus.Answered ? "answered" : null,
             _ => change.Modified.Keys.Any(name => name != nameof(Entity.UpdatedAt)) ? "updated" : null,
         };

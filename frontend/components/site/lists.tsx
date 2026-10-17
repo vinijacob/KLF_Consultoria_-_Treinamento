@@ -63,6 +63,7 @@ export function PostCard({ post }: { post: PostListItem }) {
       <span className="flex flex-1 flex-col p-7">
         <span className="flex flex-wrap items-center gap-3">
           <Badge tone="brand">{postTypeLabel[post.type]}</Badge>
+          {post.category && <Badge>{post.category.name}</Badge>}
           {post.publishedAt && (
             <time dateTime={post.publishedAt} className="font-sans text-sm text-ink-soft">
               {formatDate(post.publishedAt)}

@@ -4,6 +4,7 @@ import type {
   AlbumListItem,
   CareerEntry,
   Client,
+  FeaturedQuote,
   Paged,
   PostDetail,
   PostListItem,
@@ -11,6 +12,7 @@ import type {
   ServiceDetail,
   ServiceListItem,
   SiteSettings,
+  TaxonomyItem,
   Testimonial,
 } from "@/types/site";
 
@@ -49,6 +51,9 @@ export const getService = (slug: string) => get<ServiceDetail>(`/services/${enco
 
 export const getCareer = () => orFallback(get<CareerEntry[]>("/career", "career"), []);
 
+/** A citação da página inicial; `null` quando não há uma publicada. */
+export const getFeaturedQuote = () => orFallback(get<FeaturedQuote>("/featured-quote", "featured-quote"), null);
+
 export const getTestimonials = () => orFallback(get<Testimonial[]>("/testimonials", "testimonials"), []);
 
 /** Quantos depoimentos o destaque mostra. Os outros ficam no mural de /clientes. */
@@ -77,16 +82,25 @@ const emptyPage: Paged<PostListItem> = {
 export function getPosts({
   type,
   search,
+  category,
+  tag,
   page = 1,
   pageSize = 10,
-}: { type?: PostType; search?: string; page?: number; pageSize?: number } = {}) {
+}: { type?: PostType; search?: string; category?: string; tag?: string; page?: number; pageSize?: number } = {}) {
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (type) query.set("type", type);
   if (search) query.set("search", search);
+  if (category) query.set("category", category);
+  if (tag) query.set("tag", tag);
 
   return orFallback(get<Paged<PostListItem>>(`/posts?${query}`, "posts"), { ...emptyPage, page, pageSize });
 }
 
 export const getPost = (slug: string) => get<PostDetail>(`/posts/${encodeURIComponent(slug)}`, "posts");
+
+/** Categorias com publicações no ar (o filtro de /conteudo só mostra as que levam a algum lugar). */
+export const getPostCategories = () => orFallback(get<TaxonomyItem[]>("/post-categories", "posts"), []);
+
+export const getPostTags = () => orFallback(get<TaxonomyItem[]>("/post-tags", "posts"), []);
 
 export { mediaUrl } from "@/lib/media";

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { optional, toInt, useEntityEditor } from "@/lib/admin/editor";
+import { optional, optionalInt, useEntityEditor } from "@/lib/admin/editor";
 import { useApi } from "@/lib/admin/hooks";
 import { fieldError } from "@/lib/api/client";
 import { mediaUrl } from "@/lib/media";
 import type { AdminClient } from "@/types/admin";
 import { Checkbox, Input } from "@/components/ui/field";
+import { DisplayOrderField, useDisplayOrder } from "../display-order";
 import { EntityLoader, FlashNotice } from "../entity";
 import { MediaField, Thumb } from "../media";
 import { visibilityTag } from "../tags";
@@ -57,7 +58,7 @@ function ClientForm({ client, onReset }: { onReset: () => void; client?: AdminCl
     name: client?.name ?? "",
     websiteUrl: client?.websiteUrl ?? "",
     logoId: client?.logoId ?? null,
-    displayOrder: String(client?.displayOrder ?? 0),
+    displayOrder: client ? String(client.displayOrder) : "",
     isActive: client?.isActive ?? true,
   }));
   const editor = useEntityEditor<AdminClient>({
@@ -68,6 +69,7 @@ function ClientForm({ client, onReset }: { onReset: () => void; client?: AdminCl
     onReset,
     deleted: "Cliente excluído.",
   });
+  const order = useDisplayOrder<AdminClient>({ listPath: "/admin/clients", selfId: client?.id, name: (other) => other.name });
   const error = (field: string) => fieldError(editor.errors, field);
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -80,7 +82,7 @@ function ClientForm({ client, onReset }: { onReset: () => void; client?: AdminCl
         savedNote={editor.savedNote}
         submitLabel={client ? "Salvar alterações" : "Criar cliente"}
         onSubmit={() =>
-          void editor.save({ ...form, websiteUrl: optional(form.websiteUrl), displayOrder: toInt(form.displayOrder) })
+          void order.guard(form.displayOrder, () => editor.save({ ...form, websiteUrl: optional(form.websiteUrl), displayOrder: optionalInt(form.displayOrder) }))
         }
         extraActions={
           client && (
@@ -116,18 +118,12 @@ function ClientForm({ client, onReset }: { onReset: () => void; client?: AdminCl
         </Section>
         <Section title="Publicação">
           <FieldRow>
-            <Input
-              label="Ordem de exibição"
-              type="number"
-              min={0}
-              value={form.displayOrder}
-              onChange={(event) => set("displayOrder", event.target.value)}
-              error={error("displayOrder")}
-            />
+            <DisplayOrderField order={order} value={form.displayOrder} onChange={(value) => set("displayOrder", value)} error={error("displayOrder")} />
           </FieldRow>
           <Checkbox label="Mostrar no site" checked={form.isActive} onChange={(event) => set("isActive", event.target.checked)} />
         </Section>
       </AdminForm>
+      {order.dialog}
     </>
   );
 }

@@ -47,4 +47,10 @@ internal sealed class InMemoryContactMessageRepository : IContactMessageReposito
         SaveCount++;
         return Task.FromResult(1);
     }
+
+    public Task<IReadOnlyList<ContactMessage>> ListByEmailAsync(string email, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<ContactMessage>>([.. Messages.Where(x => string.Equals(x.Email, email, StringComparison.OrdinalIgnoreCase)).OrderByDescending(x => x.ReceivedAt)]);
+
+    public Task<int> DeleteByEmailAsync(string email, CancellationToken cancellationToken) =>
+        Task.FromResult(Messages.RemoveAll(x => string.Equals(x.Email, email, StringComparison.OrdinalIgnoreCase)));
 }

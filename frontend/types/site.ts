@@ -8,8 +8,12 @@ export type AboutSettings = {
   values?: string[] | null;
   differentials?: string[] | null;
   history?: string | null;
-  portraitId?: string | null;
+  /** Fotos da Kilciene em ordem (carrossel da página inicial e da Sobre); a primeira também é o avatar. */
+  portraitIds?: string[] | null;
 };
+
+/** A citação da Kilciene na página inicial. */
+export type FeaturedQuote = { text: string; author: string; source?: string | null };
 
 export type ContactSettings = {
   whatsapp?: string | null;
@@ -19,12 +23,10 @@ export type ContactSettings = {
   mapUrl?: string | null;
 };
 
-export type SocialSettings = {
-  instagram?: string | null;
-  linkedin?: string | null;
-  facebook?: string | null;
-  youtube?: string | null;
-};
+/** Redes sociais da KLF, na ordem do site: qualquer rede, pelo nome. */
+export type SocialSettings = { links?: SocialLink[] | null };
+
+export type SocialLink = { name: string; url: string };
 
 export type SeoSettings = { title?: string | null; description?: string | null; shareImageId?: string | null };
 
@@ -89,12 +91,20 @@ export type PostListItem = {
   summary?: string | null;
   coverId?: string | null;
   publishedAt?: string | null;
+  category?: TaxonomyRef | null;
 };
+
+/** Categoria (tema) ou tag de uma publicação. */
+export type TaxonomyRef = { name: string; slug: string };
+
+/** Categoria ou tag com publicações visíveis, para os filtros do site. */
+export type TaxonomyItem = TaxonomyRef & { postCount: number };
 
 export type PostDetail = PostListItem & {
   contentHtml: string;
   seoTitle?: string | null;
   seoDescription?: string | null;
+  tags: TaxonomyRef[];
 };
 
 export type Paged<T> = {

@@ -160,7 +160,15 @@ export function ContactForm({ services, initialServiceId }: { services: Pick<Ser
               e concordo que a KLF use estes dados para responder ao meu pedido.
             </>
           }
-          hint="Guardamos a mensagem por até 2 anos e você pode pedir a exclusão a qualquer momento."
+          hint={
+            <>
+              Guardamos a mensagem por até 2 anos e você pode{" "}
+              <Link href="/meus-dados" className="text-brand underline underline-offset-4">
+                pedir a exclusão
+              </Link>{" "}
+              a qualquer momento.
+            </>
+          }
           checked={form.accepts}
           onChange={(event) => set("accepts", event.target.checked)}
           error={error("acceptsPrivacyPolicy")}

@@ -31,7 +31,7 @@ public sealed class CareerEntryTests
         var entry = new CareerEntry(CareerEntryType.Education, "MBA", "FGV", null, Start, null, 0);
 
         Assert.Throws<ValidationException>(() =>
-            entry.Update(CareerEntryType.Education, "Outro", "FGV", null, Start, Start.AddDays(-1), 0));
+            entry.Update(CareerEntryType.Education, "Outro", "FGV", null, Start, Start.AddDays(-1)));
 
         Assert.Equal("MBA", entry.Title);
     }

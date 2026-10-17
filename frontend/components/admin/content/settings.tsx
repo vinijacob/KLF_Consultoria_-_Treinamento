@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { optional } from "@/lib/admin/editor";
 import { useApi, useSubmit } from "@/lib/admin/hooks";
 import { adminFetch } from "@/lib/auth/session";
@@ -9,10 +9,12 @@ import { formatCnpj } from "@/lib/cnpj";
 import { formatDay } from "@/lib/format";
 import { phoneFieldValue } from "@/lib/phone";
 import type { AboutSettings, ContactSettings, LegalSettings, SeoSettings, SiteSettings, SocialSettings } from "@/types/admin";
+import type { SocialLink } from "@/types/site";
 import { Button } from "@/components/ui/button";
-import { CnpjInput, Input, PhoneInput, Textarea } from "@/components/ui/field";
+import { CnpjInput, FieldError, Input, PhoneInput, Textarea } from "@/components/ui/field";
+import { ArrowDownIcon, ArrowUpIcon, CloseIcon } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
-import { MediaField } from "../media";
+import { MediaField, MediaListField } from "../media";
 import { AdminHeader, FieldRow, LoadError, Loading, Section } from "../ui";
 
 type Errors = Record<string, string[]> | undefined;
@@ -69,6 +71,117 @@ function Block<T>({
   );
 }
 
+type SocialRow = SocialLink & { key: string };
+
+let rowCounter = 0;
+const newRowKey = () => `rede-${++rowCounter}`;
+
+const MAX_SOCIAL_LINKS = 12;
+const socialSuggestions = ["Instagram", "LinkedIn", "Facebook", "YouTube", "TikTok", "X (Twitter)", "Threads", "Pinterest", "Spotify", "Kwai"];
+
+/**
+ * Redes sociais em lista livre: nome + link, até 12, com mover e tirar. Linhas totalmente vazias não são enviadas; os
+ * erros da API (`Links[0].Url`) usam o índice da lista enviada, então `sentKeys` guarda quais linhas foram e em que
+ * ordem: o erro continua na linha certa mesmo se ela for movida depois.
+ */
+function SocialLinksField({
+  rows,
+  onChange,
+  sentKeys,
+  errors,
+}: {
+  rows: SocialRow[];
+  onChange: (rows: SocialRow[]) => void;
+  sentKeys: string[];
+  errors: Errors;
+}) {
+  const listId = useId();
+  const update = (key: string, patch: Partial<SocialLink>) => onChange(rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+  const move = (from: number, to: number) => {
+    const next = [...rows];
+    [next[from], next[to]] = [next[to], next[from]];
+    onChange(next);
+  };
+  const rowError = (row: SocialRow, field: "name" | "url") => {
+    const index = sentKeys.indexOf(row.key);
+    return index < 0 ? undefined : fieldError(errors, `links[${index}].${field}`);
+  };
+
+  return (
+    <div className="grid gap-4">
+      <datalist id={listId}>
+        {socialSuggestions
+          .filter((name) => !rows.some((row) => row.name.trim().toLowerCase() === name.toLowerCase()))
+          .map((name) => (
+            <option key={name} value={name} />
+          ))}
+      </datalist>
+      {rows.length === 0 && <p className="font-sans text-[0.9375rem] text-ink-soft">Nenhuma rede ainda. No site, o rodapé mostra “Em breve”.</p>}
+      {rows.map((row, index) => (
+        <fieldset key={row.key} className="grid gap-3 rounded-2xl border border-rule bg-card p-4 sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_auto] sm:items-start">
+          <legend className="sr-only">Rede social {index + 1}</legend>
+          <Input
+            label="Nome da rede"
+            list={listId}
+            placeholder="Ex.: Instagram"
+            value={row.name}
+            maxLength={40}
+            onChange={(event) => update(row.key, { name: event.target.value })}
+            error={rowError(row, "name")}
+          />
+          <Input
+            label="Link do perfil"
+            type="url"
+            placeholder="https://"
+            value={row.url}
+            maxLength={300}
+            onChange={(event) => update(row.key, { url: event.target.value })}
+            error={rowError(row, "url")}
+          />
+          <div className="flex sm:mt-7">
+            <button
+              type="button"
+              disabled={index === 0}
+              onClick={() => move(index, index - 1)}
+              aria-label={`Subir ${row.name || `a rede ${index + 1}`}`}
+              className="grid size-11 place-items-center hover:text-brand disabled:opacity-40"
+            >
+              <ArrowUpIcon />
+            </button>
+            <button
+              type="button"
+              disabled={index === rows.length - 1}
+              onClick={() => move(index, index + 1)}
+              aria-label={`Descer ${row.name || `a rede ${index + 1}`}`}
+              className="grid size-11 place-items-center hover:text-brand disabled:opacity-40"
+            >
+              <ArrowDownIcon />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(rows.filter((item) => item.key !== row.key))}
+              aria-label={`Tirar ${row.name || `a rede ${index + 1}`}`}
+              className="grid size-11 place-items-center hover:text-danger"
+            >
+              <CloseIcon />
+            </button>
+          </div>
+        </fieldset>
+      ))}
+      <FieldError>{fieldError(errors, "links")}</FieldError>
+      <div>
+        <Button
+          variant="outline"
+          disabled={rows.length >= MAX_SOCIAL_LINKS}
+          onClick={() => onChange([...rows, { key: newRowKey(), name: "", url: "" }])}
+        >
+          {rows.length >= MAX_SOCIAL_LINKS ? `Limite de ${MAX_SOCIAL_LINKS} redes` : "Adicionar rede social"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 const lines = (text: string) =>
   text
     .split("\n")
@@ -82,7 +195,7 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
     values: (settings.about?.values ?? []).join("\n"),
     differentials: (settings.about?.differentials ?? []).join("\n"),
     history: settings.about?.history ?? "",
-    portraitId: settings.about?.portraitId ?? null,
+    portraitIds: settings.about?.portraitIds ?? [],
   });
   const [contact, setContact] = useState({
     whatsapp: phoneFieldValue(settings.contact?.whatsapp),
@@ -91,12 +204,8 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
     address: settings.contact?.address ?? "",
     mapUrl: settings.contact?.mapUrl ?? "",
   });
-  const [social, setSocial] = useState({
-    instagram: settings.social?.instagram ?? "",
-    linkedin: settings.social?.linkedin ?? "",
-    facebook: settings.social?.facebook ?? "",
-    youtube: settings.social?.youtube ?? "",
-  });
+  const [social, setSocial] = useState<SocialRow[]>(() => (settings.social?.links ?? []).map((link) => ({ key: newRowKey(), ...link })));
+  const socialSentKeys = useRef<string[]>([]);
   const [seo, setSeo] = useState({
     title: settings.seo?.title ?? "",
     description: settings.seo?.description ?? "",
@@ -115,17 +224,18 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
           values: lines(about.values),
           differentials: lines(about.differentials),
           history: optional(about.history),
-          portraitId: about.portraitId,
+          portraitIds: about.portraitIds,
         })}
       >
         {(errors) => (
           <>
-            <MediaField
-              label="Retrato da Kilciene"
-              hint="Aparece no topo da página inicial e na página Sobre. Prefira foto vertical (proporção 4:5), com boa luz."
-              value={about.portraitId}
-              onChange={(id) => setAbout({ ...about, portraitId: id })}
-              error={fieldError(errors, "portraitId")}
+            <MediaListField
+              label="Fotos da Kilciene"
+              hint="Viram um carrossel no topo da página inicial e na página Sobre, nesta ordem; a primeira também aparece como foto pequena. Prefira fotos verticais (proporção 4:5), com boa luz."
+              value={about.portraitIds}
+              onChange={(ids) => setAbout({ ...about, portraitIds: ids })}
+              max={8}
+              error={fieldError(errors, "portraitIds")}
             />
             <Textarea
               label="História"
@@ -209,30 +319,14 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
       <Block<SocialSettings>
         settingKey="social"
         title="Redes sociais"
-        description="Links completos dos perfis, começando com https://."
-        toPayload={() => ({
-          instagram: optional(social.instagram),
-          linkedin: optional(social.linkedin),
-          facebook: optional(social.facebook),
-          youtube: optional(social.youtube),
-        })}
+        description="Qualquer rede: escreva o nome como deve aparecer no site e o link completo do perfil (começando com https://). A ordem aqui é a ordem do rodapé."
+        toPayload={() => {
+          const sent = social.filter((row) => row.name.trim() || row.url.trim());
+          socialSentKeys.current = sent.map((row) => row.key);
+          return { links: sent.map((row) => ({ name: row.name.trim(), url: row.url.trim() })) };
+        }}
       >
-        {(errors) => (
-          <FieldRow>
-            {(["instagram", "linkedin", "facebook", "youtube"] as const).map((network) => (
-              <Input
-                key={network}
-                label={{ instagram: "Instagram", linkedin: "LinkedIn", facebook: "Facebook", youtube: "YouTube" }[network]}
-                optional
-                type="url"
-                placeholder="https://"
-                value={social[network]}
-                onChange={(event) => setSocial({ ...social, [network]: event.target.value })}
-                error={fieldError(errors, network)}
-              />
-            ))}
-          </FieldRow>
-        )}
+        {(errors) => <SocialLinksField rows={social} onChange={setSocial} sentKeys={socialSentKeys.current} errors={errors} />}
       </Block>
 
       <Block<SeoSettings>

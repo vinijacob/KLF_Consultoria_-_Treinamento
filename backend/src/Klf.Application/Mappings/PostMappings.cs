@@ -18,7 +18,9 @@ internal static class PostMappings
         post.PublishedAt,
         post.SeoTitle,
         post.SeoDescription,
-        post.AuthorId);
+        post.AuthorId,
+        post.CategoryId,
+        [.. post.Tags.Select(link => link.Tag.Name)]);
 
     public static PostListItemResponse ToListItem(this Post post) => new(
         post.Id,
@@ -28,7 +30,8 @@ internal static class PostMappings
         post.Summary,
         post.CoverId,
         post.Status,
-        post.PublishedAt);
+        post.PublishedAt,
+        post.Category?.ToRef());
 
     public static PublicPostResponse ToPublicResponse(this Post post) => new(
         post.Id,
@@ -40,5 +43,9 @@ internal static class PostMappings
         post.CoverId,
         post.PublishedAt,
         post.SeoTitle,
-        post.SeoDescription);
+        post.SeoDescription,
+        post.Category?.ToRef(),
+        [.. post.Tags.Select(link => new TaxonomyRef(link.Tag.Name, link.Tag.Slug))]);
+
+    private static TaxonomyRef ToRef(this Category category) => new(category.Name, category.Slug);
 }

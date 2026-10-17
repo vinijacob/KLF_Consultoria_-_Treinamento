@@ -15,8 +15,12 @@ public sealed class AboutSettingsValidator : AbstractValidator<AboutSettings>
         RuleFor(x => x.History).MaximumLength(5000).WithMessage("A história pode ter no máximo 5000 caracteres.");
         RuleFor(x => x.Values).MustBeShortList("valores");
         RuleFor(x => x.Differentials).MustBeShortList("diferenciais");
-        RuleFor(x => x.PortraitId)
-            .NotEqual(Guid.Empty).When(x => x.PortraitId is not null)
+        RuleFor(x => x.PortraitIds)
+            .Must(ids => ids is null || ids.Count <= AboutSettings.MaxPortraits)
+            .WithMessage($"Use no máximo {AboutSettings.MaxPortraits} fotos no carrossel.")
+            .Must(ids => ids is null || ids.Distinct().Count() == ids.Count)
+            .WithMessage("A mesma foto aparece duas vezes no carrossel.")
+            .Must(ids => ids is null || !ids.Contains(Guid.Empty))
             .WithMessage("Imagem inválida.");
     }
 }
@@ -51,10 +55,24 @@ public sealed class SocialSettingsValidator : AbstractValidator<SocialSettings>
     /// <summary>Defines the rules.</summary>
     public SocialSettingsValidator()
     {
-        RuleFor(x => x.Instagram).MustBeHttpsUrl();
-        RuleFor(x => x.Linkedin).MustBeHttpsUrl();
-        RuleFor(x => x.Facebook).MustBeHttpsUrl();
-        RuleFor(x => x.Youtube).MustBeHttpsUrl();
+        RuleFor(x => x.Links)
+            .Must(links => links is null || links.Count <= SocialSettings.MaxLinks)
+            .WithMessage($"Informe no máximo {SocialSettings.MaxLinks} redes sociais.")
+            .Must(links => links is null || links.DistinctBy(link => link.Name.Trim().ToUpperInvariant()).Count() == links.Count)
+            .WithMessage("Essa rede social já está na lista.");
+
+        RuleForEach(x => x.Links).ChildRules(link =>
+        {
+            link.RuleFor(x => x.Name)
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty().WithMessage("Informe o nome da rede social.")
+                .Must(name => name.Trim().Length <= 40).WithMessage("O nome pode ter no máximo 40 caracteres.");
+
+            link.RuleFor(x => x.Url)
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty().WithMessage("Informe o link do perfil.")
+                .MustBeHttpsUrl();
+        });
     }
 }
 

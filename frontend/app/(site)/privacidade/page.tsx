@@ -94,8 +94,9 @@ export default async function PrivacyPage() {
               <h3>No painel da equipe</h3>
               <p>
                 Quem trabalha com a KLF entra no painel com nome, e-mail, senha (guardada só de forma cifrada, nunca em texto) e um
-                segundo fator de verificação. Registramos as sessões para manter a conta segura (execução de contrato e legítimo
-                interesse).
+                segundo fator de verificação. Registramos as sessões e as ações feitas no painel, e reconhecemos o navegador
+                (tipo de navegador e sistema) para avisar por e-mail quando a conta for acessada de um aparelho novo. Tudo
+                isso serve para manter a conta segura (execução de contrato e legítimo interesse).
               </p>
             </>
           ),
@@ -113,6 +114,8 @@ export default async function PrivacyPage() {
               <li>Depoimentos: enquanto a autorização valer. Retirada a autorização, o depoimento sai do site.</li>
               <li>Avaliações: as respostas anônimas ficam como histórico das turmas, sem prazo, porque não identificam ninguém.</li>
               <li>Contas do painel: enquanto a pessoa trabalhar com a KLF.</li>
+              <li>Registro de atividades do painel: 2 anos. Aparelhos reconhecidos no login: 1 ano depois do último uso.</li>
+              <li>Pedidos sobre os seus dados (acesso, correção, exclusão): 5 anos depois de respondidos, como prova de que atendemos.</li>
             </ul>
           ),
         },
@@ -183,7 +186,9 @@ export default async function PrivacyPage() {
                 <li>oposição a um tratamento que não respeite a lei.</li>
               </ul>
               <p>
-                Envie o pedido para {dpoEmail}. Respondemos em até 15 dias. Se não ficar satisfeito, você também pode reclamar à
+                Faça o pedido pelo formulário em <Link href="/meus-dados">Seus dados</Link> ou envie para {dpoEmail}. Respondemos
+                em até 15 dias. Antes de entregar, corrigir ou apagar dados, podemos pedir que você confirme por e-mail que o
+                pedido é seu. Se não ficar satisfeito, você também pode reclamar à
                 ANPD, em <a href="https://www.gov.br/anpd" rel="noopener noreferrer">gov.br/anpd</a>.
               </p>
             </>

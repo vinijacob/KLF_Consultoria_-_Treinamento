@@ -205,5 +205,5 @@ public sealed class TwoFactorAuthServiceTests
     }
 
     private AuthService CreateService(bool required) =>
-        new(_identity, _tokens, new FakeTwoFactorPolicy(required), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock, new FakeAuditTrail());
+        new(_identity, _tokens, new FakeTwoFactorPolicy(required), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock, new FakeAuditTrail(), new FakeLoginDeviceService());
 }

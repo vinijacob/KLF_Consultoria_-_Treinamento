@@ -10,7 +10,12 @@ namespace Klf.Domain.Entities;
 /// <summary>A blog post, project or news item published on the site.</summary>
 public sealed class Post : SoftDeletableEntity
 {
+    /// <summary>Most tags a post can have.</summary>
+    public const int MaxTags = 10;
+
     private const string ScheduledForField = "ScheduledFor";
+
+    private readonly List<PostTag> _tags = [];
 
     /// <summary>Creates a post.</summary>
     /// <param name="authorId">Id of the signed-in user who creates it (never taken from the request body).</param>
@@ -95,6 +100,15 @@ public sealed class Post : SoftDeletableEntity
     /// <summary>User who created the post. Never changes after creation.</summary>
     public Guid AuthorId { get; private set; }
 
+    /// <summary>Theme of the post; optional.</summary>
+    public Guid? CategoryId { get; private set; }
+
+    /// <summary>The theme, loaded with the post.</summary>
+    public Category? Category { get; private set; }
+
+    /// <summary>Keywords of the post, in the order they were given. Use <see cref="Classify"/> to change them.</summary>
+    public IReadOnlyCollection<PostTag> Tags => _tags;
+
     /// <summary>
     /// The rule for "visible on the public site": not a draft and the publication date already arrived.
     /// Written as an expression so repositories can use it in database queries.
@@ -131,6 +145,33 @@ public sealed class Post : SoftDeletableEntity
         DateTime utcNow)
     {
         SetDetails(type, title, slug, summary, contentJson, contentHtml, coverId, status, scheduledFor, seoTitle, seoDescription, utcNow);
+    }
+
+    /// <summary>Sets the theme and the keywords of the post.</summary>
+    /// <param name="category">Theme; <see langword="null"/> for none.</param>
+    /// <param name="tags">Keywords, without repetitions; at most <see cref="MaxTags"/>.</param>
+    /// <exception cref="ValidationException">More than <see cref="MaxTags"/> tags or a repeated tag.</exception>
+    public void Classify(Category? category, IReadOnlyList<Tag> tags)
+    {
+        if (tags.Count > MaxTags)
+        {
+            throw new ValidationException("Tags", $"Use no máximo {MaxTags} tags por publicação.");
+        }
+
+        if (tags.DistinctBy(tag => tag.Id).Count() != tags.Count)
+        {
+            throw new ValidationException("Tags", "A mesma tag não pode aparecer duas vezes.");
+        }
+
+        Category = category;
+        CategoryId = category?.Id;
+
+        _tags.RemoveAll(existing => tags.All(tag => tag.Id != existing.TagId));
+
+        foreach (var tag in tags.Where(tag => _tags.All(existing => existing.TagId != tag.Id)))
+        {
+            _tags.Add(new PostTag(tag));
+        }
     }
 
     [MemberNotNull(nameof(Title), nameof(Slug), nameof(ContentJson), nameof(ContentHtml))]

@@ -16,6 +16,8 @@ namespace Klf.Application.DTOs.Posts;
 /// <param name="SeoTitle">Title for search engines.</param>
 /// <param name="SeoDescription">Description for search engines.</param>
 /// <param name="AuthorId">User who created the post.</param>
+/// <param name="CategoryId">Theme of the post.</param>
+/// <param name="Tags">Keywords of the post, by name.</param>
 public sealed record PostResponse(
     Guid Id,
     PostType Type,
@@ -29,4 +31,6 @@ public sealed record PostResponse(
     DateTime? PublishedAt,
     string? SeoTitle,
     string? SeoDescription,
-    Guid AuthorId);
+    Guid AuthorId,
+    Guid? CategoryId,
+    IReadOnlyList<string> Tags);

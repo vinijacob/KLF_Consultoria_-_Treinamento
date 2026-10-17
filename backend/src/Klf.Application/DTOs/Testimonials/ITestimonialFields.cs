@@ -27,6 +27,6 @@ public interface ITestimonialFields
     /// <summary>Whether the testimonial is shown on the public site.</summary>
     bool IsPublished { get; }
 
-    /// <summary>Position in the public list.</summary>
-    int DisplayOrder { get; }
+    /// <summary>Chosen position (0 = first), or <see langword="null"/>: the end for a new item, the current position when editing.</summary>
+    int? DisplayOrder { get; }
 }

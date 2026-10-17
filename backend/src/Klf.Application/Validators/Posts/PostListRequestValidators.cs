@@ -20,6 +20,12 @@ public sealed class PostListRequestValidator : AbstractValidator<PostListRequest
             .IsInEnum().When(x => x.Type is not null)
             .WithMessage("Tipo de post inválido. Use Project, Article ou News.");
 
+        RuleFor(x => x.Category)
+            .MaximumLength(Services.Posts.TaxonomyText.SlugMaxLength).WithMessage("Categoria inválida.");
+
+        RuleFor(x => x.Tag)
+            .MaximumLength(Services.Posts.TaxonomyText.SlugMaxLength).WithMessage("Tag inválida.");
+
         RuleFor(x => x.Search)
             .MaximumLength(SearchMaxLength).WithMessage($"A busca pode ter no máximo {SearchMaxLength} caracteres.");
     }

@@ -2,6 +2,7 @@ using Klf.Application.DTOs.Testimonials;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Mappings;
 using Klf.Application.Services.Media;
+using Klf.Domain.Common;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -40,6 +41,7 @@ internal sealed class TestimonialService(
     {
         await MediaReference.EnsureExistsAsync(mediaRepository, request.PhotoId, "PhotoId", cancellationToken);
 
+        var list = await repository.ListInOrderAsync(cancellationToken);
         var testimonial = new Testimonial(
             request.AuthorName.Trim(),
             NullIfBlank(request.AuthorRole),
@@ -49,8 +51,9 @@ internal sealed class TestimonialService(
             ConsentDate(request.ConsentGivenAt),
             request.ConsentCoversImage,
             request.IsPublished,
-            request.DisplayOrder);
+            list.Count);
 
+        DisplayOrdering.Place(list, testimonial, request.DisplayOrder);
         repository.Add(testimonial);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -61,6 +64,7 @@ internal sealed class TestimonialService(
     {
         var testimonial = await GetOrThrowAsync(id, cancellationToken);
         await MediaReference.EnsureExistsAsync(mediaRepository, request.PhotoId, "PhotoId", cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
         testimonial.Update(
             request.AuthorName.Trim(),
@@ -70,9 +74,9 @@ internal sealed class TestimonialService(
             request.PhotoId,
             ConsentDate(request.ConsentGivenAt),
             request.ConsentCoversImage,
-            request.IsPublished,
-            request.DisplayOrder);
+            request.IsPublished);
 
+        DisplayOrdering.Place(list, testimonial, request.DisplayOrder);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return testimonial.ToResponse();
@@ -91,7 +95,9 @@ internal sealed class TestimonialService(
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var testimonial = await GetOrThrowAsync(id, cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
+        DisplayOrdering.Remove(list, testimonial);
         repository.Remove(testimonial);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

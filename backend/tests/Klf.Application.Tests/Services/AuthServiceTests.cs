@@ -2,6 +2,7 @@ using Klf.Application.DTOs.Auth;
 using Klf.Application.Interfaces.Identity;
 using Klf.Application.Services.Auth;
 using Klf.Application.Tests.Fakes;
+using Klf.Domain.Common;
 using Klf.Domain.Exceptions;
 
 namespace Klf.Application.Tests.Services;
@@ -15,6 +16,7 @@ public sealed class AuthServiceTests
     private readonly MutableTimeProvider _clock = new(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero));
     private readonly FakeTokenService _tokens;
     private readonly FakeAuditTrail _audit = new();
+    private readonly FakeLoginDeviceService _devices = new();
 
     public AuthServiceTests()
     {
@@ -203,6 +205,19 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
+    public async Task Login_returns_the_device_token_and_records_the_new_device_when_the_browser_is_unknown()
+    {
+        _devices.NewDevice = "Chrome no macOS";
+
+        var session = await LoginSessionAsync(CreateService(CredentialsCheckResult.Success(User)));
+
+        Assert.Equal("device-token", session.DeviceToken);
+        var entry = Assert.Single(_audit.Entries);
+        Assert.Equal(AuditActions.LoginNewDevice, entry.Action);
+        Assert.Equal("Chrome no macOS", entry.TargetLabel);
+    }
+
+    [Fact]
     public async Task GetCurrentUser_throws_not_found_when_user_does_not_exist()
     {
         await Assert.ThrowsAsync<NotFoundException>(() =>
@@ -212,7 +227,7 @@ public sealed class AuthServiceTests
     private static string Hash(string token) => FakeTokenService.Hash(token);
 
     private AuthService CreateService(CredentialsCheckResult result, bool twoFactorRequired = false, FakeIdentityService? identity = null) =>
-        new(identity ?? new FakeIdentityService(User, result), _tokens, new FakeTwoFactorPolicy(twoFactorRequired), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock, _audit);
+        new(identity ?? new FakeIdentityService(User, result), _tokens, new FakeTwoFactorPolicy(twoFactorRequired), new FakeEmailSender(), new FakeFrontendLinks(), _refreshTokens, _refreshTokens, _clock, _audit, _devices);
 
     private static async Task<AuthSession> LoginSessionAsync(AuthService service) =>
         (await service.LoginAsync(ValidLogin, TestContext.Current.CancellationToken)).Session!;

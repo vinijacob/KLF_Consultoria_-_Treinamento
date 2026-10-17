@@ -23,6 +23,6 @@ public interface ICareerEntryFields
     /// <summary>When it ended; <see langword="null"/> while ongoing.</summary>
     DateOnly? EndDate { get; }
 
-    /// <summary>Position in the timeline.</summary>
-    int DisplayOrder { get; }
+    /// <summary>Chosen position (0 = first), or <see langword="null"/>: the end for a new item, the current position when editing.</summary>
+    int? DisplayOrder { get; }
 }

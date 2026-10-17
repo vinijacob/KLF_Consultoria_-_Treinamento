@@ -23,6 +23,12 @@ internal sealed class AlbumRepository(AppDbContext context) : IAlbumRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Album>> ListInOrderAsync(CancellationToken cancellationToken) =>
+        await context.Albums
+            .OrderBy(album => album.DisplayOrder)
+            .ThenBy(album => album.Title)
+            .ToListAsync(cancellationToken);
+
     public Task<Album?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         context.Albums.Include(album => album.Items).FirstOrDefaultAsync(album => album.Id == id, cancellationToken);
 

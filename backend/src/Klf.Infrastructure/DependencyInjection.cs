@@ -129,6 +129,11 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ICareerEntryRepository, CareerEntryRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IKnownDeviceRepository, KnownDeviceRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<IDataRequestRepository, DataRequestRepository>();
+        services.AddScoped<IFeaturedQuoteRepository, FeaturedQuoteRepository>();
         services.AddScoped<IPostRepository, PostRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();

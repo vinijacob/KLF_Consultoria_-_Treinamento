@@ -23,6 +23,12 @@ internal sealed class ClientRepository(AppDbContext context) : IClientRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Client>> ListInOrderAsync(CancellationToken cancellationToken) =>
+        await context.Clients
+            .OrderBy(client => client.DisplayOrder)
+            .ThenBy(client => client.Name)
+            .ToListAsync(cancellationToken);
+
     public Task<Client?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         context.Clients.FirstOrDefaultAsync(client => client.Id == id, cancellationToken);
 

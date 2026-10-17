@@ -11,7 +11,7 @@ namespace Klf.Application.DTOs.Catalog;
 /// <param name="WorkloadHours">Duration, in hours (1 to 2000).</param>
 /// <param name="Format">How it is delivered: <c>InPerson</c>, <c>Online</c> or <c>InCompany</c>.</param>
 /// <param name="CoverId">Cover image id; optional.</param>
-/// <param name="DisplayOrder">Position in the public list; lower numbers come first.</param>
+/// <param name="DisplayOrder">Position in the list (0 = first); leave empty to keep the current one. If another item holds it, the two swap places.</param>
 /// <param name="IsActive">Whether the service is visible on the public site.</param>
 public sealed record UpdateServiceRequest(
     string Title,
@@ -22,5 +22,5 @@ public sealed record UpdateServiceRequest(
     int WorkloadHours,
     ServiceFormat Format,
     Guid? CoverId,
-    int DisplayOrder,
+    int? DisplayOrder,
     bool IsActive) : IServiceFields;

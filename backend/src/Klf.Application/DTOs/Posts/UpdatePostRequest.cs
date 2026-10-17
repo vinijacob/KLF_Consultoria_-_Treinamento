@@ -14,6 +14,8 @@ namespace Klf.Application.DTOs.Posts;
 /// <param name="ScheduledFor">When to publish (with time zone offset); required when the status is <c>Scheduled</c>.</param>
 /// <param name="SeoTitle">Title for search engines (up to 60 characters); optional.</param>
 /// <param name="SeoDescription">Description for search engines (up to 160 characters); optional.</param>
+/// <param name="CategoryId">Theme of the post; optional.</param>
+/// <param name="Tags">Keywords (up to 10, 40 characters each); new ones are created. Empty or missing = none.</param>
 public sealed record UpdatePostRequest(
     PostType Type,
     string Title,
@@ -25,4 +27,6 @@ public sealed record UpdatePostRequest(
     PostStatus Status,
     DateTimeOffset? ScheduledFor,
     string? SeoTitle,
-    string? SeoDescription) : IPostFields;
+    string? SeoDescription,
+    Guid? CategoryId = null,
+    IReadOnlyList<string>? Tags = null) : IPostFields;

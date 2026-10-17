@@ -8,4 +8,12 @@ namespace Klf.Application.Services.Auth;
 /// <param name="AccessTokenExpiresAt">When the access token expires, in UTC.</param>
 /// <param name="RefreshToken">Token used to get a new access token.</param>
 /// <param name="SessionExpiresAt">When the session ends and a new sign-in is required, in UTC.</param>
-public sealed record AuthSession(string AccessToken, DateTime AccessTokenExpiresAt, string RefreshToken, DateTime SessionExpiresAt);
+/// <param name="DeviceToken">
+/// On a new sign-in, the token that identifies the browser (another HttpOnly cookie); <see langword="null"/> on a refresh.
+/// </param>
+public sealed record AuthSession(
+    string AccessToken,
+    DateTime AccessTokenExpiresAt,
+    string RefreshToken,
+    DateTime SessionExpiresAt,
+    string? DeviceToken = null);

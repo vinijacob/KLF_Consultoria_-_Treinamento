@@ -10,6 +10,8 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       { href: "/painel/servicos", label: "Serviços" },
       { href: "/painel/publicacoes", label: "Publicações" },
+      { href: "/painel/categorias", label: "Categorias e tags" },
+      { href: "/painel/citacao", label: "Citação" },
       { href: "/painel/trajetoria", label: "Trajetória" },
       { href: "/painel/depoimentos", label: "Depoimentos" },
       { href: "/painel/clientes", label: "Clientes" },
@@ -21,7 +23,10 @@ export const adminNav: AdminNavGroup[] = [
   {
     title: "Atendimento",
     adminOnly: true,
-    items: [{ href: "/painel/mensagens", label: "Mensagens" }],
+    items: [
+      { href: "/painel/mensagens", label: "Mensagens" },
+      { href: "/painel/pedidos-lgpd", label: "Pedidos LGPD" },
+    ],
   },
   {
     title: "Avaliações",

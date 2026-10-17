@@ -50,18 +50,18 @@ public sealed class AlbumTests
     }
 
     [Fact]
-    public void Every_field_is_replaced_when_album_is_updated()
+    public void Every_field_but_the_position_is_replaced_when_album_is_updated()
     {
         var cover = Guid.CreateVersion7();
         var album = new Album("A", "a", null, null, 0, true);
 
-        album.Update("B", "b", "Desc", cover, 5, false);
+        album.Update("B", "b", "Desc", cover, false);
 
         Assert.Equal("B", album.Title);
         Assert.Equal("b", album.Slug);
         Assert.Equal("Desc", album.Description);
         Assert.Equal(cover, album.CoverId);
-        Assert.Equal(5, album.DisplayOrder);
+        Assert.Equal(0, album.DisplayOrder);
         Assert.False(album.IsActive);
     }
 }

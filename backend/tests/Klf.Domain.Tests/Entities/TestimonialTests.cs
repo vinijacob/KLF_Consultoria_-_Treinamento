@@ -62,7 +62,7 @@ public sealed class TestimonialTests
         testimonial.RevokeConsent(Now);
 
         Assert.Throws<ValidationException>(() =>
-            testimonial.Update("Ana", null, null, "Ótimo", null, Signed, false, isPublished: true, 0));
+            testimonial.Update("Ana", null, null, "Ótimo", null, Signed, false, isPublished: true));
         Assert.False(testimonial.IsPublished);
     }
 
@@ -72,7 +72,7 @@ public sealed class TestimonialTests
         var testimonial = Create(Signed, isPublished: true);
 
         Assert.Throws<ValidationException>(() =>
-            testimonial.Update("Outro", null, null, "Texto novo", null, consentGivenAt: null, false, isPublished: true, 9));
+            testimonial.Update("Outro", null, null, "Texto novo", null, consentGivenAt: null, false, isPublished: true));
 
         Assert.Equal("Ana", testimonial.AuthorName);
         Assert.Equal(Signed, testimonial.ConsentGivenAt);

@@ -23,6 +23,12 @@ internal sealed class ServiceRepository(AppDbContext context) : IServiceReposito
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Service>> ListInOrderAsync(CancellationToken cancellationToken) =>
+        await context.Services
+            .OrderBy(service => service.DisplayOrder)
+            .ThenBy(service => service.Title)
+            .ToListAsync(cancellationToken);
+
     public Task<Service?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         context.Services.FirstOrDefaultAsync(service => service.Id == id, cancellationToken);
 

@@ -19,6 +19,12 @@ public interface IAlbumRepository
     /// <summary>Whether another album already uses the slug; <paramref name="excludingId"/> skips the album being edited.</summary>
     Task<bool> SlugExistsAsync(string slug, Guid? excludingId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Returns every album in the order of the panel list (position, then name), tracked for changes, so their
+    /// positions can be renumbered (see <see cref="Klf.Domain.Common.DisplayOrdering"/>).
+    /// </summary>
+    Task<IReadOnlyList<Album>> ListInOrderAsync(CancellationToken cancellationToken);
+
     /// <summary>Marks a new album to be inserted on the next <see cref="IUnitOfWork.SaveChangesAsync"/>.</summary>
     void Add(Album album);
 

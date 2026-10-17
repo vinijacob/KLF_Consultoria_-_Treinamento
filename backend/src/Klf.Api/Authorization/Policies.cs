@@ -25,11 +25,15 @@ internal static class Policies
     /// <summary>Read the audit log of the panel (who did what and when). Admin only.</summary>
     public const string ViewAuditLog = nameof(ViewAuditLog);
 
+    /// <summary>Handles requests of data subjects (LGPD) and erases their data: Admin only.</summary>
+    public const string ManageDataRequests = nameof(ManageDataRequests);
+
     /// <summary>Registers every policy.</summary>
     public static AuthorizationBuilder AddKlfPolicies(this AuthorizationBuilder builder) => builder
         .AddPolicy(ManageUsers, policy => policy.RequireRole(Roles.Admin))
         .AddPolicy(ManageContent, policy => policy.RequireRole(Roles.Admin, Roles.Editor))
         .AddPolicy(ManageFeedback, policy => policy.RequireRole(Roles.Admin))
         .AddPolicy(ManageContactMessages, policy => policy.RequireRole(Roles.Admin))
-        .AddPolicy(ViewAuditLog, policy => policy.RequireRole(Roles.Admin));
+        .AddPolicy(ViewAuditLog, policy => policy.RequireRole(Roles.Admin))
+        .AddPolicy(ManageDataRequests, policy => policy.RequireRole(Roles.Admin));
 }

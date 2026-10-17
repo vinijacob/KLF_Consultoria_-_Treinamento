@@ -144,6 +144,9 @@ public sealed class CareerControllersTests : IClassFixture<KlfApiFactory>
         public Task<IReadOnlyList<CareerEntry>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<CareerEntry>>([.. Entries]);
 
+        public Task<IReadOnlyList<CareerEntry>> ListInOrderAsync(CareerEntryType entryType, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<CareerEntry>>([.. Entries.Where(e => e.EntryType == entryType).OrderBy(e => e.DisplayOrder)]);
+
         public Task<CareerEntry?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Entries.SingleOrDefault(e => e.Id == id));
 

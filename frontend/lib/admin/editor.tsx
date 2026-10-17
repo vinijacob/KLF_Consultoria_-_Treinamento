@@ -24,11 +24,27 @@ type EditorOptions = {
   onReset?: () => void;
 };
 
+type CreateHook<TResponse> = {
+  /**
+   * Passo extra logo depois de criar (ex.: enviar o termo em PDF do depoimento, que precisa do id). Devolve um aviso
+   * quando falhar; o registro continua criado e o aviso vai junto do recado.
+   */
+  afterCreate?: (saved: TResponse) => Promise<string | null>;
+};
+
 /**
  * Criar, salvar e excluir um registro do painel. Ao criar, limpa os campos para um novo cadastro (com link para abrir
  * o que foi salvo) ou vai para a edição; ao excluir, volta para a lista com um recado.
  */
-export function useEntityEditor<TResponse extends { id: string }>({ apiPath, listHref, id, created, deleted, onReset }: EditorOptions) {
+export function useEntityEditor<TResponse extends { id: string }>({
+  apiPath,
+  listHref,
+  id,
+  created,
+  deleted,
+  onReset,
+  afterCreate,
+}: EditorOptions & CreateHook<TResponse>) {
   const router = useRouter();
   const submit = useSubmit();
   const flash = useFlash();
@@ -40,14 +56,17 @@ export function useEntityEditor<TResponse extends { id: string }>({ apiPath, lis
     );
     if (!result) return undefined;
 
+    const warning = !id && afterCreate ? await afterCreate(result) : null;
+    const createdText = warning ? `${created} ${warning}` : created;
+
     if (id) {
       setSavedAt(new Date());
     } else if (onReset) {
-      setFlash(`${created} Os campos foram limpos para um novo cadastro.`, { href: `${listHref}/${result.id}`, label: "Abrir o que foi salvo" });
+      setFlash(`${createdText} Os campos foram limpos para um novo cadastro.`, { href: `${listHref}/${result.id}`, label: "Abrir o que foi salvo" });
       onReset();
       window.scrollTo({ top: 0 });
     } else {
-      setFlash(created);
+      setFlash(createdText);
       router.replace(`${listHref}/${result.id}`);
     }
 
@@ -89,3 +108,6 @@ export const optional = (value: string | null | undefined) => (value?.trim() ? v
 
 /** Número digitado num `<input type="number">` (texto) para a API. */
 export const toInt = (value: string) => (value.trim() === "" ? 0 : Number.parseInt(value, 10));
+
+/** Número opcional (ex.: a ordem de exibição): em branco vira `null`, e a API decide. */
+export const optionalInt = (value: string) => (value.trim() === "" ? null : Number.parseInt(value, 10));

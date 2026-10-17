@@ -15,6 +15,9 @@ internal sealed class InMemoryServiceRepository : IServiceRepository, IUnitOfWor
             .OrderBy(s => s.DisplayOrder)
             .ThenBy(s => s.Title)]);
 
+    public Task<IReadOnlyList<Service>> ListInOrderAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Service>>([.. Services.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Title, StringComparer.Ordinal)]);
+
     public Task<Service?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Services.SingleOrDefault(s => s.Id == id));
 

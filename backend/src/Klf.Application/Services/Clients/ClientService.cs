@@ -2,6 +2,7 @@ using Klf.Application.DTOs.Clients;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Mappings;
 using Klf.Application.Services.Media;
+using Klf.Domain.Common;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -37,13 +38,15 @@ internal sealed class ClientService(
     {
         await MediaReference.EnsureExistsAsync(mediaRepository, request.LogoId, "LogoId", cancellationToken);
 
+        var list = await repository.ListInOrderAsync(cancellationToken);
         var client = new Client(
             request.Name.Trim(),
             NullIfBlank(request.WebsiteUrl),
             request.LogoId,
-            request.DisplayOrder,
+            list.Count,
             request.IsActive);
 
+        DisplayOrdering.Place(list, client, request.DisplayOrder);
         repository.Add(client);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -54,14 +57,15 @@ internal sealed class ClientService(
     {
         var client = await GetOrThrowAsync(id, cancellationToken);
         await MediaReference.EnsureExistsAsync(mediaRepository, request.LogoId, "LogoId", cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
         client.Update(
             request.Name.Trim(),
             NullIfBlank(request.WebsiteUrl),
             request.LogoId,
-            request.DisplayOrder,
             request.IsActive);
 
+        DisplayOrdering.Place(list, client, request.DisplayOrder);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return client.ToResponse();
@@ -70,7 +74,9 @@ internal sealed class ClientService(
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var client = await GetOrThrowAsync(id, cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
+        DisplayOrdering.Remove(list, client);
         repository.Remove(client);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

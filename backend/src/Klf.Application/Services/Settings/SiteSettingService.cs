@@ -55,14 +55,19 @@ internal sealed class SiteSettingService(
         {
             case SiteSettingKeys.About:
                 var about = Parse(key, value, aboutValidator);
-                await MediaReference.EnsureExistsAsync(media, about.PortraitId, nameof(AboutSettings.PortraitId), cancellationToken);
+                foreach (var portraitId in about.PortraitIds ?? [])
+                {
+                    await MediaReference.EnsureExistsAsync(media, portraitId, nameof(AboutSettings.PortraitIds), cancellationToken);
+                }
+
                 valueJson = Serialize(about);
                 break;
             case SiteSettingKeys.Contact:
                 valueJson = Serialize(Parse(key, value, contactValidator));
                 break;
             case SiteSettingKeys.Social:
-                valueJson = Serialize(Parse(key, value, socialValidator));
+                var social = Parse(key, value, socialValidator);
+                valueJson = Serialize(new SocialSettings([.. (social.Links ?? []).Select(link => new SocialLink(link.Name.Trim(), link.Url.Trim()))]));
                 break;
             case SiteSettingKeys.Seo:
                 var seo = Parse(key, value, seoValidator);

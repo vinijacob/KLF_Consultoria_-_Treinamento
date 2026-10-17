@@ -17,6 +17,42 @@ public sealed class AuditChangeBuilderTests
         new(Guid.CreateVersion7(), PostType.Article, "Atendimento que encanta", "atendimento", null, "{}", "<p>x</p>", null, PostStatus.Draft, null, null, null, Now);
 
     [Fact]
+    public void Items_moved_only_to_make_room_are_not_recorded_when_another_item_really_changed()
+    {
+        var edited = new Client("Loja Centro", null, null, 0, true);
+        var deleted = new Client("Loja Sul", null, null, 0, true);
+
+        var swap = AuditChangeBuilder.Build(
+        [
+            Change(edited, EntityState.Modified, ("Name", "Loja C", "Loja Centro"), ("DisplayOrder", 3, 0)),
+            Change(new Client("Loja Norte", null, null, 3, true), EntityState.Modified, ("DisplayOrder", 0, 3), ("UpdatedAt", null, Now)),
+        ]);
+        var gapClosed = AuditChangeBuilder.Build(
+        [
+            Change(deleted, EntityState.Modified, ("DeletedAt", null, Now)),
+            Change(new Client("Loja Leste", null, null, 1, true), EntityState.Modified, ("DisplayOrder", 2, 1)),
+        ]);
+
+        Assert.Equal(edited.Id, Assert.Single(swap).TargetId);
+        Assert.Equal("client.deleted", Assert.Single(gapClosed).Action);
+    }
+
+    [Fact]
+    public void Swapping_only_positions_records_one_change_of_order_for_the_list()
+    {
+        var drafts = AuditChangeBuilder.Build(
+        [
+            Change(new Client("Loja A", null, null, 1, true), EntityState.Modified, ("DisplayOrder", 0, 1), ("UpdatedAt", null, Now)),
+            Change(new Client("Loja B", null, null, 0, true), EntityState.Modified, ("DisplayOrder", 1, 0), ("UpdatedAt", null, Now)),
+        ]);
+
+        var draft = Assert.Single(drafts);
+        Assert.Equal("client.reordered", draft.Action);
+        Assert.Null(draft.TargetId);
+        Assert.Null(draft.TargetLabel);
+    }
+
+    [Fact]
     public void Created_updated_and_soft_deleted_content_is_named_after_the_entity()
     {
         var client = new Client("Loja Centro", null, null, 0, true);
@@ -31,6 +67,47 @@ public sealed class AuditChangeBuilderTests
         Assert.Equal(["client.created", "client.updated", "client.deleted"], drafts.Select(draft => draft.Action));
         Assert.Equal(client.Id, drafts[0].TargetId);
         Assert.Equal("Loja Centro", drafts[0].TargetLabel);
+    }
+
+    [Fact]
+    public void Tags_of_a_new_post_do_not_add_an_edit_and_tags_alone_count_as_editing_the_post()
+    {
+        var post = Post();
+        var tag = new Tag("Pós-venda", "pos-venda");
+        post.Classify(null, [tag]);
+        var link = post.Tags.Single();
+        typeof(PostTag).GetProperty(nameof(PostTag.PostId))!.SetValue(link, post.Id);
+
+        var created = AuditChangeBuilder.Build([Change(link, EntityState.Added), Change(post, EntityState.Added), Change(tag, EntityState.Added)]);
+        var retagged = AuditChangeBuilder.Build([Change(link, EntityState.Deleted)]);
+
+        Assert.Equal(["post.created", "post-tag.created"], created.Select(draft => draft.Action));
+        Assert.Equal("Atendimento que encanta", created[0].TargetLabel);
+        Assert.Equal(new AuditDraft("post.updated", post.Id, null), Assert.Single(retagged));
+    }
+
+    [Fact]
+    public void Data_requests_are_recorded_without_the_name_of_the_person_and_only_when_received_or_closed()
+    {
+        var request = new DataRequest("ABCD-2345", "Ana Souza", "ana@exemplo.com", DataRequestKind.Deletion, null, Now);
+
+        var received = Assert.Single(AuditChangeBuilder.Build([Change(request, EntityState.Added)]));
+        var closed = Assert.Single(AuditChangeBuilder.Build([Change(request, EntityState.Modified, ("Status", DataRequestStatus.Open, DataRequestStatus.Completed))]));
+        var historyOnly = AuditChangeBuilder.Build([Change(request, EntityState.Modified, ("History", null, null), ("UpdatedAt", Now, Now))]);
+
+        Assert.Equal(new AuditDraft("data-request.received", request.Id, null), received);
+        Assert.Equal("data-request.completed", closed.Action);
+        Assert.Empty(historyOnly);
+    }
+
+    [Fact]
+    public void Categories_are_recorded_with_their_name()
+    {
+        var category = new Category("Liderança", "lideranca");
+
+        var draft = Assert.Single(AuditChangeBuilder.Build([Change(category, EntityState.Modified, ("Name", "Lider", "Liderança"))]));
+
+        Assert.Equal(new AuditDraft("post-category.updated", category.Id, "Liderança"), draft);
     }
 
     [Fact]

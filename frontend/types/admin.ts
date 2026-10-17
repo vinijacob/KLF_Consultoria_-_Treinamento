@@ -57,12 +57,17 @@ export type AdminPost = {
   seoTitle?: string | null;
   seoDescription?: string | null;
   authorId: string;
+  categoryId?: string | null;
+  tags: string[];
 };
 
 export type AdminPostListItem = Pick<
   AdminPost,
   "id" | "type" | "title" | "slug" | "summary" | "coverId" | "status" | "publishedAt"
->;
+> & { category?: { name: string; slug: string } | null };
+
+/** Categoria ou tag no painel, com quantas publicações a usam (rascunhos incluídos). */
+export type AdminTaxonomyItem = { id: string; name: string; slug: string; postCount: number };
 
 export type AdminCareerEntry = {
   id: string;

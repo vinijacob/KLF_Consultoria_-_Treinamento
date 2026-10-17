@@ -21,6 +21,16 @@ public sealed class InMemoryPostRepository : IPostRepository, IUnitOfWork
             query = query.Where(p => p.Type == type);
         }
 
+        if (filter.CategorySlug is { } category)
+        {
+            query = query.Where(p => p.Category?.Slug == category);
+        }
+
+        if (filter.TagSlug is { } tag)
+        {
+            query = query.Where(p => p.Tags.Any(link => link.Tag.Slug == tag));
+        }
+
         var all = query.OrderByDescending(p => p.PublishedAt ?? p.CreatedAt).ToList();
 
         return Task.FromResult<(IReadOnlyList<Post>, int)>(([.. all.Skip(skip).Take(take)], all.Count));

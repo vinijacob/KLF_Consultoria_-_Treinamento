@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 import type { MediaAsset, Paged } from "@/types/admin";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input } from "@/components/ui/field";
-import { AlertIcon } from "@/components/ui/icons";
+import { AlertIcon, ArrowLeftIcon, ArrowRightIcon, CloseIcon } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
 import { Dialog, Pagination, Tag } from "./ui";
 
@@ -226,6 +226,105 @@ export function MediaField({
         <MediaPicker
           onPick={(asset) => {
             onChange(asset.id);
+            setMissingAlt(!asset.altText);
+            setOpen(false);
+          }}
+        />
+      </Dialog>
+    </div>
+  );
+}
+
+/**
+ * Várias imagens em ordem (ex.: o carrossel do retrato): miniaturas com mover para a esquerda/direita e tirar, e um
+ * botão que abre a biblioteca para acrescentar. A ordem aqui é a ordem no site.
+ */
+export function MediaListField({
+  label,
+  hint,
+  value,
+  onChange,
+  max,
+  error,
+}: {
+  label: string;
+  hint?: string;
+  value: string[];
+  onChange: (ids: string[]) => void;
+  max: number;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [missingAlt, setMissingAlt] = useState(false);
+  const move = (from: number, to: number) => {
+    const next = [...value];
+    [next[from], next[to]] = [next[to], next[from]];
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <p className="mb-1.5 font-sans text-sm font-medium text-ink">
+        {label}
+        <span className="ml-2 font-normal text-ink-soft">
+          ({value.length} de {max})
+        </span>
+      </p>
+      {hint && <p className="mb-2 font-sans text-sm text-ink-soft">{hint}</p>}
+      {value.length > 0 && (
+        <ol className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+          {value.map((id, index) => (
+            <li key={id}>
+              <Thumb src={mediaUrl(id)} alt="" />
+              <div className="mt-1 flex items-center justify-between gap-1">
+                <span className="font-mono text-xs text-ink-soft">{String(index + 1).padStart(2, "0")}</span>
+                <span className="flex">
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => move(index, index - 1)}
+                    aria-label={`Mover a foto ${index + 1} para antes`}
+                    className="grid size-11 place-items-center hover:text-brand disabled:opacity-40"
+                  >
+                    <ArrowLeftIcon />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={index === value.length - 1}
+                    onClick={() => move(index, index + 1)}
+                    aria-label={`Mover a foto ${index + 1} para depois`}
+                    className="grid size-11 place-items-center hover:text-brand disabled:opacity-40"
+                  >
+                    <ArrowRightIcon />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onChange(value.filter((item) => item !== id))}
+                    aria-label={`Tirar a foto ${index + 1}`}
+                    className="grid size-11 place-items-center hover:text-danger"
+                  >
+                    <CloseIcon />
+                  </button>
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+      <Button variant="outline" disabled={value.length >= max} onClick={() => setOpen(true)}>
+        {value.length === 0 ? "Escolher a primeira foto" : value.length >= max ? `Limite de ${max} fotos` : "Acrescentar foto"}
+      </Button>
+      {missingAlt && (
+        <p className="mt-2 flex max-w-md items-start gap-1.5 font-sans text-sm text-warning">
+          <AlertIcon className="mt-0.5 shrink-0" />A última foto escolhida não tem texto alternativo. Complete em Imagens.
+        </p>
+      )}
+      <FieldError>{error}</FieldError>
+      <Dialog open={open} onClose={() => setOpen(false)} title={label} wide>
+        <MediaPicker
+          picked={value}
+          onPick={(asset) => {
+            if (!value.includes(asset.id)) onChange([...value, asset.id]);
             setMissingAlt(!asset.altText);
             setOpen(false);
           }}

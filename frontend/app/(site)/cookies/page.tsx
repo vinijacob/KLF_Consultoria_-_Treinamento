@@ -23,6 +23,12 @@ const essentialCookies = [
     duration: "até 8 horas",
   },
   {
+    name: "klf_device",
+    purpose:
+      "Reconhece o navegador de quem já entrou no painel, para avisar a pessoa da equipe por e-mail quando houver um acesso de um aparelho novo. Guarda só um código aleatório. Só existe para quem faz login no painel.",
+    duration: "1 ano desde o último login",
+  },
+  {
     name: "klf_fb_[código da turma]",
     purpose:
       "Evita que o mesmo navegador responda duas vezes a avaliação de uma turma. Guarda só o código da turma, cifrado, e não identifica quem respondeu.",

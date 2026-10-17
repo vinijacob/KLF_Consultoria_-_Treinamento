@@ -7,16 +7,16 @@ import { SearchField } from "./search-field";
 
 /**
  * Busca nas publicações. É um formulário GET comum (`/conteudo?busca=...`): funciona sem JavaScript, o link pode ser
- * compartilhado e quem busca é a API. Mantém o filtro de tipo escolhido.
+ * compartilhado e quem busca é a API. Mantém os filtros escolhidos (tipo, categoria, tag).
  */
 export function PostSearch({
   initial,
-  type,
+  keep,
   clearHref,
   status,
 }: {
   initial: string;
-  type?: string;
+  keep: Record<string, string | undefined>;
   clearHref: string;
   status: ReactNode;
 }) {
@@ -25,7 +25,7 @@ export function PostSearch({
 
   return (
     <form action="/conteudo" method="get" className="flex max-w-2xl items-start gap-4">
-      {type && <input type="hidden" name="tipo" value={type} />}
+      {Object.entries(keep).map(([name, value]) => value && <input key={name} type="hidden" name={name} value={value} />)}
       <SearchField
         label="Buscar nas publicações"
         placeholder="Ex.: fidelização, pós-venda"

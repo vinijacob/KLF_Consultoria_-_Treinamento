@@ -8,7 +8,15 @@ namespace Klf.Application.Interfaces.Repositories;
 /// <param name="Status">Only posts with this status.</param>
 /// <param name="Search">Keyword searched in the title and summary, ignoring case.</param>
 /// <param name="VisibleAt">When set, only posts visible on the public site at this UTC moment (see <see cref="Post.IsVisible"/>).</param>
-public sealed record PostFilter(PostType? Type = null, PostStatus? Status = null, string? Search = null, DateTime? VisibleAt = null);
+/// <param name="CategorySlug">Only posts of the category with this slug.</param>
+/// <param name="TagSlug">Only posts with the tag of this slug.</param>
+public sealed record PostFilter(
+    PostType? Type = null,
+    PostStatus? Status = null,
+    string? Search = null,
+    DateTime? VisibleAt = null,
+    string? CategorySlug = null,
+    string? TagSlug = null);
 
 /// <summary>Data access for <see cref="Post"/>. Soft-deleted posts are never returned.</summary>
 public interface IPostRepository

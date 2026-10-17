@@ -10,6 +10,9 @@ public static class AuditActions
     /// <summary>Signed in to the panel (password and, when required, two-factor).</summary>
     public const string LoginSucceeded = "login.succeeded";
 
+    /// <summary>Signed in from a browser the account did not know (an e-mail alert was sent); the label is the device.</summary>
+    public const string LoginNewDevice = "login.new-device";
+
     /// <summary>Signed in with a one-time recovery code instead of the authenticator app.</summary>
     public const string RecoveryCodeUsed = "auth.recovery-code-used";
 
@@ -49,11 +52,20 @@ public static class AuditActions
     /// <summary>The daily job deleted contact messages past the retention period.</summary>
     public const string ContactPurged = "contact.purged";
 
+    /// <summary>Deleted for real the contact messages of a data subject (LGPD request); the label says how many.</summary>
+    public const string DataRequestContactErased = "data-request.contact-erased";
+
+    /// <summary>Deleted for real a testimonial, its photo and signed term (LGPD request).</summary>
+    public const string DataRequestTestimonialErased = "data-request.testimonial-erased";
+
+    /// <summary>The daily job deleted data requests closed more than 5 years ago.</summary>
+    public const string DataRequestPurged = "data-request.purged";
+
     /// <summary>Areas used by the filter of the panel, with the action prefixes of each one.</summary>
     public static IReadOnlyDictionary<string, string[]> Areas { get; } = new Dictionary<string, string[]>
     {
-        ["content"] = ["service.", "post.", "career.", "testimonial.", "client.", "media.", "album.", "settings."],
-        ["contact"] = ["contact."],
+        ["content"] = ["service.", "post.", "post-category.", "post-tag.", "career.", "testimonial.", "client.", "media.", "album.", "settings."],
+        ["contact"] = ["contact.", "data-request."],
         ["feedback"] = ["feedback-form.", "feedback-session."],
         ["team"] = ["user."],
         ["access"] = ["login.", "auth."],

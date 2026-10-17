@@ -107,5 +107,7 @@ public sealed class PersistenceRegistrationTests(RealPersistenceApiFactory facto
         using var scope = factory.Services.CreateScope();
 
         Assert.NotNull(scope.ServiceProvider.GetService<IRefreshTokenRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IKnownDeviceRepository>());
+        Assert.NotNull(scope.ServiceProvider.GetService<Klf.Application.Interfaces.Identity.IClientDevice>());
     }
 }

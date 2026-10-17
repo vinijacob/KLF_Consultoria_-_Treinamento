@@ -199,7 +199,7 @@ export function Checkbox({
   error,
   className,
   ...props
-}: { label: ReactNode; hint?: string; error?: string } & Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+}: { label: ReactNode; hint?: ReactNode; error?: string } & Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
   const id = useId();
 
   return (

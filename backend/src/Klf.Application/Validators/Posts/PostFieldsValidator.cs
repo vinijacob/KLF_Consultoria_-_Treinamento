@@ -3,6 +3,8 @@ using System.Text.Json;
 using FluentValidation;
 
 using Klf.Application.DTOs.Posts;
+using Klf.Application.Services.Posts;
+using Klf.Domain.Entities;
 using Klf.Domain.Enums;
 
 namespace Klf.Application.Validators.Posts;
@@ -71,6 +73,20 @@ public abstract class PostFieldsValidator<T> : AbstractValidator<T>
         RuleFor(x => x.ScheduledFor)
             .NotNull().When(x => x.Status == PostStatus.Scheduled)
             .WithMessage("Informe a data do agendamento.");
+
+        RuleFor(x => x.CategoryId)
+            .NotEqual(Guid.Empty).When(x => x.CategoryId is not null)
+            .WithMessage("Categoria inválida.");
+
+        RuleFor(x => x.Tags)
+            .Must(tags => tags is null || tags.Count <= Post.MaxTags).WithMessage($"Use no máximo {Post.MaxTags} tags por publicação.");
+
+        RuleForEach(x => x.Tags)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage("Tag vazia.")
+            .Must(tag => TaxonomyText.CleanName(tag).Length <= TaxonomyText.TagNameMaxLength)
+            .WithMessage($"Cada tag pode ter no máximo {TaxonomyText.TagNameMaxLength} caracteres.")
+            .Must(tag => TaxonomyText.ToSlug(tag).Length > 0).WithMessage("Cada tag precisa ter pelo menos uma letra ou um número.");
 
         RuleFor(x => x.SeoTitle)
             .MaximumLength(SeoTitleMaxLength).WithMessage($"O título SEO pode ter no máximo {SeoTitleMaxLength} caracteres.");

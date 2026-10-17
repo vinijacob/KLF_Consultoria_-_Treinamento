@@ -9,7 +9,7 @@ namespace Klf.Domain.Entities;
 /// <summary>
 /// An item of Kilciene's public career timeline (education, certification or experience), shown on the "Trajetória" page.
 /// </summary>
-public sealed class CareerEntry : SoftDeletableEntity
+public sealed class CareerEntry : SoftDeletableEntity, IOrderedEntity
 {
     /// <summary>Creates a career entry.</summary>
     /// <exception cref="ValidationException"><paramref name="endDate"/> is before <paramref name="startDate"/>.</exception>
@@ -22,7 +22,8 @@ public sealed class CareerEntry : SoftDeletableEntity
         DateOnly? endDate,
         int displayOrder)
     {
-        SetDetails(entryType, title, institution, description, startDate, endDate, displayOrder);
+        SetDetails(entryType, title, institution, description, startDate, endDate);
+        DisplayOrder = displayOrder;
     }
 
     /// <summary>Kind of entry.</summary>
@@ -43,13 +44,13 @@ public sealed class CareerEntry : SoftDeletableEntity
     /// <summary>When it ended; <see langword="null"/> while ongoing (e.g. current job).</summary>
     public DateOnly? EndDate { get; private set; }
 
-    /// <summary>Position in the timeline; lower numbers come first.</summary>
+    /// <summary>Position inside its group (<see cref="EntryType"/>); 0 comes first.</summary>
     public int DisplayOrder { get; private set; }
 
     /// <summary>Whether the entry is still ongoing.</summary>
     public bool IsOngoing => EndDate is null;
 
-    /// <summary>Replaces every editable field.</summary>
+    /// <summary>Replaces every editable field except the position, which changes through <see cref="DisplayOrdering"/>.</summary>
     /// <exception cref="ValidationException"><paramref name="endDate"/> is before <paramref name="startDate"/>.</exception>
     public void Update(
         CareerEntryType entryType,
@@ -57,11 +58,13 @@ public sealed class CareerEntry : SoftDeletableEntity
         string? institution,
         string? description,
         DateOnly startDate,
-        DateOnly? endDate,
-        int displayOrder)
+        DateOnly? endDate)
     {
-        SetDetails(entryType, title, institution, description, startDate, endDate, displayOrder);
+        SetDetails(entryType, title, institution, description, startDate, endDate);
     }
+
+    /// <inheritdoc />
+    public void MoveTo(int position) => DisplayOrder = position;
 
     [MemberNotNull(nameof(Title))]
     private void SetDetails(
@@ -70,8 +73,7 @@ public sealed class CareerEntry : SoftDeletableEntity
         string? institution,
         string? description,
         DateOnly startDate,
-        DateOnly? endDate,
-        int displayOrder)
+        DateOnly? endDate)
     {
         if (endDate < startDate)
         {
@@ -84,6 +86,5 @@ public sealed class CareerEntry : SoftDeletableEntity
         Description = description;
         StartDate = startDate;
         EndDate = endDate;
-        DisplayOrder = displayOrder;
     }
 }

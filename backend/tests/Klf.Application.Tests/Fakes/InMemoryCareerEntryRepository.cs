@@ -1,5 +1,6 @@
 using Klf.Application.Interfaces.Repositories;
 using Klf.Domain.Entities;
+using Klf.Domain.Enums;
 
 namespace Klf.Application.Tests.Fakes;
 
@@ -10,7 +11,10 @@ internal sealed class InMemoryCareerEntryRepository : ICareerEntryRepository, IU
     public int SaveCount { get; private set; }
 
     public Task<IReadOnlyList<CareerEntry>> ListAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<CareerEntry>>([.. Entries.OrderBy(e => e.EntryType).ThenBy(e => e.DisplayOrder)]);
+        Task.FromResult<IReadOnlyList<CareerEntry>>([.. Entries.OrderBy(e => e.EntryType).ThenBy(e => e.DisplayOrder).ThenBy(e => e.Title, StringComparer.Ordinal)]);
+
+    public Task<IReadOnlyList<CareerEntry>> ListInOrderAsync(CareerEntryType entryType, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<CareerEntry>>([.. Entries.Where(e => e.EntryType == entryType).OrderBy(e => e.DisplayOrder).ThenBy(e => e.Title, StringComparer.Ordinal)]);
 
     public Task<CareerEntry?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Entries.SingleOrDefault(e => e.Id == id));

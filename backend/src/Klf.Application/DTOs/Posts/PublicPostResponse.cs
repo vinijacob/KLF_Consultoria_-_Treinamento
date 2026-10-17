@@ -13,6 +13,8 @@ namespace Klf.Application.DTOs.Posts;
 /// <param name="PublishedAt">When it went live, in UTC.</param>
 /// <param name="SeoTitle">Title for search engines; empty means use <paramref name="Title"/>.</param>
 /// <param name="SeoDescription">Description for search engines; empty means use <paramref name="Summary"/>.</param>
+/// <param name="Category">Theme of the post.</param>
+/// <param name="Tags">Keywords of the post.</param>
 public sealed record PublicPostResponse(
     Guid Id,
     PostType Type,
@@ -23,4 +25,6 @@ public sealed record PublicPostResponse(
     Guid? CoverId,
     DateTime? PublishedAt,
     string? SeoTitle,
-    string? SeoDescription);
+    string? SeoDescription,
+    TaxonomyRef? Category,
+    IReadOnlyList<TaxonomyRef> Tags);

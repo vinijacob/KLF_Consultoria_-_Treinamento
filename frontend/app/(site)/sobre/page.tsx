@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Badge, Container, FramedImage, PageHeader, SectionHeading } from "@/components/site/blocks";
+import { Badge, Container, PageHeader, SectionHeading } from "@/components/site/blocks";
 import { ClosingCta } from "@/components/site/contact";
+import { PortraitCarousel } from "@/components/site/portrait-carousel";
 import { Kicker } from "@/components/ui/typography";
 import { copy } from "@/content/site-copy";
-import { getCareer, getSettings, mediaUrl } from "@/lib/api/public";
+import { getCareer, getSettings } from "@/lib/api/public";
 import { careerTypeLabel, formatMonthYear, twoDigits } from "@/lib/format";
 import type { CareerEntry, CareerEntryType } from "@/types/site";
 
@@ -37,15 +38,8 @@ export default async function AboutPage() {
       <PageHeader kicker={copy.about.title} title={copy.person.name} intro={copy.person.role} />
 
       <Container className="mt-12 grid items-start gap-12 lg:grid-cols-12">
-        <div className="relative lg:col-span-5">
-          <div aria-hidden className="absolute inset-0 translate-x-4 translate-y-4 rounded-2xl bg-brand-soft" />
-          <FramedImage
-            src={about.portraitId ? mediaUrl(about.portraitId) : null}
-            alt={copy.person.name}
-            placeholder="Retrato em breve"
-            priority
-            className="relative"
-          />
+        <div className="lg:col-span-5">
+          <PortraitCarousel ids={about.portraitIds ?? []} name={copy.person.name} priority />
         </div>
         <div className="space-y-5 text-xl leading-relaxed lg:col-span-7 lg:pt-2">
           {paragraphs.map((paragraph, index) => (

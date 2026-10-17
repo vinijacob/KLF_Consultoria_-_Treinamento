@@ -34,6 +34,12 @@ public interface IContactMessageRepository
     /// <summary>Marks a new message to be inserted on the next <see cref="IUnitOfWork.SaveChangesAsync"/>.</summary>
     void Add(ContactMessage message);
 
+    /// <summary>Messages sent with this e-mail (case ignored), newest first, read-only.</summary>
+    Task<IReadOnlyList<ContactMessage>> ListByEmailAsync(string email, CancellationToken cancellationToken);
+
+    /// <summary>Deletes, right away, every message sent with this e-mail (case ignored). Returns how many.</summary>
+    Task<int> DeleteByEmailAsync(string email, CancellationToken cancellationToken);
+
     /// <summary>Marks a message to be deleted for good on the next <see cref="IUnitOfWork.SaveChangesAsync"/>.</summary>
     void Remove(ContactMessage message);
 }

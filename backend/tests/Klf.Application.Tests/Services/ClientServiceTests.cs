@@ -41,12 +41,28 @@ public sealed class ClientServiceTests
     }
 
     [Fact]
+    public async Task Positions_stay_unique_when_clients_are_created_moved_and_deleted()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var first = await _service.CreateAsync(new CreateClientRequest("Loja A", null, null, null, true), token);
+        var second = await _service.CreateAsync(new CreateClientRequest("Loja B", null, null, null, true), token);
+        var third = await _service.CreateAsync(new CreateClientRequest("Loja C", null, null, null, true), token);
+
+        await _service.UpdateAsync(third.Id, new UpdateClientRequest("Loja C", null, null, 0, true), token);
+        await _service.DeleteAsync(second.Id, token);
+
+        Assert.Equal([0, 1, 2], new[] { first, second, third }.Select(client => client.DisplayOrder));
+        Assert.Equal(["Loja C", "Loja A"], _repository.Clients.OrderBy(client => client.DisplayOrder).Select(client => client.Name));
+        Assert.Equal([0, 1], _repository.Clients.OrderBy(client => client.DisplayOrder).Select(client => client.DisplayOrder));
+    }
+
+    [Fact]
     public async Task Update_replaces_fields_and_throws_not_found_when_client_does_not_exist()
     {
         var client = new Client("Antiga", null, null, 0, true);
         _repository.Clients.Add(client);
 
-        var response = await _service.UpdateAsync(client.Id, new UpdateClientRequest("Nova", null, null, 3, false), TestContext.Current.CancellationToken);
+        var response = await _service.UpdateAsync(client.Id, new UpdateClientRequest("Nova", null, null, null, false), TestContext.Current.CancellationToken);
 
         Assert.Equal("Nova", response.Name);
         await Assert.ThrowsAsync<NotFoundException>(() =>

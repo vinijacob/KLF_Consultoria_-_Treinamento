@@ -69,6 +69,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Refresh tokens of the admin panel sessions (hashes only).</summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<KnownDevice> KnownDevices => Set<KnownDevice>();
+
+    public DbSet<Category> Categories => Set<Category>();
+
+    public DbSet<Tag> Tags => Set<Tag>();
+
+    public DbSet<DataRequest> DataRequests => Set<DataRequest>();
+
+    public DbSet<FeaturedQuote> FeaturedQuotes => Set<FeaturedQuote>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<Enum>().HaveConversion<string>().HaveMaxLength(50);

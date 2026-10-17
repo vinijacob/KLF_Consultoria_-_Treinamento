@@ -18,13 +18,7 @@ const linkClass = "underline-offset-4 hover:underline";
 
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const contact = settings.contact ?? {};
-  const social = settings.social ?? {};
-  const socials = [
-    ["Instagram", social.instagram],
-    ["LinkedIn", social.linkedin],
-    ["Facebook", social.facebook],
-    ["YouTube", social.youtube],
-  ].filter((entry): entry is [string, string] => !!entry[1]);
+  const socials = settings.social?.links ?? [];
 
   return (
     <footer className="mt-24 bg-footer text-footer-ink">
@@ -77,10 +71,10 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
 
           <Column title="Redes">
             {socials.length === 0 && <li className="text-footer-ink/70">Em breve</li>}
-            {socials.map(([label, href]) => (
-              <li key={label}>
-                <a href={href} className={linkClass} rel="noopener noreferrer" target="_blank">
-                  {label}
+            {socials.map((link) => (
+              <li key={link.name}>
+                <a href={link.url} className={linkClass} rel="noopener noreferrer" target="_blank">
+                  {link.name}
                   <span className="sr-only"> (abre em nova aba)</span>
                 </a>
               </li>
@@ -101,6 +95,11 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             <li>
               <Link href="/cookies" className={linkClass}>
                 Política de cookies
+              </Link>
+            </li>
+            <li>
+              <Link href="/meus-dados" className={linkClass}>
+                Seus dados (LGPD)
               </Link>
             </li>
             <li>

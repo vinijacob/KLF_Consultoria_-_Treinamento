@@ -56,4 +56,10 @@ internal sealed class MediaAssetRepository(AppDbContext context) : IMediaAssetRe
     public void Add(MediaAsset mediaAsset) => context.MediaAssets.Add(mediaAsset);
 
     public void Remove(MediaAsset mediaAsset) => context.MediaAssets.Remove(mediaAsset);
+
+    public Task<MediaAsset?> GetIncludingDeletedAsync(Guid id, CancellationToken cancellationToken) =>
+        context.MediaAssets.IgnoreQueryFilters().AsNoTracking().FirstOrDefaultAsync(media => media.Id == id, cancellationToken);
+
+    public Task EraseAsync(Guid id, CancellationToken cancellationToken) =>
+        context.MediaAssets.IgnoreQueryFilters().Where(media => media.Id == id).ExecuteDeleteAsync(cancellationToken);
 }

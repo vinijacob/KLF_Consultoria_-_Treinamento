@@ -3,6 +3,7 @@ using Klf.Application.Interfaces.Content;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Mappings;
 using Klf.Application.Services.Media;
+using Klf.Domain.Common;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -48,6 +49,7 @@ internal sealed class ServiceCatalogService(
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: null, cancellationToken);
         await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
 
+        var list = await repository.ListInOrderAsync(cancellationToken);
         var service = new Service(
             request.Title.Trim(),
             request.Slug,
@@ -57,9 +59,10 @@ internal sealed class ServiceCatalogService(
             request.WorkloadHours,
             request.Format,
             request.CoverId,
-            request.DisplayOrder,
+            list.Count,
             request.IsActive);
 
+        DisplayOrdering.Place(list, service, request.DisplayOrder);
         repository.Add(service);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -71,6 +74,7 @@ internal sealed class ServiceCatalogService(
         var service = await GetOrThrowAsync(id, cancellationToken);
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: id, cancellationToken);
         await MediaReference.EnsureExistsAsync(mediaRepository, request.CoverId, "CoverId", cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
         service.Update(
             request.Title.Trim(),
@@ -81,9 +85,9 @@ internal sealed class ServiceCatalogService(
             request.WorkloadHours,
             request.Format,
             request.CoverId,
-            request.DisplayOrder,
             request.IsActive);
 
+        DisplayOrdering.Place(list, service, request.DisplayOrder);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return service.ToResponse();
@@ -92,7 +96,9 @@ internal sealed class ServiceCatalogService(
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var service = await GetOrThrowAsync(id, cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
+        DisplayOrdering.Remove(list, service);
         repository.Remove(service);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

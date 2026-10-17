@@ -30,7 +30,8 @@ public sealed class PasswordRecoveryServiceTests
             _refreshTokens,
             _refreshTokens,
             _clock,
-            _audit);
+            _audit,
+            new FakeLoginDeviceService());
     }
 
     [Fact]

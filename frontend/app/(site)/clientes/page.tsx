@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Container, EmptyNote, PageHeader, SectionHeading } from "@/components/site/blocks";
 import { ClientShowcase } from "@/components/site/client-showcase";
 import { ClosingCta } from "@/components/site/contact";
-import { TestimonialSpotlight, TestimonialWall } from "@/components/site/testimonials";
+import { TestimonialWall } from "@/components/site/testimonials";
 import { copy } from "@/content/site-copy";
-import { getClients, getLatestTestimonials, getSettings, getTestimonials } from "@/lib/api/public";
+import { getClients, getSettings, getTestimonials } from "@/lib/api/public";
 import { pickRandom } from "@/lib/search";
 
 export const metadata: Metadata = {
@@ -13,12 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ClientsPage() {
-  const [clients, testimonials, latestTestimonials, settings] = await Promise.all([
-    getClients(),
-    getTestimonials(),
-    getLatestTestimonials(),
-    getSettings(),
-  ]);
+  const [clients, testimonials, settings] = await Promise.all([getClients(), getTestimonials(), getSettings()]);
   const featured = pickRandom(clients, 20).map((client) => client.id);
 
   return (
@@ -35,14 +30,8 @@ export default async function ClientsPage() {
             <SectionHeading kicker={copy.testimonials.kicker} title={copy.testimonials.title} />
           </div>
           <div className="mt-10">
-            <TestimonialSpotlight testimonials={latestTestimonials} />
+            <TestimonialWall testimonials={testimonials} />
           </div>
-          {testimonials.length > 1 && (
-            <div className="mt-20">
-              <h3 className="mb-8 font-serif text-3xl">Todos os depoimentos</h3>
-              <TestimonialWall testimonials={testimonials} />
-            </div>
-          )}
         </Container>
       )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { optional, toInt, useEntityEditor } from "@/lib/admin/editor";
+import { optional, optionalInt, useEntityEditor } from "@/lib/admin/editor";
 import { useApi } from "@/lib/admin/hooks";
 import { fieldError } from "@/lib/api/client";
 import { formatMonthYear } from "@/lib/format";
@@ -9,6 +9,7 @@ import type { AdminCareerEntry } from "@/types/admin";
 import type { CareerEntryType } from "@/types/site";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/field";
 import { Kicker } from "@/components/ui/typography";
+import { DisplayOrderField, useDisplayOrder } from "../display-order";
 import { EntityLoader, FlashNotice } from "../entity";
 import { AdminForm, AdminHeader, ConfirmButton, EmptyState, FieldRow, IndexList, IndexRow, LoadError, Loading, NewButton, Section, Tag } from "../ui";
 
@@ -98,7 +99,7 @@ function toForm(entry?: AdminCareerEntry): Form {
     startDate: entry?.startDate ?? "",
     endDate: entry?.endDate ?? "",
     ongoing: entry ? !entry.endDate : false,
-    displayOrder: String(entry?.displayOrder ?? 0),
+    displayOrder: entry ? String(entry.displayOrder) : "",
   };
 }
 
@@ -112,8 +113,20 @@ function CareerForm({ entry, onReset }: { onReset: () => void; entry?: AdminCare
     onReset,
     deleted: "Item excluído.",
   });
+  const order = useDisplayOrder<AdminCareerEntry>({
+    listPath: "/admin/career",
+    selfId: entry?.id,
+    scope: (other) => other.entryType === form.entryType,
+    name: (other) => other.title,
+  });
   const error = (field: string) => fieldError(editor.errors, field);
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const changeType = (entryType: CareerEntryType) =>
+    setForm((current) => ({
+      ...current,
+      entryType,
+      displayOrder: !entry ? current.displayOrder : entryType === entry.entryType ? String(entry.displayOrder) : "",
+    }));
   const institutionLabel = form.entryType === "Experience" ? "Empresa" : "Instituição";
 
   return (
@@ -125,15 +138,17 @@ function CareerForm({ entry, onReset }: { onReset: () => void; entry?: AdminCare
         savedNote={editor.savedNote}
         submitLabel={entry ? "Salvar alterações" : "Criar item"}
         onSubmit={() =>
-          void editor.save({
-            entryType: form.entryType,
-            title: form.title,
-            institution: optional(form.institution),
-            description: optional(form.description),
-            startDate: form.startDate || null,
-            endDate: form.ongoing ? null : form.endDate || null,
-            displayOrder: toInt(form.displayOrder),
-          })
+          void order.guard(form.displayOrder, () =>
+            editor.save({
+              entryType: form.entryType,
+              title: form.title,
+              institution: optional(form.institution),
+              description: optional(form.description),
+              startDate: form.startDate || null,
+              endDate: form.ongoing ? null : form.endDate || null,
+              displayOrder: optionalInt(form.displayOrder),
+            }),
+          )
         }
         extraActions={
           entry && (
@@ -148,7 +163,7 @@ function CareerForm({ entry, onReset }: { onReset: () => void; entry?: AdminCare
         }
       >
         <Section title="O quê">
-          <Select label="Tipo" value={form.entryType} onChange={(event) => set("entryType", event.target.value as CareerEntryType)} error={error("entryType")}>
+          <Select label="Tipo" value={form.entryType} onChange={(event) => changeType(event.target.value as CareerEntryType)} error={error("entryType")}>
             {groupOrder.map((type) => (
               <option key={type} value={type}>
                 {typeLabel[type]}
@@ -188,18 +203,17 @@ function CareerForm({ entry, onReset }: { onReset: () => void; entry?: AdminCare
           </FieldRow>
           <Checkbox label="Ainda em andamento" checked={form.ongoing} onChange={(event) => set("ongoing", event.target.checked)} />
           <FieldRow>
-            <Input
-              label="Ordem de exibição"
-              hint="Menor número aparece primeiro dentro do grupo."
-              type="number"
-              min={0}
+            <DisplayOrderField
+              order={order}
+              within={groupTitle[form.entryType]}
               value={form.displayOrder}
-              onChange={(event) => set("displayOrder", event.target.value)}
+              onChange={(value) => set("displayOrder", value)}
               error={error("displayOrder")}
             />
           </FieldRow>
         </Section>
       </AdminForm>
+      {order.dialog}
     </>
   );
 }

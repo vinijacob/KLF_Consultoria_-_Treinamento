@@ -16,7 +16,7 @@ internal sealed class PostRepository(AppDbContext context) : IPostRepository
         int take,
         CancellationToken cancellationToken)
     {
-        var query = context.Posts.AsNoTracking();
+        var query = context.Posts.AsNoTracking().Include(post => post.Category).AsQueryable();
 
         if (filter.VisibleAt is { } visibleAt)
         {
@@ -26,6 +26,16 @@ internal sealed class PostRepository(AppDbContext context) : IPostRepository
         if (filter.Type is { } type)
         {
             query = query.Where(post => post.Type == type);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.CategorySlug))
+        {
+            query = query.Where(post => post.Category != null && post.Category.Slug == filter.CategorySlug);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.TagSlug))
+        {
+            query = query.Where(post => post.Tags.Any(link => link.Tag.Slug == filter.TagSlug));
         }
 
         if (filter.Status is { } status)
@@ -55,10 +65,10 @@ internal sealed class PostRepository(AppDbContext context) : IPostRepository
     }
 
     public Task<Post?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
-        context.Posts.FirstOrDefaultAsync(post => post.Id == id, cancellationToken);
+        WithTaxonomy(context.Posts).FirstOrDefaultAsync(post => post.Id == id, cancellationToken);
 
     public Task<Post?> GetVisibleBySlugAsync(string slug, DateTime utcNow, CancellationToken cancellationToken) =>
-        context.Posts
+        WithTaxonomy(context.Posts)
             .AsNoTracking()
             .Where(Post.IsVisible(utcNow))
             .FirstOrDefaultAsync(post => post.Slug == slug, cancellationToken);
@@ -69,6 +79,13 @@ internal sealed class PostRepository(AppDbContext context) : IPostRepository
     public void Add(Post post) => context.Posts.Add(post);
 
     public void Remove(Post post) => context.Posts.Remove(post);
+
+    private static IQueryable<Post> WithTaxonomy(IQueryable<Post> posts) =>
+        posts
+            .Include(post => post.Category)
+            .Include(post => post.Tags)
+            .ThenInclude(link => link.Tag)
+            .AsSplitQuery();
 
     private static string EscapeLike(string text) => text
         .Replace(LikeEscape, LikeEscape + LikeEscape, StringComparison.Ordinal)

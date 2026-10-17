@@ -6,11 +6,18 @@ namespace Klf.Application.DTOs.Settings;
 /// <param name="Values">Company values, one item each (up to 20 items of 200 characters).</param>
 /// <param name="Differentials">Differentials, one item each (up to 20 items of 200 characters).</param>
 /// <param name="History">Company history (up to 5000 characters).</param>
-/// <param name="PortraitId">Portrait of Kilciene shown on the home page and the "Sobre" page; must be an uploaded image.</param>
+/// <param name="PortraitIds">
+/// Photos of Kilciene, in order, shown as a carousel on the home page and the "Sobre" page (up to 8 uploaded images; the
+/// first one is also her avatar).
+/// </param>
 public sealed record AboutSettings(
     string? Mission,
     string? Vision,
     IReadOnlyList<string>? Values,
     IReadOnlyList<string>? Differentials,
     string? History,
-    Guid? PortraitId = null);
+    IReadOnlyList<Guid>? PortraitIds = null)
+{
+    /// <summary>Most photos in the carousel.</summary>
+    public const int MaxPortraits = 8;
+}

@@ -81,7 +81,7 @@ public sealed class ClientsAndTestimonialsControllersTests : IClassFixture<KlfAp
         var create = await client.PostAsJsonAsync(AdminClients, new CreateClientRequest("Loja", "https://loja.com.br", null, 0, true), TestContext.Current.CancellationToken);
         var body = await create.Content.ReadFromJsonAsync<ClientResponse>(TestContext.Current.CancellationToken);
         var uri = new Uri($"{AdminClients}/{body!.Id}", UriKind.Relative);
-        var put = await client.PutAsJsonAsync(uri, new UpdateClientRequest("Loja Nova", null, null, 1, true), TestContext.Current.CancellationToken);
+        var put = await client.PutAsJsonAsync(uri, new UpdateClientRequest("Loja Nova", null, null, null, true), TestContext.Current.CancellationToken);
         var delete = await client.DeleteAsync(uri, TestContext.Current.CancellationToken);
         var after = await client.GetAsync(uri, TestContext.Current.CancellationToken);
 

@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const legalPages = missingLegalData(legal).length === 0 ? ["/privacidade", "/termos", "/cookies"] : [];
 
   return [
-    ...["", "/servicos", "/sobre", "/clientes", "/conteudo", "/galeria", "/contato"].map((path) => ({ url: `${base}${path}` })),
+    ...["", "/servicos", "/sobre", "/clientes", "/conteudo", "/galeria", "/contato", "/meus-dados"].map((path) => ({ url: `${base}${path}` })),
     ...services.map((service) => ({ url: `${base}/servicos/${service.slug}` })),
     ...posts.items.map((post) => ({ url: `${base}/conteudo/${post.slug}`, lastModified: post.publishedAt ?? undefined })),
     ...albums.map((album) => ({ url: `${base}/galeria/${album.slug}` })),

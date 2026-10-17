@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { isActive, navFor, roleInfo } from "@/config/admin";
 import { datelineFor } from "@/lib/admin/datetime";
-import { useUnreadMessageCount } from "@/lib/admin/unread";
+import { useOpenDataRequestCount, useUnreadMessageCount } from "@/lib/admin/unread";
 import { cn } from "@/lib/cn";
 import type { Role } from "@/types/admin";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -69,6 +69,11 @@ function PanelWordmark() {
   );
 }
 
+const countLabels: Record<string, (count: number) => string> = {
+  "/painel/mensagens": (count) => `${count} não lida${count > 1 ? "s" : ""}`,
+  "/painel/pedidos-lgpd": (count) => `${count} em aberto`,
+};
+
 function CountBadge({ count }: { count: number }) {
   return (
     <span
@@ -111,7 +116,7 @@ function Navigation({ onNavigate, counts = {} }: { onNavigate?: () => void; coun
                     <span className="w-5 font-mono text-xs font-normal text-ink-soft">{index}</span>
                     <span className="flex-1">
                       {item.label}
-                      {unread > 0 && <span className="sr-only">, {unread} não lida{unread > 1 ? "s" : ""}</span>}
+                      {unread > 0 && <span className="sr-only">, {countLabels[item.href]?.(unread) ?? unread}</span>}
                     </span>
                     {unread > 0 && <CountBadge count={unread} />}
                     {current && unread === 0 && <span aria-hidden className="h-px w-4 self-center bg-accent" />}
@@ -158,8 +163,10 @@ function AccountFooter() {
 export function AdminShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { isAdmin } = useAuth();
-  const unread = useUnreadMessageCount(isAdmin);
-  const counts = { "/painel/mensagens": unread };
+  const unreadMessages = useUnreadMessageCount(isAdmin);
+  const openRequests = useOpenDataRequestCount(isAdmin);
+  const unread = unreadMessages + openRequests;
+  const counts = { "/painel/mensagens": unreadMessages, "/painel/pedidos-lgpd": openRequests };
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -196,7 +203,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   {!open && unread > 0 && (
                     <>
                       <CountBadge count={unread} />
-                      <span className="sr-only">{unread} mensage{unread > 1 ? "ns" : "m"} não lida{unread > 1 ? "s" : ""}</span>
+                      <span className="sr-only">{unread} pendência{unread > 1 ? "s" : ""} no atendimento</span>
                     </>
                   )}
                 </span>

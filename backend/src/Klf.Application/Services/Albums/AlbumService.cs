@@ -2,6 +2,7 @@ using Klf.Application.DTOs.Albums;
 using Klf.Application.Interfaces.Repositories;
 using Klf.Application.Interfaces.Storage;
 using Klf.Application.Mappings;
+using Klf.Domain.Common;
 using Klf.Domain.Entities;
 using Klf.Domain.Exceptions;
 
@@ -50,14 +51,16 @@ internal sealed class AlbumService(
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: null, cancellationToken);
         await EnsureCoverExistsAsync(request.CoverId, cancellationToken);
 
+        var list = await repository.ListInOrderAsync(cancellationToken);
         var album = new Album(
             request.Title.Trim(),
             request.Slug,
             NullIfBlank(request.Description),
             request.CoverId,
-            request.DisplayOrder,
+            list.Count,
             request.IsActive);
 
+        DisplayOrdering.Place(list, album, request.DisplayOrder);
         repository.Add(album);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -69,15 +72,16 @@ internal sealed class AlbumService(
         var album = await GetOrThrowAsync(id, cancellationToken);
         await EnsureSlugIsFreeAsync(request.Slug, excludingId: id, cancellationToken);
         await EnsureCoverExistsAsync(request.CoverId, cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
         album.Update(
             request.Title.Trim(),
             request.Slug,
             NullIfBlank(request.Description),
             request.CoverId,
-            request.DisplayOrder,
             request.IsActive);
 
+        DisplayOrdering.Place(list, album, request.DisplayOrder);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return await ToResponseAsync(album, cancellationToken);
@@ -104,7 +108,9 @@ internal sealed class AlbumService(
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var album = await GetOrThrowAsync(id, cancellationToken);
+        var list = await repository.ListInOrderAsync(cancellationToken);
 
+        DisplayOrdering.Remove(list, album);
         repository.Remove(album);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

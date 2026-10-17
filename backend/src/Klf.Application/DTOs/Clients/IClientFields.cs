@@ -12,8 +12,8 @@ public interface IClientFields
     /// <summary>Logo image id.</summary>
     Guid? LogoId { get; }
 
-    /// <summary>Position in the public list.</summary>
-    int DisplayOrder { get; }
+    /// <summary>Chosen position (0 = first), or <see langword="null"/>: the end for a new item, the current position when editing.</summary>
+    int? DisplayOrder { get; }
 
     /// <summary>Whether the client is visible on the public site.</summary>
     bool IsActive { get; }

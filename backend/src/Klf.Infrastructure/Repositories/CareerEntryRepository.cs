@@ -1,5 +1,6 @@
 using Klf.Application.Interfaces.Repositories;
 using Klf.Domain.Entities;
+using Klf.Domain.Enums;
 using Klf.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,14 @@ internal sealed class CareerEntryRepository(AppDbContext context) : ICareerEntry
             .AsNoTracking()
             .OrderBy(x => x.EntryType)
             .ThenBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Title)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<CareerEntry>> ListInOrderAsync(CareerEntryType entryType, CancellationToken cancellationToken) =>
+        await context.CareerEntries
+            .Where(x => x.EntryType == entryType)
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Title)
             .ToListAsync(cancellationToken);
 
     public Task<CareerEntry?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>

@@ -20,4 +20,11 @@ public interface IFrontendLinks
     /// <param name="email">Account e-mail.</param>
     /// <param name="token">Invitation token.</param>
     Uri Invite(string email, string token);
+
+    /// <summary>Address of the "forgot my password" page, where a new reset link is requested.</summary>
+    Uri ForgotPassword();
+
+    /// <summary>Address of a data request (LGPD) in the admin panel.</summary>
+    /// <param name="id">Request id.</param>
+    Uri DataRequest(Guid id);
 }

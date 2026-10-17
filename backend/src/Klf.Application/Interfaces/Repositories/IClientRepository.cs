@@ -15,6 +15,12 @@ public interface IClientRepository
     /// <summary>Returns the client with the given id, tracked for changes, or <see langword="null"/>.</summary>
     Task<Client?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Returns every client in the order of the panel list (position, then name), tracked for changes, so their
+    /// positions can be renumbered (see <see cref="Klf.Domain.Common.DisplayOrdering"/>).
+    /// </summary>
+    Task<IReadOnlyList<Client>> ListInOrderAsync(CancellationToken cancellationToken);
+
     /// <summary>Marks a new client to be inserted on the next <see cref="IUnitOfWork.SaveChangesAsync"/>.</summary>
     void Add(Client client);
 

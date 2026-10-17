@@ -4,7 +4,7 @@ using Klf.Domain.Exceptions;
 namespace Klf.Domain.Entities;
 
 /// <summary>A photo album shown on the public gallery.</summary>
-public sealed class Album : SoftDeletableEntity
+public sealed class Album : SoftDeletableEntity, IOrderedEntity
 {
     private readonly List<AlbumMedia> _items = [];
 
@@ -19,7 +19,8 @@ public sealed class Album : SoftDeletableEntity
     {
         Title = title;
         Slug = slug;
-        Update(title, slug, description, coverId, displayOrder, isActive);
+        Update(title, slug, description, coverId, isActive);
+        DisplayOrder = displayOrder;
     }
 
     /// <summary>Name of the album.</summary>
@@ -34,7 +35,7 @@ public sealed class Album : SoftDeletableEntity
     /// <summary>Cover image; optional.</summary>
     public Guid? CoverId { get; private set; }
 
-    /// <summary>Position in the public list; lower numbers come first.</summary>
+    /// <summary>Position in the list; 0 comes first.</summary>
     public int DisplayOrder { get; private set; }
 
     /// <summary>Whether the album is visible on the public site.</summary>
@@ -43,22 +44,23 @@ public sealed class Album : SoftDeletableEntity
     /// <summary>The images of the album. Use <see cref="SetItems"/> to change them.</summary>
     public IReadOnlyCollection<AlbumMedia> Items => _items;
 
-    /// <summary>Replaces every editable field except the items.</summary>
+    /// <summary>Replaces every editable field except the items and the position (see <see cref="DisplayOrdering"/>).</summary>
     /// <param name="title">Name of the album.</param>
     /// <param name="slug">Unique URL identifier.</param>
     /// <param name="description">Short text about the album; optional.</param>
     /// <param name="coverId">Cover image; optional.</param>
-    /// <param name="displayOrder">Position in the public list.</param>
     /// <param name="isActive">Whether the album is visible on the public site.</param>
-    public void Update(string title, string slug, string? description, Guid? coverId, int displayOrder, bool isActive)
+    public void Update(string title, string slug, string? description, Guid? coverId, bool isActive)
     {
         Title = title;
         Slug = slug;
         Description = description;
         CoverId = coverId;
-        DisplayOrder = displayOrder;
         IsActive = isActive;
     }
+
+    /// <inheritdoc />
+    public void MoveTo(int position) => DisplayOrder = position;
 
     /// <summary>
     /// Replaces the images of the album, in the given order (the first one gets position 0).

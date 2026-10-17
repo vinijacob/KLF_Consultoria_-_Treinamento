@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { optional, toInt, useEntityEditor } from "@/lib/admin/editor";
+import { optional, optionalInt, toInt, useEntityEditor } from "@/lib/admin/editor";
 import { useApi } from "@/lib/admin/hooks";
 import { slugify } from "@/lib/admin/text";
 import { fieldError } from "@/lib/api/client";
@@ -9,6 +9,7 @@ import { formatWorkload, serviceFormatLabel } from "@/lib/format";
 import type { AdminService, AdminServiceListItem } from "@/types/admin";
 import type { ServiceFormat } from "@/types/site";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/field";
+import { DisplayOrderField, useDisplayOrder } from "../display-order";
 import { EntityLoader, FlashNotice } from "../entity";
 import { MediaField } from "../media";
 import { RichTextEditor } from "../rich-text";
@@ -77,7 +78,7 @@ function toForm(service?: AdminService): Form {
     workloadHours: String(service?.workloadHours ?? 8),
     format: service?.format ?? "InCompany",
     coverId: service?.coverId ?? null,
-    displayOrder: String(service?.displayOrder ?? 0),
+    displayOrder: service ? String(service.displayOrder) : "",
     isActive: service?.isActive ?? true,
   };
 }
@@ -93,6 +94,7 @@ function ServiceForm({ service, onReset }: { onReset: () => void; service?: Admi
     onReset,
     deleted: "Serviço excluído.",
   });
+  const order = useDisplayOrder<AdminService>({ listPath: "/admin/services", selfId: service?.id, name: (other) => other.title });
   const error = (field: string) => fieldError(editor.errors, field);
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -110,12 +112,14 @@ function ServiceForm({ service, onReset }: { onReset: () => void; service?: Admi
         savedNote={editor.savedNote}
         submitLabel={service ? "Salvar alterações" : "Criar serviço"}
         onSubmit={() =>
-          void editor.save({
-            ...form,
-            summary: optional(form.summary),
-            workloadHours: toInt(form.workloadHours),
-            displayOrder: toInt(form.displayOrder),
-          })
+          void order.guard(form.displayOrder, () =>
+            editor.save(  {
+              ...form,
+              summary: optional(form.summary),
+              workloadHours: toInt(form.workloadHours),
+              displayOrder: optionalInt(form.displayOrder),
+            }),
+          )
         }
         extraActions={
           service && (
@@ -210,16 +214,7 @@ function ServiceForm({ service, onReset }: { onReset: () => void; service?: Admi
 
         <Section title="Publicação">
           <FieldRow>
-            <Input
-              label="Ordem de exibição"
-              hint="Menor número aparece primeiro."
-              type="number"
-              min={0}
-              inputMode="numeric"
-              value={form.displayOrder}
-              onChange={(event) => set("displayOrder", event.target.value)}
-              error={error("displayOrder")}
-            />
+            <DisplayOrderField order={order} value={form.displayOrder} onChange={(value) => set("displayOrder", value)} error={error("displayOrder")} />
           </FieldRow>
           <Checkbox
             label="Mostrar no site"
@@ -229,6 +224,7 @@ function ServiceForm({ service, onReset }: { onReset: () => void; service?: Admi
           />
         </Section>
       </AdminForm>
+      {order.dialog}
     </>
   );
 }

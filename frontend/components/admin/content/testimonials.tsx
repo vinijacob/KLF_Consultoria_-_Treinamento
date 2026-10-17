@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import { formatShortDate, fromLocalInput, toLocalInput } from "@/lib/admin/datetime";
-import { optional, toInt, useEntityEditor } from "@/lib/admin/editor";
+import { optional, optionalInt, useEntityEditor } from "@/lib/admin/editor";
 import { useApi } from "@/lib/admin/hooks";
 import { formatBytes } from "@/lib/admin/text";
 import { adminDownload, adminFetch } from "@/lib/auth/session";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox, FieldError, Input, Textarea } from "@/components/ui/field";
 import { DownloadIcon } from "@/components/ui/icons";
 import { Notice } from "@/components/ui/notice";
+import { DisplayOrderField, useDisplayOrder } from "../display-order";
 import { EntityLoader, FlashNotice } from "../entity";
 import { MediaField } from "../media";
 import { AdminForm, AdminHeader, ConfirmButton, EmptyState, FieldRow, IndexList, IndexRow, LoadError, Loading, NewButton, Section, Tag } from "../ui";
@@ -35,6 +36,76 @@ function listTags(item: AdminTestimonial) {
 
 const PDF_MAX_BYTES = 10 * 1024 * 1024;
 
+/** Confere o arquivo antes de enviar (a API confere de novo pelo conteúdo). */
+function checkPdf(file: File) {
+  if (file.type && file.type !== "application/pdf") return "Envie o termo em PDF.";
+  if (file.size > PDF_MAX_BYTES) return `O arquivo tem ${formatBytes(file.size)}; o limite é 10 MB.`;
+  return null;
+}
+
+function uploadConsentDocument(testimonialId: string, file: File) {
+  const body = new FormData();
+  body.append("file", file);
+  return adminFetch<AdminTestimonial>(`/admin/testimonials/${testimonialId}/consent-document`, { method: "PUT", body });
+}
+
+const uploadProblem = (failure: unknown) =>
+  failure instanceof ApiError ? (fieldError(failure.errors, "file") ?? failure.message) : "Não foi possível enviar o termo. Tente de novo.";
+
+/**
+ * Termo escolhido durante a criação do depoimento: fica guardado aqui e sobe logo depois que o depoimento é criado
+ * (o arquivo precisa do id do depoimento).
+ */
+function NewConsentDocumentField({ file, onChange }: { file: File | null; onChange: (file: File | null) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hintId = useId();
+  const [problem, setProblem] = useState<string | null>(null);
+
+  return (
+    <div className="rounded-2xl border border-rule bg-card p-5">
+      <p className="font-sans font-medium">
+        Termo assinado (PDF) <span className="font-normal text-ink-soft">(opcional)</span>
+      </p>
+      <p id={hintId} className="mt-1 font-sans text-sm leading-relaxed text-ink-soft">
+        Vai para a área privada junto com o depoimento, ao clicar em “Criar depoimento”. Não aparece no site. Até 10 MB.
+      </p>
+      {file && (
+        <p className="mt-4 font-sans text-[0.9375rem]">
+          <span className="font-medium break-all">{file.name}</span>
+          <span className="text-ink-soft"> · {formatBytes(file.size)} · será enviado ao criar</span>
+        </p>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(event) => {
+          const chosen = event.target.files?.[0];
+          event.target.value = "";
+          if (!chosen) return;
+          const problemText = checkPdf(chosen);
+          setProblem(problemText);
+          if (!problemText) onChange(chosen);
+        }}
+      />
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Button variant="outline" aria-describedby={hintId} onClick={() => inputRef.current?.click()}>
+          {file ? "Trocar arquivo" : "Escolher termo em PDF"}
+        </Button>
+        {file && (
+          <Button variant="quiet" onClick={() => onChange(null)}>
+            Tirar
+          </Button>
+        )}
+      </div>
+      <div aria-live="polite">{problem && <FieldError>{problem}</FieldError>}</div>
+    </div>
+  );
+}
+
 /**
  * Termo de consentimento assinado (PDF). Vai na hora para o armazenamento privado da API (não depende do botão
  * Salvar) e só sai de lá baixado por quem está no painel.
@@ -48,19 +119,15 @@ function ConsentDocumentField({ item, onReplace }: { item: AdminTestimonial; onR
   const attached = item.consentDocument;
 
   async function upload(file: File) {
-    setProblem(null);
-    if (file.type && file.type !== "application/pdf") return setProblem("Envie o termo em PDF.");
-    if (file.size > PDF_MAX_BYTES) return setProblem(`O arquivo tem ${formatBytes(file.size)}; o limite é 10 MB.`);
+    const problemText = checkPdf(file);
+    setProblem(problemText);
+    if (problemText) return;
 
-    const body = new FormData();
-    body.append("file", file);
     setPending(true);
     try {
-      onReplace(await adminFetch<AdminTestimonial>(path, { method: "PUT", body }));
+      onReplace(await uploadConsentDocument(item.id, file));
     } catch (failure) {
-      setProblem(
-        failure instanceof ApiError ? (fieldError(failure.errors, "file") ?? failure.message) : "Não foi possível enviar o termo. Tente de novo.",
-      );
+      setProblem(uploadProblem(failure));
     } finally {
       setPending(false);
     }
@@ -212,7 +279,7 @@ function toForm(item?: AdminTestimonial): Form {
     consentDate: toLocalInput(item?.consentGivenAt).slice(0, 10),
     consentCoversImage: item?.consentCoversImage ?? false,
     isPublished: item?.isPublished ?? false,
-    displayOrder: String(item?.displayOrder ?? 0),
+    displayOrder: item ? String(item.displayOrder) : "",
   };
 }
 
@@ -226,6 +293,7 @@ function TestimonialForm({
   onReset: () => void;
 }) {
   const [form, setForm] = useState(() => toForm(item));
+  const [newDocument, setNewDocument] = useState<File | null>(null);
   const editor = useEntityEditor<AdminTestimonial>({
     apiPath: "/admin/testimonials",
     listHref: LIST,
@@ -233,7 +301,17 @@ function TestimonialForm({
     created: "Depoimento criado.",
     onReset,
     deleted: "Depoimento excluído.",
+    afterCreate: async (saved) => {
+      if (!newDocument) return null;
+      try {
+        await uploadConsentDocument(saved.id, newDocument);
+        return "Termo em PDF anexado.";
+      } catch (failure) {
+        return `Mas o termo não foi enviado (${uploadProblem(failure)}). Abra o depoimento para anexar de novo.`;
+      }
+    },
   });
+  const order = useDisplayOrder<AdminTestimonial>({ listPath: "/admin/testimonials", selfId: item?.id, name: (other) => other.authorName });
   const error = (field: string) => fieldError(editor.errors, field);
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((current) => ({ ...current, [key]: value }));
   const revoked = Boolean(item?.consentRevokedAt);
@@ -266,17 +344,19 @@ function TestimonialForm({
         savedNote={editor.savedNote}
         submitLabel={item ? "Salvar alterações" : "Criar depoimento"}
         onSubmit={() =>
-          void editor.save({
-            authorName: form.authorName,
-            authorRole: optional(form.authorRole),
-            companyName: optional(form.companyName),
-            quote: form.quote,
-            photoId: form.photoId,
-            consentGivenAt: form.consentDate ? fromLocalInput(`${form.consentDate}T12:00`) : null,
-            consentCoversImage: form.consentCoversImage,
-            isPublished: form.isPublished,
-            displayOrder: toInt(form.displayOrder),
-          })
+          void order.guard(form.displayOrder, () =>
+            editor.save(  {
+              authorName: form.authorName,
+              authorRole: optional(form.authorRole),
+              companyName: optional(form.companyName),
+              quote: form.quote,
+              photoId: form.photoId,
+              consentGivenAt: form.consentDate ? fromLocalInput(`${form.consentDate}T12:00`) : null,
+              consentCoversImage: form.consentCoversImage,
+              isPublished: form.isPublished,
+              displayOrder: optionalInt(form.displayOrder),
+            }),
+          )
         }
         extraActions={
           item && (
@@ -354,7 +434,7 @@ function TestimonialForm({
           {item ? (
             <ConsentDocumentField item={item} onReplace={onReplace} />
           ) : (
-            <Notice tone="privacy">Depois de criar o depoimento, abra-o de novo para anexar o termo assinado em PDF.</Notice>
+            <NewConsentDocumentField file={newDocument} onChange={setNewDocument} />
           )}
         </Section>
 
@@ -368,17 +448,11 @@ function TestimonialForm({
             error={error("isPublished")}
           />
           <FieldRow>
-            <Input
-              label="Ordem de exibição"
-              type="number"
-              min={0}
-              value={form.displayOrder}
-              onChange={(event) => set("displayOrder", event.target.value)}
-              error={error("displayOrder")}
-            />
+            <DisplayOrderField order={order} value={form.displayOrder} onChange={(value) => set("displayOrder", value)} error={error("displayOrder")} />
           </FieldRow>
         </Section>
       </AdminForm>
+      {order.dialog}
     </>
   );
 }

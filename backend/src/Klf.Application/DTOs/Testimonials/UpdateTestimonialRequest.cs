@@ -9,7 +9,7 @@ namespace Klf.Application.DTOs.Testimonials;
 /// <param name="ConsentGivenAt">When the author signed the consent term; required to publish; cannot be in the future.</param>
 /// <param name="ConsentCoversImage">Whether the consent also covers the use of the author's image.</param>
 /// <param name="IsPublished">Whether the testimonial is shown on the public site; requires <c>ConsentGivenAt</c>.</param>
-/// <param name="DisplayOrder">Position in the public list; lower numbers come first.</param>
+/// <param name="DisplayOrder">Position in the list (0 = first); leave empty to keep the current one. If another item holds it, the two swap places.</param>
 public sealed record UpdateTestimonialRequest(
     string AuthorName,
     string? AuthorRole,
@@ -19,4 +19,4 @@ public sealed record UpdateTestimonialRequest(
     DateTimeOffset? ConsentGivenAt,
     bool ConsentCoversImage,
     bool IsPublished,
-    int DisplayOrder) : ITestimonialFields;
+    int? DisplayOrder) : ITestimonialFields;

@@ -11,6 +11,9 @@ internal sealed class InMemoryClientRepository : IClientRepository, IUnitOfWork
     public Task<IReadOnlyList<Client>> ListAsync(bool onlyActive, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Client>>([.. Clients.Where(x => !onlyActive || x.IsActive).OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name)]);
 
+    public Task<IReadOnlyList<Client>> ListInOrderAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Client>>([.. Clients.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name, StringComparer.Ordinal)]);
+
     public Task<Client?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Clients.SingleOrDefault(x => x.Id == id));
 

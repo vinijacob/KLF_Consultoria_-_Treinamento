@@ -29,12 +29,20 @@ public sealed class PostsControllersTests : IClassFixture<KlfApiFactory>
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
     private readonly InMemoryPostRepository _store = new();
+    private readonly InMemoryCategoryRepository _categories;
+    private readonly InMemoryTagRepository _tags;
     private readonly WebApplicationFactory<Program> _factory;
 
     public PostsControllersTests(KlfApiFactory factory)
     {
+        _categories = new InMemoryCategoryRepository(_store.Posts);
+        _tags = new InMemoryTagRepository(_store.Posts);
         _factory = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
+            services.RemoveAll<ICategoryRepository>();
+            services.RemoveAll<ITagRepository>();
+            services.AddSingleton<ICategoryRepository>(_categories);
+            services.AddSingleton<ITagRepository>(_tags);
             services.RemoveAll<IPostRepository>();
             services.RemoveAll<IUnitOfWork>();
             services.AddSingleton<IPostRepository>(_store);
@@ -177,6 +185,33 @@ public sealed class PostsControllersTests : IClassFixture<KlfApiFactory>
         var post = new Post(Guid.CreateVersion7(), PostType.Article, "Título " + slug, slug, null, "{}", "<p>x</p>", null, status, null, null, null, now);
         _store.Posts.Add(post);
         return post;
+    }
+
+    [Fact]
+    public async Task Categories_are_managed_by_the_panel_and_tags_show_on_the_public_post()
+    {
+        using var anonymous = _factory.CreateClient();
+        using var editor = CreateClientAs(Guid.CreateVersion7(), Roles.Editor);
+        var categoriesUri = new Uri("/api/v1/admin/post-categories", UriKind.Relative);
+
+        var unauthorized = await anonymous.GetAsync(categoriesUri, TestContext.Current.CancellationToken);
+        var created = await editor.PostAsJsonAsync(categoriesUri, new CreateCategoryRequest("Liderança"), TestContext.Current.CancellationToken);
+        var category = await created.Content.ReadFromJsonAsync<TaxonomyItemResponse>(TestContext.Current.CancellationToken);
+        var duplicate = await editor.PostAsJsonAsync(categoriesUri, new CreateCategoryRequest("lideranca"), TestContext.Current.CancellationToken);
+        var post = new Post(Guid.CreateVersion7(), PostType.Article, "Com tema", "com-tema", null, "{}", "<p>x</p>", null, PostStatus.Published, null, null, null, DateTime.UtcNow.AddMinutes(-1));
+        post.Classify(_categories.Categories.Single(), [new Tag("Pós-venda", "pos-venda")]);
+        _store.Posts.Add(post);
+
+        var publicCategories = await anonymous.GetStringAsync(new Uri("/api/v1/public/post-categories", UriKind.Relative), TestContext.Current.CancellationToken);
+        var publicPost = await anonymous.GetStringAsync(new Uri($"{PublicUri}/com-tema", UriKind.Relative), TestContext.Current.CancellationToken);
+        var filtered = await anonymous.GetStringAsync(new Uri($"{PublicUri}?tag=pos-venda", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
+        Assert.Equal("lideranca", category!.Slug);
+        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+        Assert.Contains("\"postCount\":1", publicCategories, StringComparison.Ordinal);
+        Assert.Contains("\"tags\":[{\"name\":\"Pós-venda\",\"slug\":\"pos-venda\"}]", publicPost, StringComparison.Ordinal);
+        Assert.Contains("com-tema", filtered, StringComparison.Ordinal);
     }
 
     private HttpClient CreateClientAs(Guid userId, string role)

@@ -11,4 +11,10 @@ public record PostListRequest : PagedRequest
 
     /// <summary>Keyword searched in the title and summary.</summary>
     public string? Search { get; init; }
+
+    /// <summary>Only posts of the category with this slug.</summary>
+    public string? Category { get; init; }
+
+    /// <summary>Only posts with the tag of this slug.</summary>
+    public string? Tag { get; init; }
 }

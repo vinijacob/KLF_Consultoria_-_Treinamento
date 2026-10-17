@@ -10,6 +10,9 @@ public sealed class InMemoryServiceRepository : IServiceRepository, IUnitOfWork
     public Task<IReadOnlyList<Service>> ListAsync(bool onlyActive, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Service>>([.. Services.Where(s => !onlyActive || s.IsActive).OrderBy(s => s.DisplayOrder)]);
 
+    public Task<IReadOnlyList<Service>> ListInOrderAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Service>>([.. Services.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Title, StringComparer.Ordinal)]);
+
     public Task<Service?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Services.SingleOrDefault(s => s.Id == id));
 
