@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEven
 import { createPortal } from "react-dom";
 import type { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
+import { useBackdropClose } from "@/lib/dialog";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { Kicker, Rule } from "@/components/ui/typography";
@@ -231,7 +232,8 @@ function useIsClient() {
 }
 
 /**
- * Diálogo modal nativo (`<dialog>`): foco preso e Esc para fechar já vêm do navegador.
+ * Diálogo modal nativo (`<dialog>`): foco preso e Esc para fechar já vêm do navegador. Atrás, a tela borrada e
+ * esmaecida (como na foto ampliada do site); clicar no fundo fecha sem salvar (o conteúdo é desmontado ao fechar).
  * Vai para o fim do `<body>` (portal), então um formulário dentro dele (ex.: enviar imagem) nunca fica dentro do
  * formulário da página; e o envio de dentro não sobe para o formulário de fora.
  */
@@ -251,6 +253,7 @@ export function Dialog({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const isClient = useIsClient();
+  const backdropClose = useBackdropClose(onClose);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -265,10 +268,11 @@ export function Dialog({
     <dialog
       ref={ref}
       onClose={onClose}
+      {...backdropClose}
       onSubmit={(event) => event.stopPropagation()}
       aria-labelledby={titleId}
       className={cn(
-        "m-auto max-h-[90vh] w-[calc(100%-2rem)] overflow-y-auto border-2 border-ink bg-paper p-0 text-ink backdrop:bg-paper-deep",
+        "m-auto max-h-[90vh] w-[calc(100%-2rem)] overflow-y-auto border-2 border-ink bg-paper p-0 text-ink backdrop:bg-paper/65 backdrop:backdrop-blur-md motion-safe:animate-bubble motion-safe:backdrop:animate-veil",
         wide ? "max-w-5xl" : "max-w-lg",
       )}
     >

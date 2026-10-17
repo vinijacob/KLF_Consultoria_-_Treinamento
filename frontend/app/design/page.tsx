@@ -123,8 +123,9 @@ export default function DesignPage() {
         </div>
       </Block>
 
-      <Block title="Banner de cookies (só aparece quando há categoria opcional em uso)">
-        <div className="max-w-3xl">
+      <Block title="Banner de cookies (primeira visita: só o aviso dos essenciais, ou a escolha quando há categoria opcional em uso)">
+        <div className="grid max-w-3xl gap-6">
+          <CookieBannerPreview onlyEssential />
           <CookieBannerPreview />
         </div>
       </Block>

@@ -45,7 +45,7 @@ export default async function ServicePage({ params }: PageProps<"/servicos/[slug
         <div className="lg:col-span-8">
           {service.coverId && (
             <div className="mb-12">
-              <FramedImage src={mediaUrl(service.coverId)} alt="" ratio="aspect-video" sizes="(min-width: 1024px) 60vw, 100vw" />
+              <FramedImage src={mediaUrl(service.coverId)} alt="" ratio="aspect-video" zoom sizes="(min-width: 1024px) 60vw, 100vw" />
             </div>
           )}
           <Prose html={service.contentHtml} />

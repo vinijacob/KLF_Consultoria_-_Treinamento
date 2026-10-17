@@ -1,5 +1,7 @@
 import { ArrowLink, Avatar, Badge, Container, SectionHeading } from "@/components/site/blocks";
+import { ZoomablePhoto } from "@/components/site/bubble";
 import { ClientShowcase } from "@/components/site/client-showcase";
+import { FeaturedQuoteCard } from "@/components/site/featured-quote";
 import { ClosingCta } from "@/components/site/contact";
 import { RevealObserver } from "@/components/site/reveal-observer";
 import { PostGrid, ServiceGrid } from "@/components/site/lists";
@@ -64,19 +66,7 @@ export default async function HomePage() {
 
       {quote && (
         <Container className="mt-24">
-          <figure className="reveal relative overflow-hidden rounded-3xl bg-brand px-8 pt-16 pb-12 text-brand-contrast sm:px-16 sm:pt-20 sm:pb-16">
-            <span aria-hidden className="absolute top-2 left-6 font-serif text-[9rem] leading-none select-none sm:left-12">
-              “
-            </span>
-            <blockquote className="relative max-w-4xl">
-              <p className="font-serif text-[clamp(1.75rem,3.6vw,2.75rem)] leading-[1.2] italic">{quote.text}</p>
-            </blockquote>
-            <figcaption className="relative mt-8 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs uppercase tracking-[0.16em]">
-              <span aria-hidden className="h-px w-10 bg-brand-contrast" />
-              <span>{quote.author}</span>
-              {quote.source && <span className="normal-case tracking-normal font-sans text-sm">{quote.source}</span>}
-            </figcaption>
-          </figure>
+          <FeaturedQuoteCard quote={quote} />
         </Container>
       )}
 
@@ -109,7 +99,16 @@ export default async function HomePage() {
           <blockquote className="md:col-span-8">
             <p className="font-serif text-[clamp(1.5rem,3vw,2.25rem)] leading-[1.3]">{about.mission ?? copy.about.teaser}</p>
             <footer className="mt-8 flex items-center gap-4 font-sans text-[0.9375rem]">
-              <Avatar name={copy.person.name} src={portrait} />
+              {portrait ? (
+                <ZoomablePhoto
+                  photo={{ src: portrait, alt: copy.person.name }}
+                  className="shrink-0 rounded-full ring-2 ring-transparent ring-offset-4 ring-offset-paper-deep transition-[box-shadow] duration-500 hover:ring-accent"
+                >
+                  <Avatar name={copy.person.name} src={portrait} />
+                </ZoomablePhoto>
+              ) : (
+                <Avatar name={copy.person.name} src={portrait} />
+              )}
               <span>
                 <span className="block font-semibold">{copy.person.name}</span>
                 <span className="block text-ink-soft">{copy.person.role}</span>

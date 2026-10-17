@@ -36,7 +36,7 @@ const essentialCookies = [
   },
   {
     name: CONSENT_COOKIE,
-    purpose: "Guarda a sua escolha sobre cookies opcionais, para não perguntarmos de novo a cada página.",
+    purpose: "Guarda que você já viu o aviso de cookies e a sua escolha sobre os opcionais, para não perguntarmos de novo a cada página.",
     duration: "6 meses",
   },
 ];
@@ -129,8 +129,8 @@ export default async function CookiesPage() {
           body:
             optional.length === 0 ? (
               <p>
-                Hoje não usamos nenhum. Se um dia o site mostrar conteúdo de outros serviços, como vídeos do YouTube ou publicações
-                do Instagram, eles só vão carregar depois que você permitir, e esta página vai listá-los.
+                Hoje não usamos nenhum. Se um dia o site mostrar conteúdo de outros serviços, como vídeos do YouTube, eles só vão
+                carregar depois que você permitir, e esta página vai listá-los.
               </p>
             ) : (
               <>

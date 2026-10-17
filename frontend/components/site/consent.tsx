@@ -61,8 +61,44 @@ export function CookiePreferencesButton({ className, children = "Preferências d
   );
 }
 
-function BannerBox({ onCustomize, onChoose, className }: { onCustomize: () => void; onChoose: (accept: boolean) => void; className?: string }) {
+/**
+ * `onlyEssential`: nenhuma categoria opcional em uso, então não há o que aceitar ou recusar; o banner só avisa e some
+ * com "Entendi".
+ */
+function BannerBox({
+  onlyEssential,
+  onCustomize,
+  onChoose,
+  className,
+}: {
+  onlyEssential: boolean;
+  onCustomize: () => void;
+  onChoose: (accept: boolean) => void;
+  className?: string;
+}) {
   const titleId = useId();
+
+  if (onlyEssential) {
+    return (
+      <section aria-labelledby={titleId} className={cn("rounded-2xl border border-rule-strong bg-card p-5 sm:p-6", className)}>
+        <h2 id={titleId} className="text-xl">
+          Sua privacidade
+        </h2>
+        <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
+          <p className="font-sans text-[0.9375rem] leading-relaxed text-ink-soft">
+            Usamos apenas cookies essenciais, que fazem o site funcionar e guardam este aviso. As visitas são contadas sem cookies
+            e sem identificar você.{" "}
+            <Link href="/cookies" className="text-brand underline underline-offset-4">
+              Política de cookies
+            </Link>
+          </p>
+          <Button variant="outline" className="shrink-0 self-start sm:self-auto" onClick={() => onChoose(false)}>
+            Entendi
+          </Button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby={titleId} className={cn("rounded-2xl border border-rule-strong bg-card p-5 sm:p-6", className)}>
@@ -92,8 +128,8 @@ function BannerBox({ onCustomize, onChoose, className }: { onCustomize: () => vo
 }
 
 /** Só para o guia visual (`/design`): o banner parado, sem gravar nada. */
-export function CookieBannerPreview() {
-  return <BannerBox onCustomize={() => undefined} onChoose={() => undefined} />;
+export function CookieBannerPreview({ onlyEssential = false }: { onlyEssential?: boolean }) {
+  return <BannerBox onlyEssential={onlyEssential} onCustomize={() => undefined} onChoose={() => undefined} />;
 }
 
 function PreferencesDialog({ open, onClose, choice }: { open: boolean; onClose: () => void; choice: ConsentChoice | null }) {
@@ -193,9 +229,9 @@ function PreferencesDialog({ open, onClose, choice }: { open: boolean; onClose: 
 }
 
 /**
- * Banner e preferências de cookies do site público. O banner só aparece quando há alguma categoria opcional em uso
- * (`lib/consent.ts`) e a pessoa ainda não escolheu; Aceitar, Recusar e Personalizar têm o mesmo destaque.
- * As preferências abrem pelo link do rodapé a qualquer momento.
+ * Banner e preferências de cookies do site público. O banner aparece na primeira visita: sem categoria opcional em uso
+ * (`lib/consent.ts`), só avisa dos essenciais ("Entendi"); com alguma, Aceitar, Recusar e Personalizar têm o mesmo
+ * destaque. As preferências abrem pelo link do rodapé a qualquer momento.
  */
 export function ConsentManager() {
   const choice = useConsent();
@@ -214,6 +250,7 @@ export function ConsentManager() {
       {showBanner && (
         <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4 sm:px-6 sm:pb-6">
           <BannerBox
+            onlyEssential={activeCategories().length === 0}
             className="motion-safe:animate-rise mx-auto max-w-3xl"
             onCustomize={() => setOpen(true)}
             onChoose={(accept) => saveConsent(allOptional(accept))}
@@ -226,7 +263,7 @@ export function ConsentManager() {
 }
 
 /**
- * Conteúdo de outro serviço (vídeo do YouTube, post do Instagram) que só carrega com consentimento. Antes disso
+ * Conteúdo de outro serviço (ex.: vídeo do YouTube) que só carrega com consentimento. Antes disso
  * mostra uma caixa explicando o que é e um botão para carregar, que grava o aceite daquela categoria.
  */
 export function ConsentGate({ category, service, children }: { category: ConsentCategory; service: string; children: ReactNode }) {

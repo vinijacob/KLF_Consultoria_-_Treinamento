@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { ZoomablePhoto } from "./bubble";
 
 /** Largura e respiro padrão das páginas do site. */
 export function Container({ className, children }: { className?: string; children: ReactNode }) {
@@ -81,7 +82,7 @@ export function ArrowLink({ href, children, className }: { href: string; childre
   );
 }
 
-/** Foto com cantos suaves; sem foto, um espaço reservado honesto (nunca imagem genérica de banco). */
+/** Foto com cantos suaves; sem foto, um espaço reservado honesto (nunca imagem genérica de banco). `zoom`: clicar amplia. */
 export function FramedImage({
   src,
   alt,
@@ -91,6 +92,7 @@ export function FramedImage({
   priority,
   sizes = "(min-width: 1024px) 40vw, 100vw",
   className,
+  zoom,
 }: {
   src?: string | null;
   alt: string;
@@ -100,18 +102,29 @@ export function FramedImage({
   priority?: boolean;
   sizes?: string;
   className?: string;
+  zoom?: boolean;
 }) {
+  const frame = (
+    <div className={cn("relative overflow-hidden rounded-2xl bg-paper-deep", ratio)}>
+      {src ? (
+        <Image src={src} alt={alt} fill unoptimized priority={priority} sizes={sizes} className="object-cover" />
+      ) : (
+        <div className="absolute inset-0 grid place-items-center p-6 text-center">
+          <span className="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">{placeholder}</span>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <figure className={className}>
-      <div className={cn("relative overflow-hidden rounded-2xl bg-paper-deep", ratio)}>
-        {src ? (
-          <Image src={src} alt={alt} fill unoptimized priority={priority} sizes={sizes} className="object-cover" />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center p-6 text-center">
-            <span className="font-mono text-xs uppercase tracking-[0.16em] text-ink-soft">{placeholder}</span>
-          </div>
-        )}
-      </div>
+      {zoom && src ? (
+        <ZoomablePhoto photo={{ src, alt, caption }} className="lift block w-full rounded-2xl">
+          {frame}
+        </ZoomablePhoto>
+      ) : (
+        frame
+      )}
       {caption && <figcaption className="mt-3 font-sans text-sm text-ink-soft">{caption}</figcaption>}
     </figure>
   );
@@ -139,10 +152,7 @@ export function Avatar({ name, src, size = "md" }: { name: string; src?: string 
 
 export { initials };
 
-/** Conteúdo vindo do editor do painel. O HTML já chega sanitizado pela API (IHtmlContentSanitizer). */
-export function Prose({ html, className }: { html: string; className?: string }) {
-  return <div className={cn("prose-klf", className)} dangerouslySetInnerHTML={{ __html: html }} />;
-}
+export { Prose } from "./prose";
 
 export function EmptyNote({ children }: { children: ReactNode }) {
   return <p className="rounded-xl border border-dashed border-rule-strong px-6 py-10 text-center font-sans text-base text-ink-soft">{children}</p>;

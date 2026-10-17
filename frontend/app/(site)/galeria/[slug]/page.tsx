@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
+import { AlbumPhotos } from "@/components/site/album-photos";
 import { ArrowLink, Container, EmptyNote, PageHeader } from "@/components/site/blocks";
 import { getAlbum } from "@/lib/api/public";
 
@@ -30,28 +30,7 @@ export default async function AlbumPage({ params }: PageProps<"/galeria/[slug]">
         {album.items.length === 0 ? (
           <EmptyNote>As fotos deste álbum serão publicadas em breve.</EmptyNote>
         ) : (
-          <ul className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {album.items.map((item, index) => (
-              <li key={`${item.url}-${index}`} className="reveal">
-                <figure>
-                  <a href={item.url} target="_blank" rel="noopener" className="lift block overflow-hidden rounded-2xl">
-                    <span className="relative block aspect-[4/3] overflow-hidden rounded-2xl bg-paper-deep">
-                      <Image
-                        src={item.url}
-                        alt={item.altText ?? ""}
-                        fill
-                        unoptimized
-                        sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
-                        className="object-cover"
-                      />
-                    </span>
-                    <span className="sr-only">Abrir a foto em tamanho original (nova aba)</span>
-                  </a>
-                  {item.caption && <figcaption className="mt-3 font-sans text-sm text-ink-soft">{item.caption}</figcaption>}
-                </figure>
-              </li>
-            ))}
-          </ul>
+          <AlbumPhotos items={album.items} />
         )}
         <ArrowLink href="/galeria" className="mt-16">
           Voltar para a galeria

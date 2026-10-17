@@ -14,7 +14,7 @@ const INTERVAL_MS = 8000;
 /**
  * Depoimento em destaque com a lista de quem falou logo abaixo (fotos ou iniciais). A troca é automática a cada 8 s,
  * marcada por uma linha que enche sob o nome atual; ela pausa com o mouse em cima e para de vez quando a pessoa
- * escolhe um depoimento. Quem pediu menos movimento no sistema troca só clicando.
+ * escolhe um depoimento, e também enquanto o cartão de quem falou está aberto. Quem pediu menos movimento troca só clicando.
  * O tempo vem do fim da própria animação da linha, então o texto troca exatamente quando a linha termina.
  */
 export function TestimonialSpotlight({ testimonials }: { testimonials: Testimonial[] }) {
@@ -23,6 +23,7 @@ export function TestimonialSpotlight({ testimonials }: { testimonials: Testimoni
   const [index, setIndex] = useState(0);
   const [chosen, setChosen] = useState(false);
   const [hovering, setHovering] = useState(false);
+  const [personOpen, setPersonOpen] = useState(false);
   const count = testimonials.length;
   const auto = count > 1 && !chosen && !reducedMotion;
 
@@ -30,7 +31,7 @@ export function TestimonialSpotlight({ testimonials }: { testimonials: Testimoni
 
   return (
     <div onMouseEnter={() => setHovering(true)} onMouseLeave={() => setHovering(false)}>
-      <div className="grid items-center rounded-3xl border border-rule bg-card px-7 py-10 sm:px-12 sm:py-14">
+      <div className="relative grid rounded-3xl border border-rule bg-card transition-colors duration-500 hover:border-rule-strong">
         {testimonials.map((testimonial, position) => (
           <div
             key={testimonial.id}
@@ -38,9 +39,9 @@ export function TestimonialSpotlight({ testimonials }: { testimonials: Testimoni
             role={count > 1 ? "tabpanel" : undefined}
             aria-labelledby={count > 1 ? `${id}-tab-${position}` : undefined}
             aria-hidden={position !== index}
-            className={cn("[grid-area:1/1]", position === index ? "motion-safe:animate-fade" : "invisible")}
+            className={cn("flex flex-col justify-center px-7 py-10 [grid-area:1/1] sm:px-12 sm:py-14", position === index ? "motion-safe:animate-fade" : "invisible")}
           >
-            <TestimonialQuote testimonial={testimonial} large />
+            <TestimonialQuote testimonial={testimonial} large onPersonOpenChange={setPersonOpen} />
           </div>
         ))}
       </div>
@@ -77,7 +78,7 @@ export function TestimonialSpotlight({ testimonials }: { testimonials: Testimoni
                     key={index}
                     aria-hidden
                     onAnimationEnd={() => setIndex((position + 1) % count)}
-                    className={cn("absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent motion-safe:animate-progress", hovering && "[animation-play-state:paused]")}
+                    className={cn("absolute inset-x-0 bottom-0 h-0.5 origin-left bg-accent motion-safe:animate-progress", (hovering || personOpen) && "[animation-play-state:paused]!")}
                     style={{ animationDuration: `${INTERVAL_MS}ms` }}
                   />
                 )}
@@ -102,7 +103,10 @@ export function TestimonialWall({ testimonials }: { testimonials: Testimonial[] 
     <div>
       <ul className="gap-5 md:columns-2 lg:columns-3">
         {shown.map((testimonial) => (
-          <li key={testimonial.id} className="mb-5 break-inside-avoid rounded-2xl border border-rule bg-card p-7 motion-safe:animate-rise">
+          <li
+            key={testimonial.id}
+            className="relative mb-5 break-inside-avoid rounded-2xl border border-rule bg-card p-7 transition-colors duration-500 hover:border-rule-strong motion-safe:animate-rise"
+          >
             <TestimonialQuote testimonial={testimonial} />
           </li>
         ))}

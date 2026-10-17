@@ -1,7 +1,7 @@
 import type { LegalSettings } from "@/types/site";
 
 /** Última revisão do texto das páginas legais. Mude junto com o texto de `/privacidade`, `/termos` ou `/cookies`. */
-export const LEGAL_TEXT_REVISED_ON = "2026-10-15";
+export const LEGAL_TEXT_REVISED_ON = "2026-10-16";
 
 const requiredFields: [keyof LegalSettings, string][] = [
   ["companyName", "razão social"],

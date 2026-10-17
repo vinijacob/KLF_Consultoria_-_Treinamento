@@ -234,7 +234,7 @@ function SettingsForms({ settings }: { settings: SiteSettings }) {
               hint="Viram um carrossel no topo da página inicial e na página Sobre, nesta ordem; a primeira também aparece como foto pequena. Prefira fotos verticais (proporção 4:5), com boa luz."
               value={about.portraitIds}
               onChange={(ids) => setAbout({ ...about, portraitIds: ids })}
-              max={8}
+              max={10}
               error={fieldError(errors, "portraitIds")}
             />
             <Textarea

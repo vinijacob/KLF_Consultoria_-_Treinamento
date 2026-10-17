@@ -62,7 +62,7 @@ export default async function PostPage({ params }: PageProps<"/conteudo/[slug]">
         {post.coverId && (
           <Container className="mt-10">
             <div className="mx-auto max-w-[42rem]">
-              <FramedImage src={mediaUrl(post.coverId)} alt="" ratio="aspect-video" sizes="(min-width: 1024px) 896px, 100vw" />
+              <FramedImage src={mediaUrl(post.coverId)} alt="" ratio="aspect-video" zoom sizes="(min-width: 1024px) 896px, 100vw" />
             </div>
           </Container>
         )}

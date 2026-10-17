@@ -6,7 +6,8 @@ import { cn } from "@/lib/cn";
 import { formatDate, formatWorkload, postTypeLabel, serviceFormatLabel, twoDigits } from "@/lib/format";
 import { mediaUrl } from "@/lib/media";
 import type { PostListItem, ServiceListItem, Testimonial } from "@/types/site";
-import { Avatar, Badge } from "./blocks";
+import { Badge } from "./blocks";
+import { TestimonialPerson } from "./testimonial-person";
 
 /** Cartão de serviço: número, formato e carga horária em etiquetas, título, resumo e a seta que anda no hover. */
 export function ServiceCard({ service, number, className }: { service: ServiceListItem; number: number; className?: string }) {
@@ -93,8 +94,16 @@ export function PostGrid({ posts }: { posts: PostListItem[] }) {
   );
 }
 
-/** Depoimento: aspas tipográficas, texto em itálico e a pessoa com foto (ou iniciais). Nunca estrelas. */
-export function TestimonialQuote({ testimonial, large }: { testimonial: Testimonial; large?: boolean }) {
+/** Depoimento: aspas tipográficas, texto em itálico e a pessoa com foto (ou iniciais), que abre o cartão dela. Nunca estrelas. */
+export function TestimonialQuote({
+  testimonial,
+  large,
+  onPersonOpenChange,
+}: {
+  testimonial: Testimonial;
+  large?: boolean;
+  onPersonOpenChange?: (open: boolean) => void;
+}) {
   const byline = [testimonial.authorRole, testimonial.companyName].filter(Boolean).join(", ");
 
   return (
@@ -111,7 +120,7 @@ export function TestimonialQuote({ testimonial, large }: { testimonial: Testimon
         </span>
       </blockquote>
       <figcaption className={cn("flex items-center gap-4 font-sans text-[0.9375rem]", large ? "mt-8" : "mt-5")}>
-        <Avatar name={testimonial.authorName} src={testimonial.photoId ? mediaUrl(testimonial.photoId) : null} size={large ? "md" : "sm"} />
+        <TestimonialPerson testimonial={testimonial} size={large ? "md" : "sm"} onOpenChange={onPersonOpenChange} />
         <span>
           <span className="block font-semibold text-ink">{testimonial.authorName}</span>
           {byline && <span className="block text-ink-soft">{byline}</span>}

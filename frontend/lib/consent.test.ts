@@ -6,8 +6,8 @@ const notInUse: ConsentCategoryInfo[] = [{ id: "thirdParty", label: "Terceiros",
 
 describe("consentimento", () => {
   it("lê de volta a escolha gravada", () => {
-    const choice = makeChoice({ thirdParty: true }, "2026-10-12");
-    expect(parseConsent(serializeConsent(choice))).toEqual({ version: CONSENT_VERSION, decidedOn: "2026-10-12", thirdParty: true });
+    const choice = makeChoice({ thirdParty: true }, "2026-10-12", ["thirdParty"]);
+    expect(parseConsent(serializeConsent(choice))).toEqual({ version: CONSENT_VERSION, decidedOn: "2026-10-12", asked: ["thirdParty"], thirdParty: true });
   });
 
   it("marca como recusada a categoria que não foi aceita", () => {
@@ -21,10 +21,21 @@ describe("consentimento", () => {
     expect(parseConsent(undefined)).toBeNull();
   });
 
-  it("só pede decisão quando há categoria opcional em uso e nada foi escolhido", () => {
+  it("mostra o banner na primeira visita, mesmo sem categoria opcional em uso", () => {
     expect(needsDecision(null, inUse)).toBe(true);
-    expect(needsDecision(null, notInUse)).toBe(false);
-    expect(needsDecision(makeChoice({}, "2026-10-12"), inUse)).toBe(false);
+    expect(needsDecision(null, notInUse)).toBe(true);
+  });
+
+  it("não pergunta de novo o que já foi perguntado", () => {
+    expect(needsDecision(makeChoice({}, "2026-10-12", []), notInUse)).toBe(false);
+    expect(needsDecision(makeChoice({}, "2026-10-12", ["thirdParty"]), inUse)).toBe(false);
+  });
+
+  it("pergunta de novo quando entra em uso uma categoria que a pessoa não viu", () => {
+    const sawOnlyTheNotice = makeChoice({}, "2026-10-12", []);
+    expect(needsDecision(sawOnlyTheNotice, inUse)).toBe(true);
+    const oldCookie = parseConsent(encodeURIComponent(JSON.stringify({ version: CONSENT_VERSION, decidedOn: "2026-10-01", thirdParty: false })));
+    expect(needsDecision(oldCookie, inUse)).toBe(true);
   });
 
   it("acha o cookie certo entre vários", () => {

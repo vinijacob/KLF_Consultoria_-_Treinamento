@@ -5,6 +5,7 @@ import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { mediaUrl } from "@/lib/media";
 import { usePrefersReducedMotion } from "@/lib/motion";
+import { Lightbox } from "./bubble";
 
 const INTERVAL_MS = 6000;
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -13,7 +14,8 @@ const pad = (value: number) => String(value).padStart(2, "0");
  * Retrato da Kilciene em carrossel: a foto nova entra como uma página virada (da direita para a esquerda) e se assenta
  * devagar; embaixo, o número da foto e um traço por foto, que enche até a troca. Pausa com o mouse ou o foco em cima e
  * para de vez quando alguém escolhe uma foto. Quem pediu menos movimento troca só clicando, sem animação.
- * Com uma foto só, é um retrato comum; sem nenhuma, a moldura com o aviso.
+ * Com uma foto só, é um retrato comum; sem nenhuma, a moldura com o aviso. No hover (ou foco), a placa de trás desliza
+ * e um fio fino se assenta dentro da foto, como passe-partout; clicar abre a foto ampliada (e a troca pausa).
  */
 export function PortraitCarousel({
   ids,
@@ -33,7 +35,9 @@ export function PortraitCarousel({
   const [previous, setPrevious] = useState<number | null>(null);
   const [chosen, setChosen] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [zoomed, setZoomed] = useState<number | null>(null);
   const count = ids.length;
+  const alt = (position: number) => (count > 1 ? `${name}, foto ${position + 1} de ${count}` : name);
   const auto = count > 1 && !chosen && !reducedMotion;
 
   function show(next: number) {
@@ -49,13 +53,16 @@ export function PortraitCarousel({
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <div className="relative">
-        <div aria-hidden className="absolute inset-0 translate-x-4 translate-y-4 rounded-2xl bg-brand-soft" />
+      <div className="group/portrait relative">
+        <div
+          aria-hidden
+          className="absolute inset-0 translate-x-4 translate-y-4 rounded-2xl bg-brand-soft transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:group-hover/portrait:translate-x-6 motion-safe:group-hover/portrait:translate-y-6 motion-safe:group-has-[:focus-visible]/portrait:translate-x-6 motion-safe:group-has-[:focus-visible]/portrait:translate-y-6"
+        />
         <div
           role={count > 1 ? "group" : undefined}
           aria-roledescription={count > 1 ? "carrossel" : undefined}
           aria-label={count > 1 ? `Fotos de ${name}` : undefined}
-          className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-paper-deep"
+          className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-paper-deep ring-1 ring-rule"
         >
           {count === 0 && (
             <div className="absolute inset-0 grid place-items-center p-6 text-center">
@@ -77,7 +84,7 @@ export function PortraitCarousel({
               >
                 <Image
                   src={mediaUrl(id)}
-                  alt={count > 1 ? `${name}, foto ${position + 1} de ${count}` : name}
+                  alt={alt(position)}
                   fill
                   unoptimized
                   priority={priority && position === 0}
@@ -87,8 +94,35 @@ export function PortraitCarousel({
               </div>
             );
           })}
+          {count > 0 && (
+            <>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-1.5 z-30 rounded-xl border border-photo-frame opacity-0 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/portrait:inset-4 group-hover/portrait:opacity-100 group-has-[:focus-visible]/portrait:inset-4 group-has-[:focus-visible]/portrait:opacity-100"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute bottom-6 left-6 z-30 translate-y-1 rounded-full bg-card px-3 py-1 font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-ink opacity-0 transition-all duration-500 group-hover/portrait:translate-y-0 group-hover/portrait:opacity-100 group-has-[:focus-visible]/portrait:translate-y-0 group-has-[:focus-visible]/portrait:opacity-100"
+              >
+                Ampliar
+              </span>
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                aria-label={`Ampliar: ${alt(index)}`}
+                onClick={() => setZoomed(index)}
+                className="absolute inset-0 z-40 cursor-zoom-in rounded-2xl"
+              />
+            </>
+          )}
         </div>
       </div>
+      <Lightbox
+        photos={ids.map((id, position) => ({ src: mediaUrl(id), alt: alt(position) }))}
+        index={zoomed}
+        onIndexChange={setZoomed}
+        onClose={() => setZoomed(null)}
+      />
 
       {count > 1 && (
         <div className="mt-8 flex items-center gap-5">
@@ -118,7 +152,7 @@ export function PortraitCarousel({
                           key={index}
                           aria-hidden
                           onAnimationEnd={() => show((index + 1) % count)}
-                          className={cn("absolute inset-0 origin-left bg-accent motion-safe:animate-progress", paused && "[animation-play-state:paused]")}
+                          className={cn("absolute inset-0 origin-left bg-accent motion-safe:animate-progress", (paused || zoomed !== null) && "[animation-play-state:paused]!")}
                           style={{ animationDuration: `${INTERVAL_MS}ms` }}
                         />
                       ) : (
